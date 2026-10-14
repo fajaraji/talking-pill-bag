@@ -28,3 +28,50 @@ When done: run npm run typecheck and npm run build and fix any errors, then git 
 
 
 ## Result
+                                                                                                                                          T3 selesai. Berikut ringkasan perubahan dan cara mengujinya:
+
+### Yang berubah
+
+1. **`lib/storage.ts`** — Modul akses localStorage terpusat dengan tipe:
+   - `getMedicines`, `saveMedicine`, `deleteMedicine`
+   - `getDoseLog`, `markDoseTaken`, `removeDoseLogEntry`
+
+2. **`lib/clock.ts`** — Fungsi `getToday()` mengembalikan tanggal real `YYYY-MM-DD` (siap untuk fitur "demo time" di kemudian hari).
+
+3. **`lib/i18n.ts`** — Ditambah semua string UI baru untuk layar Hari Ini dalam 4 bahasa (en, zh, ms, id).
+
+4. **`app/add/page.tsx`** — Direfaktor pakai `saveMedicine()`. Setelah konfirmasi, navigasi ke `/today` (bukan `/`).
+
+5. **`app/page.tsx`** — Jika sudah ada obat, muncul 2 tombol besar: "Today's medicines" dan "Add medicine". Jika belum ada, hanya "Add medicine".
+
+6. **`app/today/page.tsx`** — Layar "Hari Ini" untuk penerima obat (lansia):
+   - **Slot**: Pagi / Siang / Malam / Sebelum Tidur. Section kosong disembunyikan.
+   - **Kartu dosis**: foto thumbnail, nama obat + kekuatan (min 22px), dosis per minum, ikon makanan + teks (before/after/with/any), petunjuk khusus jika ada.
+   - **Tombol "Done"** tinggi min 64px. Setelah ditekan jadi hijau "Taken at HH:MM" dengan tombol **Undo** selama 10 detik.
+   - **"Time not set"**: obat dengan `time_slots` kosong tidak hilang, tapi ditampilkan di section kuning dengan tombol edit.
+   - **Header**: tanggal hari ini sesuai bahasa + progress "X / Y doses taken".
+   - **Aksesibilitas**: kontras tinggi, tap target >= 48px, semua tombol punya `aria-label`.
+
+### Hasil build & typecheck
+- `npm run typecheck` — lulus tanpa error.
+- `npm run build` — sukses, semua halaman ter-generate.
+
+### Commit
+`feat: add Today screen with dose tracking and localStorage storage module`
+
+### Cara cek
+1. Jalankan `npm run dev`, buka http://localhost:3000.
+2. Pilih bahasa, tekan "Add Medicine", foto/unggah label obat, konfirmasi.
+3. Setelah konfirmasi, otomatis masuk ke `/today`.
+4. Cek obat muncul di slot yang benar sesuai `time_slots`.
+5. Tekan "Done" pada salah satu dosis → muncul "Taken at HH:MM" + tombol "Undo" selama 10 detik.
+6. Kembali ke `/`, pasti muncul 2 tombol ("Today's medicines" dan "Add medicine").
+7. Tambah obat tanpa time_slots (unclear) → di `/today` muncul di section "Time not set".
+
+## Stats
+
+- Duration: 7.8 min
+- Turns:                                                                                                                                           121
+- Is error:                                                                                                                                           False
+- Session id:                                                                                                                                           01a13b9c-3fae-7a25-b2fd-91f58be674a5
+- Cost/usage: {"input_tokens":1197868,"output_tokens":14200,"cache_creation_input_tokens":74540,"cache_read_input_tokens":1123328,"cache_creation":null,"server_tool_use":null,"service_tier":null}  total_cost_usd=                                                                                                                                          0

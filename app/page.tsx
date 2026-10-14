@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   type Language,
   languages,
@@ -9,6 +10,7 @@ import {
 } from "@/lib/i18n";
 
 export default function HomePage() {
+  const router = useRouter();
   const [lang, setLang] = useState<Language>(defaultLanguage);
 
   // Load persisted language choice on mount
@@ -65,13 +67,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Get Started button (placeholder — no destination yet) */}
+      {/* Get Started button */}
       <button
         className="mt-4 w-full max-w-sm rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-        onClick={() => {
-          // Navigation targets will be added in subsequent tasks
-          alert(t(lang, "placeholderPageTitle"));
-        }}
+        onClick={() => router.push("/add")}
       >
         {t(lang, "getStarted")}
       </button>

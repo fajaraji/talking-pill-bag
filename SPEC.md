@@ -68,6 +68,15 @@ tapi sumbernya tetap `data/drug-info.json`.
 - **LLM provider** lewat endpoint **OpenAI-compatible**, dikonfigurasi di `.env.local`:
   `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_VISION_MODEL`, `LLM_TEXT_MODEL`.
   (Bisa Tencent Hunyuan, Gemini, OpenAI, dll. API key TIDAK PERNAH masuk ke kode atau Git.)
+- **Hasil uji model (14 Okt 2026, endpoint Nous Research):**
+  - `google/gemini-2.5-flash` (vision): membaca label 1–4 dan 6 dengan benar, menolak label 5 yang buram, sekitar 5 detik
+    dan sekitar US$0,002 per foto. Kirim `response_format: {"type":"json_object"}`. Field `food` dari model masih bebas
+    (misalnya "BEFORE BEDTIME"), jadi prompt harus memaksa enum di SPEC bagian 7 dan zod harus menolak nilai lain.
+  - `tencent/hy3` (teks) adalah **model reasoning**. Tanpa pengaturan, ia "berpikir" dulu sekitar 600 token. Kalau
+    `max_tokens` kecil, `content` kembali `null`. Selalu kirim `reasoning: {"enabled": false}` (jawaban langsung,
+    sekitar 40 token) dan `max_tokens` minimal 1000. Waktu respons 8–13 detik, jadi **simpan hasil penjelasan per
+    obat + bahasa di localStorage** (buat sekali saat obat dikonfirmasi, jangan saat tombol dengar ditekan).
+    Jika `content` kosong atau error → pakai teks bahasa Inggris dari `data/drug-info.json`.
 - **Penyimpanan:** `localStorage` di browser (cukup untuk demo; sebut di diagram sebagai batasan).
 - **Suara:** `window.speechSynthesis` (gratis, tanpa API).
 - **Waktu demo:** tombol tersembunyi "Mode demo: majukan waktu +1 hari" supaya pengingat,

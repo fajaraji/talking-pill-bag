@@ -132,6 +132,20 @@ export default function HomePage() {
         >
           {t(lang, "bpLink")}
         </button>
+        <button
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
+          onClick={() => router.push("/questions")}
+          aria-label={t(lang, "questionsTitle")}
+        >
+          {t(lang, "questionsTitle")}
+        </button>
+        <button
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
+          onClick={() => router.push("/summary")}
+          aria-label={t(lang, "weeklySummary")}
+        >
+          {t(lang, "weeklySummary")}
+        </button>
       </div>
     </main>
   );

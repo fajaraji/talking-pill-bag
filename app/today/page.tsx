@@ -23,6 +23,7 @@ import { getDrugId } from "@/lib/drug-info";
 import { useVoices } from "@/lib/use-voices";
 import { getAdherencePrompts } from "@/lib/adherence";
 import { getMissedReasons, saveMissedReason, type MissedReasonEntry } from "@/lib/storage";
+import { getDaysLeft } from "@/lib/supply";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 
@@ -531,12 +532,45 @@ export default function TodayPage() {
         >
           {t(lang, "bpLink")} →
         </button>
+        <button
+          onClick={() => router.push("/questions")}
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          {t(lang, "questionsTitle")} →
+        </button>
+        <button
+          onClick={() => router.push("/summary")}
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          {t(lang, "weeklySummary")} →
+        </button>
         {totalDoses > 0 && (
           <p className="text-center text-base font-medium text-slate-600">
             {takenDoses} / {totalDoses} {t(lang, "dosesTaken")}
           </p>
         )}
       </header>
+
+      {/* Refill reminders */}
+      {today && medicines.length > 0 && (
+        <div className="flex w-full max-w-sm flex-col gap-3 self-center">
+          {medicines
+            .map((med) => ({ med, days: getDaysLeft(med, doseLog, today) }))
+            .filter(({ days }) => days !== null && days <= 7)
+            .map(({ med, days }) => (
+              <div
+                key={`refill-${med.id}`}
+                className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+              >
+                <p className="text-lg font-semibold text-amber-900">
+                  {t(lang, "refillReminder")
+                    .replace("{drug}", med.drug_name)
+                    .replace("{n}", String(days))}
+                </p>
+              </div>
+            ))}
+        </div>
+      )}
 
       {/* Adherence acknowledgements (shown after reason is saved) */}
       {Object.keys(justReasoned).length > 0 && (

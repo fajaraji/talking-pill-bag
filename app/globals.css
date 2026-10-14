@@ -23,3 +23,66 @@ body {
     min-height: 3rem;
   }
 }
+
+/* Print styles */
+@media print {
+  html, body {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-size: 18pt;
+    color: #000;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-medicines {
+    margin-bottom: 1.5rem;
+    page-break-inside: avoid;
+  }
+
+  .print-medicines h2 {
+    font-size: 20pt;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .print-medicines ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .print-medicines li {
+    font-size: 16pt;
+    margin-bottom: 0.25rem;
+  }
+
+  .print-questions {
+    page-break-inside: avoid;
+  }
+
+  .print-questions h2 {
+    font-size: 20pt;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .print-questions li {
+    font-size: 16pt;
+    margin-bottom: 0.4rem;
+  }
+
+  /* Avoid page breaks inside items */
+  .print-questions li,
+  .print-medicines li {
+    page-break-inside: avoid;
+  }
+}

@@ -107,7 +107,33 @@ type StringKey =
   | "date"
   | "time"
   | "bpConfirmPrompt"
-  | "bpCouldNotRead";
+  | "bpCouldNotRead"
+  // Refill
+  | "refillReminder"
+  // Questions page
+  | "questionsTitle"
+  | "questionsForDoctor"
+  | "addQuestion"
+  | "asked"
+  | "printSavePDF"
+  | "missedDosesQuestion"
+  | "refillQuestion"
+  | "bpHighQuestion"
+  | "bpVeryHighQuestion"
+  | "redirectedQuestion"
+  | "noQuestions"
+  | "currentMedicines"
+  | "printDate"
+  // Weekly summary
+  | "weeklySummary"
+  | "summaryForFamily"
+  | "dosesTakenVsScheduled"
+  | "reasonsRecorded"
+  | "bpAverage"
+  | "refillsDue"
+  | "missedThisWeek"
+  | "doses"
+  | "readingsCount";
 
 type Dictionary = Record<StringKey, string>;
 
@@ -201,6 +227,30 @@ const en: Dictionary = {
   time: "Time",
   bpConfirmPrompt: "Please check the numbers and tap Save.",
   bpCouldNotRead: "Could not read the monitor. Please enter the numbers manually.",
+  refillReminder:
+    "{drug}: about {n} days left. Arrange a refill with your clinic or pharmacy.",
+  questionsTitle: "Questions for my doctor or pharmacist",
+  questionsForDoctor: "Questions for my doctor or pharmacist",
+  addQuestion: "Add a question",
+  asked: "Asked",
+  printSavePDF: "Print / Save as PDF",
+  missedDosesQuestion: "Missed {drug} {n} times this week — reason: {reason}",
+  refillQuestion: "{drug}: about {n} days left. Arrange a refill.",
+  bpHighQuestion: "Blood pressure {sys}/{dia} on {date} — above your target.",
+  bpVeryHighQuestion: "Blood pressure {sys}/{dia} on {date} — very high reading.",
+  redirectedQuestion: "Question for doctor/pharmacist: {question}",
+  noQuestions: "No questions yet.",
+  currentMedicines: "Current medicines",
+  printDate: "Date",
+  weeklySummary: "Weekly Summary",
+  summaryForFamily: "For family members",
+  dosesTakenVsScheduled: "Doses taken vs scheduled",
+  reasonsRecorded: "Reasons recorded",
+  bpAverage: "Blood pressure average",
+  refillsDue: "Refills due",
+  missedThisWeek: "Missed {n} dose(s) this week",
+  doses: "doses",
+  readingsCount: "{n} reading(s)",
 };
 
 const zh: Dictionary = {
@@ -291,6 +341,29 @@ const zh: Dictionary = {
   time: "时间",
   bpConfirmPrompt: "请检查数字后点击保存。",
   bpCouldNotRead: "无法读取显示器。请手动输入数字。",
+  refillReminder: "{drug}：大约还剩 {n} 天。请向诊所或药房安排续药。",
+  questionsTitle: "给医生或药剂师的问题",
+  questionsForDoctor: "给医生或药剂师的问题",
+  addQuestion: "添加问题",
+  asked: "已询问",
+  printSavePDF: "打印 / 保存为 PDF",
+  missedDosesQuestion: "本周错过了 {drug} {n} 次 — 原因：{reason}",
+  refillQuestion: "{drug}：大约还剩 {n} 天。请安排续药。",
+  bpHighQuestion: "{date} 血压 {sys}/{dia} — 高于您的目标。",
+  bpVeryHighQuestion: "{date} 血压 {sys}/{dia} — 读数非常高。",
+  redirectedQuestion: "给医生/药剂师的问题：{question}",
+  noQuestions: "没有问题。",
+  currentMedicines: "当前药物",
+  printDate: "日期",
+  weeklySummary: "每周摘要",
+  summaryForFamily: "给家庭成员",
+  dosesTakenVsScheduled: "已服用剂量与计划剂量",
+  reasonsRecorded: "记录的原因",
+  bpAverage: "血压平均值",
+  refillsDue: "需续药",
+  missedThisWeek: "本周错过了 {n} 次",
+  doses: "剂",
+  readingsCount: "{n} 条记录",
 };
 
 const ms: Dictionary = {
@@ -385,6 +458,30 @@ const ms: Dictionary = {
   time: "Masa",
   bpConfirmPrompt: "Sila semak nombor dan ketik Simpan.",
   bpCouldNotRead: "Tidak dapat membaca monitor. Sila masukkan nombor secara manual.",
+  refillReminder:
+    "{drug}: tinggal lebih kurang {n} hari. Aturkan pembekalan semula di klinik atau farmasi anda.",
+  questionsTitle: "Soalan untuk doktor atau ahli farmasi saya",
+  questionsForDoctor: "Soalan untuk doktor atau ahli farmasi saya",
+  addQuestion: "Tambah soalan",
+  asked: "Sudah ditanya",
+  printSavePDF: "Cetak / Simpan sebagai PDF",
+  missedDosesQuestion: "Terlepas {drug} {n} kali minggu ini — sebab: {reason}",
+  refillQuestion: "{drug}: tinggal lebih kurang {n} hari. Aturkan pembekalan semula.",
+  bpHighQuestion: "Tekanan darah {sys}/{dia} pada {date} — melebihi sasaran anda.",
+  bpVeryHighQuestion: "Tekanan darah {sys}/{dia} pada {date} — bacaan sangat tinggi.",
+  redirectedQuestion: "Soalan untuk doktor/ahli farmasi: {question}",
+  noQuestions: "Tiada soalan lagi.",
+  currentMedicines: "Ubat semasa",
+  printDate: "Tarikh",
+  weeklySummary: "Ringkasan Mingguan",
+  summaryForFamily: "Untuk ahli keluarga",
+  dosesTakenVsScheduled: "Dosis diambil berbanding dijadualkan",
+  reasonsRecorded: "Sebab yang direkodkan",
+  bpAverage: "Purata tekanan darah",
+  refillsDue: "Pembekalan semula diperlukan",
+  missedThisWeek: "Terlepas {n} kali minggu ini",
+  doses: "dosis",
+  readingsCount: "{n} bacaan",
 };
 
 const id: Dictionary = {
@@ -479,6 +576,30 @@ const id: Dictionary = {
   time: "Waktu",
   bpConfirmPrompt: "Silakan periksa angkanya lalu ketuk Simpan.",
   bpCouldNotRead: "Tidak bisa membaca monitor. Silakan masukkan angka secara manual.",
+  refillReminder:
+    "{drug}: tinggal sekitar {n} hari. Atur pengisian ulang di klinik atau apotek Anda.",
+  questionsTitle: "Pertanyaan untuk dokter atau apoteker saya",
+  questionsForDoctor: "Pertanyaan untuk dokter atau apoteker saya",
+  addQuestion: "Tambah pertanyaan",
+  asked: "Sudah ditanyakan",
+  printSavePDF: "Cetak / Simpan sebagai PDF",
+  missedDosesQuestion: "Melewatkan {drug} {n} kali minggu ini — alasan: {reason}",
+  refillQuestion: "{drug}: tinggal sekitar {n} hari. Atur pengisian ulang.",
+  bpHighQuestion: "Tekanan darah {sys}/{dia} pada {date} — di atas sasaran Anda.",
+  bpVeryHighQuestion: "Tekanan darah {sys}/{dia} pada {date} — bacaan sangat tinggi.",
+  redirectedQuestion: "Pertanyaan untuk dokter/apoteker: {question}",
+  noQuestions: "Belum ada pertanyaan.",
+  currentMedicines: "Obat saat ini",
+  printDate: "Tanggal",
+  weeklySummary: "Ringkasan Mingguan",
+  summaryForFamily: "Untuk anggota keluarga",
+  dosesTakenVsScheduled: "Dosis diambil vs dijadwalkan",
+  reasonsRecorded: "Alasan yang tercatat",
+  bpAverage: "Rata-rata tekanan darah",
+  refillsDue: "Pengisian ulang diperlukan",
+  missedThisWeek: "Melewatkan {n} dosis minggu ini",
+  doses: "dosis",
+  readingsCount: "{n} catatan",
 };
 
 export const dictionaries: Record<Language, Dictionary> = { en, zh, ms, id };

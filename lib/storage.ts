@@ -7,6 +7,9 @@ const EXPLANATIONS_KEY = "tpb-explanations";
 const MISSED_REASONS_KEY = "tpb-missed-reasons";
 const BP_LOG_KEY = "tpb-bp-log";
 const BP_TARGET_KEY = "tpb-bp-target";
+const QUESTIONS_REDIRECTED_KEY = "tpb-questions-redirected";
+const QUESTIONS_CUSTOM_KEY = "tpb-questions-custom";
+const QUESTIONS_DONE_KEY = "tpb-questions-done";
 
 export interface Medicine extends LabelResult {
   id: string;
@@ -261,4 +264,93 @@ export function setBPTarget(target: BPTarget): void {
 export function clearBPTarget(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(BP_TARGET_KEY);
+}
+
+// ---------------------------------------------------------------------------
+// Redirected questions (for doctor/pharmacist)
+// ---------------------------------------------------------------------------
+
+export interface RedirectedQuestion {
+  question: string;
+  date: string; // YYYY-MM-DD
+}
+
+export function getRedirectedQuestions(): RedirectedQuestion[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(QUESTIONS_REDIRECTED_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as RedirectedQuestion[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRedirectedQuestion(entry: RedirectedQuestion): void {
+  if (typeof window === "undefined") return;
+  const existing = getRedirectedQuestions();
+  localStorage.setItem(QUESTIONS_REDIRECTED_KEY, JSON.stringify([...existing, entry]));
+}
+
+// ---------------------------------------------------------------------------
+// Custom questions (user-added)
+// ---------------------------------------------------------------------------
+
+export interface CustomQuestion {
+  id: string;
+  text: string;
+  addedOn: string; // YYYY-MM-DD
+}
+
+export function getCustomQuestions(): CustomQuestion[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(QUESTIONS_CUSTOM_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as CustomQuestion[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomQuestion(entry: CustomQuestion): void {
+  if (typeof window === "undefined") return;
+  const existing = getCustomQuestions();
+  localStorage.setItem(QUESTIONS_CUSTOM_KEY, JSON.stringify([...existing, entry]));
+}
+
+export function deleteCustomQuestion(id: string): void {
+  if (typeof window === "undefined") return;
+  const existing = getCustomQuestions();
+  localStorage.setItem(QUESTIONS_CUSTOM_KEY, JSON.stringify(existing.filter((q) => q.id !== id)));
+}
+
+// ---------------------------------------------------------------------------
+// Done questions (checked off by user)
+// ---------------------------------------------------------------------------
+
+export function getDoneQuestionIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(QUESTIONS_DONE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as string[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function toggleDoneQuestion(id: string): void {
+  if (typeof window === "undefined") return;
+  const existing = getDoneQuestionIds();
+  const idx = existing.indexOf(id);
+  if (idx >= 0) {
+    existing.splice(idx, 1);
+  } else {
+    existing.push(id);
+  }
+  localStorage.setItem(QUESTIONS_DONE_KEY, JSON.stringify(existing));
 }

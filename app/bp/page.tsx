@@ -151,8 +151,8 @@ function BPChart({
             strokeDasharray="6 4"
           />
           <text
-            x={left + plotW + 4}
-            y={toY(target.systolic) + 4}
+            x={left + 4}
+            y={toY(target.systolic) - 4}
             fontSize={10}
             fill="#64748b"
           >
@@ -198,22 +198,32 @@ function BPChart({
         );
       })}
 
-      {/* X-axis labels (every 3 days) */}
-      {data.map((d, i) => {
-        if (i % 3 !== 0 && i !== data.length - 1) return null;
-        return (
+      {/* X-axis labels (at most 5 evenly spaced, always first and last) */}
+      {(() => {
+        const indices: number[] = [];
+        const n = data.length;
+        if (n <= 5) {
+          for (let i = 0; i < n; i++) indices.push(i);
+        } else {
+          const step = (n - 1) / 4;
+          for (let i = 0; i < 5; i++) {
+            const idx = Math.round(i * step);
+            if (!indices.includes(idx)) indices.push(idx);
+          }
+        }
+        return indices.map((i) => (
           <text
-            key={`x-${d.date}`}
+            key={`x-${data[i].date}`}
             x={toX(i)}
             y={top + plotH + 18}
             textAnchor="middle"
             fontSize={11}
             fill="#64748b"
           >
-            {formatDateShort(lang, d.date)}
+            {formatDateShort(lang, data[i].date)}
           </text>
-        );
-      })}
+        ));
+      })()}
 
       {/* Legend */}
       <g transform={`translate(${left}, ${top + plotH + 28})`}>

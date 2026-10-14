@@ -40,7 +40,25 @@ type StringKey =
   | "pharmacistMessage"
   | "genericError"
   | "back"
-  | "retry";
+  | "retry"
+  // Today page
+  | "todayTitle"
+  | "morning"
+  | "afternoon"
+  | "evening"
+  | "bedtime"
+  | "foodBefore"
+  | "foodAfter"
+  | "foodWith"
+  | "foodAny"
+  | "done"
+  | "takenAt"
+  | "undo"
+  | "dosesTaken"
+  | "timeNotSet"
+  | "editTime"
+  | "todaysMedicines"
+  | "noMedicines";
 
 type Dictionary = Record<StringKey, string>;
 
@@ -71,6 +89,23 @@ const en: Dictionary = {
   genericError: "Something went wrong, please try again.",
   back: "Back",
   retry: "Retry",
+  todayTitle: "Today's Medicines",
+  morning: "Morning",
+  afternoon: "Afternoon",
+  evening: "Evening",
+  bedtime: "Bedtime",
+  foodBefore: "Before food",
+  foodAfter: "After food",
+  foodWith: "With food",
+  foodAny: "Any time",
+  done: "Done",
+  takenAt: "Taken at",
+  undo: "Undo",
+  dosesTaken: "doses taken",
+  timeNotSet: "Time not set",
+  editTime: "Edit time",
+  todaysMedicines: "Today's medicines",
+  noMedicines: "No medicines yet",
 };
 
 const zh: Dictionary = {
@@ -99,6 +134,23 @@ const zh: Dictionary = {
   genericError: "出了点问题，请重试。",
   back: "返回",
   retry: "重试",
+  todayTitle: "今日药物",
+  morning: "早上",
+  afternoon: "下午",
+  evening: "晚上",
+  bedtime: "睡前",
+  foodBefore: "饭前",
+  foodAfter: "饭后",
+  foodWith: "随餐",
+  foodAny: "任何时间",
+  done: "完成",
+  takenAt: "已于",
+  undo: "撤销",
+  dosesTaken: "剂已服用",
+  timeNotSet: "未设定时间",
+  editTime: "编辑时间",
+  todaysMedicines: "今日药物",
+  noMedicines: "暂无药物",
 };
 
 const ms: Dictionary = {
@@ -128,6 +180,23 @@ const ms: Dictionary = {
   genericError: "Sesuatu yang tidak kena, sila cuba semula.",
   back: "Kembali",
   retry: "Cuba semula",
+  todayTitle: "Ubat Hari Ini",
+  morning: "Pagi",
+  afternoon: "Petang",
+  evening: "Malam",
+  bedtime: "Sebelum Tidur",
+  foodBefore: "Sebelum makan",
+  foodAfter: "Selepas makan",
+  foodWith: "Semasa makan",
+  foodAny: "Bila-bila masa",
+  done: "Sudah",
+  takenAt: "Diambil pada",
+  undo: "Buat asal",
+  dosesTaken: "dosis diambil",
+  timeNotSet: "Masa tidak ditetapkan",
+  editTime: "Sunting masa",
+  todaysMedicines: "Ubat hari ini",
+  noMedicines: "Tiada ubat lagi",
 };
 
 const id: Dictionary = {
@@ -157,6 +226,23 @@ const id: Dictionary = {
   genericError: "Terjadi kesalahan, silakan coba lagi.",
   back: "Kembali",
   retry: "Coba lagi",
+  todayTitle: "Obat Hari Ini",
+  morning: "Pagi",
+  afternoon: "Siang",
+  evening: "Malam",
+  bedtime: "Sebelum Tidur",
+  foodBefore: "Sebelum makan",
+  foodAfter: "Sesudah makan",
+  foodWith: "Bersama makanan",
+  foodAny: "Kapan saja",
+  done: "Sudah",
+  takenAt: "Diambil pukul",
+  undo: "Batalkan",
+  dosesTaken: "dosis sudah diambil",
+  timeNotSet: "Waktu belum diatur",
+  editTime: "Atur waktu",
+  todaysMedicines: "Obat hari ini",
+  noMedicines: "Belum ada obat",
 };
 
 export const dictionaries: Record<Language, Dictionary> = { en, zh, ms, id };

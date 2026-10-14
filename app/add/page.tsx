@@ -9,6 +9,7 @@ import {
   t,
 } from "@/lib/i18n";
 import type { LabelResult } from "@/app/api/read-label/route";
+import { saveMedicine } from "@/lib/storage";
 
 type Step = "capture" | "confirm" | "error";
 
@@ -215,19 +216,13 @@ export default function AddMedicinePage() {
 
   function handleConfirm() {
     if (!editedResult || !thumbnail) return;
-    const existing = JSON.parse(
-      localStorage.getItem("tpb-medicines") || "[]"
-    ) as Array<LabelResult & { id: string; photo: string }>;
     const newEntry = {
       ...editedResult,
       id: crypto.randomUUID(),
       photo: thumbnail,
     };
-    localStorage.setItem(
-      "tpb-medicines",
-      JSON.stringify([...existing, newEntry])
-    );
-    router.push("/");
+    saveMedicine(newEntry);
+    router.push("/today");
   }
 
   // Restore capture attribute so "Take photo" always opens camera

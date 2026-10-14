@@ -8,10 +8,12 @@ import {
   defaultLanguage,
   t,
 } from "@/lib/i18n";
+import { getMedicines } from "@/lib/storage";
 
 export default function HomePage() {
   const router = useRouter();
   const [lang, setLang] = useState<Language>(defaultLanguage);
+  const [hasMedicines, setHasMedicines] = useState(false);
 
   // Load persisted language choice on mount
   useEffect(() => {
@@ -20,6 +22,7 @@ export default function HomePage() {
       setLang(stored);
       document.documentElement.lang = stored;
     }
+    setHasMedicines(getMedicines().length > 0);
   }, []);
 
   function selectLanguage(code: Language) {
@@ -67,13 +70,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Get Started button */}
-      <button
-        className="mt-4 w-full max-w-sm rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-        onClick={() => router.push("/add")}
-      >
-        {t(lang, "getStarted")}
-      </button>
+      {/* Navigation buttons */}
+      <div className="flex w-full max-w-sm flex-col gap-4">
+        {hasMedicines && (
+          <button
+            className="w-full rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
+            onClick={() => router.push("/today")}
+            aria-label={t(lang, "todaysMedicines")}
+          >
+            {t(lang, "todaysMedicines")}
+          </button>
+        )}
+        <button
+          className="w-full rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
+          onClick={() => router.push("/add")}
+          aria-label={t(lang, "addMedicine")}
+        >
+          {t(lang, "addMedicine")}
+        </button>
+      </div>
     </main>
   );
 }

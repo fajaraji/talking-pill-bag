@@ -29,3 +29,33 @@ Do not touch .env.local. When done: run npm run typecheck and npm run build and 
 
 
 ## Result
+                                                                                                                                                                                                                                    Selesai. Semua typecheck dan build lolos, sudah di-commit.
+
+Ringkasan perubahan:
+
+**T4 Fixes**
+- **A) Speech voices**: `lib/use-voices.ts` hook baru yang mendengarkan event `voiceschanged` dan retry setelah 500ms. `app/today/page.tsx` sekarang pakai hook ini; pesan "Voice not available" hanya muncul setelah voices selesai loading dan tidak ada voice yang cocok dengan bahasa.
+- **B) Markdown di penjelasan**: Prompt LLM di `app/api/explain/route.ts` diperbarhi dengan aturan "Return PLAIN TEXT ONLY. Do NOT use markdown formatting." Fungsi `stripMarkdown()` juga ditambahkan di server untuk membersihkan `*`, `#`, `_`, dan backticks sebelum response dikembalikan/di-cache.
+
+**T5 ΓÇö Demo Clock & Adherence**
+- `lib/clock.ts`: `getToday()`, `getNow()`, `advanceDemoDays(n)`, `resetDemoClock()`, `isDemoMode()`. Offset hari disimpan di `localStorage` key `tpb-demo-offset-days`.
+- Panel "Demo mode" muncul di bawah `/today` jika URL `?demo=1` atau `localStorage["tpb-demo"] === "1"`. Tombol "+1 day" (reload halaman) dan "Reset". Tanggal simulasi ditampilkan jika offset Γëá 0.
+- `lib/storage.ts`: `Medicine` sekarang punya field `addedOn` (YYYY-MM-DD). Obat lama tanpa `addedOn` akan di-migrate saat pertama kali di-load.
+- `lib/adherence.ts`: fungsi murni (tanpa localStorage) untuk menghitung missed doses, memeriksa recent reason, dan menghasilkan adherence prompts.
+- `app/today/page.tsx`: kartu adherence muncul di atas jika ada obat dengan ΓëÑ2 missed doses dalam 7 hari terakhir dan belum ada reason. Tombol: Forgot, Side effects, Felt well, Ran out, Other. Setelah memilih reason, muncul acknowledgement netral + pesan khusus untuk Side effects.
+- `lib/i18n.ts`: semua string UI baru sudah diterjemahkan ke en, zh, ms, id.
+- `scripts/test-adherence.mjs`: test script tanpa dependency baru. Semua test pass.
+
+**Cara cek**
+1. Buka `/today?demo=1` ΓåÆ panel demo muncul di bawah.
+2. Klik "+1 day" beberapa kali tanpa menekan "Sudah" ΓåÆ kartu adherence muncul di atas dengan pertanyaan alasan.
+3. Pilih alasan ΓåÆ kartu berubah jadi acknowledgement.
+4. Buka obat yang dikenal, tekan "Listen" ΓåÆ speech synthesis berjalan, tidak ada pesan "Voice not available" jika browser punya voice untuk bahasa tersebut.
+
+## Stats
+
+- Duration: 11.3 min
+- Turns:                                                                                                                                                                                                                                     184
+- Is error:                                                                                                                                                                                                                                     False
+- Session id:                                                                                                                                                                                                                                     01a13bb5-36b0-74c4-8c9b-809a80187a30
+- Cost/usage: {"input_tokens":3393974,"output_tokens":17832,"cache_creation_input_tokens":126390,"cache_read_input_tokens":3267584,"cache_creation":null,"server_tool_use":null,"service_tier":null}  total_cost_usd=                                                                                                                                                                                                                                    0

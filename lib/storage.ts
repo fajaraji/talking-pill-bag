@@ -2,6 +2,7 @@ import type { LabelResult } from "@/app/api/read-label/route";
 
 const MEDICINES_KEY = "tpb-medicines";
 const DOSE_LOG_KEY = "tpb-dose-log";
+const EXPLANATIONS_KEY = "tpb-explanations";
 
 export interface Medicine extends LabelResult {
   id: string;
@@ -35,6 +36,16 @@ export function saveMedicine(medicine: Medicine): void {
   if (typeof window === "undefined") return;
   const existing = getMedicines();
   localStorage.setItem(MEDICINES_KEY, JSON.stringify([...existing, medicine]));
+}
+
+export function updateMedicine(medicine: Medicine): void {
+  if (typeof window === "undefined") return;
+  const existing = getMedicines();
+  const idx = existing.findIndex((m) => m.id === medicine.id);
+  if (idx === -1) return;
+  const updated = [...existing];
+  updated[idx] = medicine;
+  localStorage.setItem(MEDICINES_KEY, JSON.stringify(updated));
 }
 
 export function deleteMedicine(id: string): void {
@@ -97,4 +108,38 @@ export function removeDoseLogEntry(
       )
     )
   );
+}
+
+// ---------------------------------------------------------------------------
+// Explanation cache (pre-generated per drug + language)
+// ---------------------------------------------------------------------------
+
+export interface CachedExplanation {
+  text: string;
+  sourceUrl: string;
+  sourceTitle: string;
+  known: boolean;
+  fallback?: boolean;
+}
+
+export function getExplanationCache(): Record<string, CachedExplanation> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(EXPLANATIONS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, CachedExplanation>;
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setExplanationCache(
+  key: string,
+  value: CachedExplanation
+): void {
+  if (typeof window === "undefined") return;
+  const existing = getExplanationCache();
+  existing[key] = value;
+  localStorage.setItem(EXPLANATIONS_KEY, JSON.stringify(existing));
 }

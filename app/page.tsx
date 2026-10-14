@@ -8,7 +8,8 @@ import {
   defaultLanguage,
   t,
 } from "@/lib/i18n";
-import { getMedicines } from "@/lib/storage";
+import { getMedicines, setExplanationCache } from "@/lib/storage";
+import { getDrugId } from "@/lib/drug-info";
 
 export default function HomePage() {
   const router = useRouter();
@@ -29,6 +30,42 @@ export default function HomePage() {
     setLang(code);
     localStorage.setItem("tpb-lang", code);
     document.documentElement.lang = code;
+
+    // Prefetch explanations for all medicines in the new language
+    const medicines = getMedicines();
+    for (const med of medicines) {
+      const drugId = getDrugId(med.drug_name);
+      if (!drugId) continue;
+      const cacheKey = `${drugId}:${code}`;
+      fetch("/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drugName: med.drug_name, language: code }),
+      })
+        .then((res) => {
+          if (!res.ok) return null;
+          return res.json() as Promise<{
+            known: boolean;
+            text: string;
+            source_url?: string;
+            source_title?: string;
+            fallback?: boolean;
+          }>;
+        })
+        .then((data) => {
+          if (!data) return;
+          setExplanationCache(cacheKey, {
+            text: data.text,
+            sourceUrl: data.source_url ?? "",
+            sourceTitle: data.source_title ?? "",
+            known: data.known,
+            fallback: data.fallback,
+          });
+        })
+        .catch(() => {
+          // Silently ignore background prefetch errors
+        });
+    }
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   type Language,
   languages,
@@ -9,7 +9,8 @@ import {
   t,
 } from "@/lib/i18n";
 import type { LabelResult } from "@/app/api/read-label/route";
-import { saveMedicine } from "@/lib/storage";
+import { saveMedicine, getMedicines, updateMedicine, setExplanationCache } from "@/lib/storage";
+import { getDrugId } from "@/lib/drug-info";
 
 type Step = "capture" | "confirm" | "error";
 
@@ -105,8 +106,9 @@ async function createThumbnail(dataUrl: string): Promise<string> {
   });
 }
 
-export default function AddMedicinePage() {
+function AddMedicinePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [step, setStep] = useState<Step>("capture");
@@ -116,14 +118,43 @@ export default function AddMedicinePage() {
   const [result, setResult] = useState<LabelResult | null>(null);
   const [editedResult, setEditedResult] = useState<LabelResult | null>(null);
   const [isRejected, setIsRejected] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
-  // Load language
+  // Load language and edit mode
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
     if (stored && languages.some((l) => l.code === stored)) {
       setLang(stored);
     }
-  }, []);
+
+    const editId = searchParams.get("edit");
+    if (editId) {
+      const medicines = getMedicines();
+      const med = medicines.find((m) => m.id === editId);
+      if (med) {
+        setIsEditMode(true);
+        setImage(med.photo);
+        setThumbnail(med.photo);
+        const labelData: LabelResult = {
+          readable: true,
+          confidence: 1,
+          drug_name: med.drug_name,
+          strength: med.strength,
+          dose_per_time: med.dose_per_time,
+          times_per_day: med.times_per_day,
+          time_slots: med.time_slots,
+          food: med.food,
+          special_instructions: med.special_instructions,
+          quantity_dispensed: med.quantity_dispensed,
+          dispensed_date: med.dispensed_date,
+          unclear_fields: med.unclear_fields,
+        };
+        setResult(labelData);
+        setEditedResult(labelData);
+        setStep("confirm");
+      }
+    }
+  }, [searchParams]);
 
   // Handle file selection (camera or gallery)
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -214,15 +245,59 @@ export default function AddMedicinePage() {
     setEditedResult({ ...editedResult, [key]: value });
   }
 
+  async function prefetchExplanations(drugName: string, language: Language) {
+    const drugId = getDrugId(drugName);
+    if (!drugId) return;
+    const cacheKey = `${drugId}:${language}`;
+    try {
+      const res = await fetch("/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drugName, language }),
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        known: boolean;
+        text: string;
+        source_url?: string;
+        source_title?: string;
+        fallback?: boolean;
+      };
+      setExplanationCache(cacheKey, {
+        text: data.text,
+        sourceUrl: data.source_url ?? "",
+        sourceTitle: data.source_title ?? "",
+        known: data.known,
+        fallback: data.fallback,
+      });
+    } catch {
+      // Silently ignore prefetch failures
+    }
+  }
+
   function handleConfirm() {
     if (!editedResult || !thumbnail) return;
-    const newEntry = {
-      ...editedResult,
-      id: crypto.randomUUID(),
-      photo: thumbnail,
-    };
-    saveMedicine(newEntry);
-    router.push("/today");
+    if (isEditMode) {
+      const editId = searchParams.get("edit");
+      if (!editId) return;
+      const updatedEntry = {
+        ...editedResult,
+        id: editId,
+        photo: thumbnail,
+      };
+      updateMedicine(updatedEntry);
+      prefetchExplanations(updatedEntry.drug_name, lang);
+      router.push("/today");
+    } else {
+      const newEntry = {
+        ...editedResult,
+        id: crypto.randomUUID(),
+        photo: thumbnail,
+      };
+      saveMedicine(newEntry);
+      prefetchExplanations(newEntry.drug_name, lang);
+      router.push("/today");
+    }
   }
 
   // Restore capture attribute so "Take photo" always opens camera
@@ -455,10 +530,13 @@ export default function AddMedicinePage() {
                           const slots = new Set(editedResult.time_slots);
                           if (e.target.checked) slots.add(opt.value);
                           else slots.delete(opt.value);
-                          updateField(
-                            "time_slots",
-                            Array.from(slots) as LabelResult["time_slots"]
-                          );
+                          const newSlots = Array.from(slots) as LabelResult["time_slots"];
+                          const next = { ...editedResult, time_slots: newSlots };
+                          // Remove time_slots from unclear_fields once at least one slot is picked
+                          if (newSlots.length > 0 && next.unclear_fields.includes("time_slots")) {
+                            next.unclear_fields = next.unclear_fields.filter((f) => f !== "time_slots");
+                          }
+                          setEditedResult(next);
                         }}
                         className="h-5 w-5"
                       />
@@ -575,5 +653,20 @@ export default function AddMedicinePage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function AddMedicinePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+          <p className="text-lg text-slate-600">Loading…</p>
+        </main>
+      }
+    >
+      <AddMedicinePageInner />
+    </Suspense>
   );
 }

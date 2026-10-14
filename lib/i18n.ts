@@ -58,7 +58,14 @@ type StringKey =
   | "timeNotSet"
   | "editTime"
   | "todaysMedicines"
-  | "noMedicines";
+  | "noMedicines"
+  // Listen / explanation panel
+  | "listen"
+  | "stop"
+  | "close"
+  | "source"
+  | "voiceNotAvailable"
+  | "loading";
 
 type Dictionary = Record<StringKey, string>;
 
@@ -106,6 +113,12 @@ const en: Dictionary = {
   editTime: "Edit time",
   todaysMedicines: "Today's medicines",
   noMedicines: "No medicines yet",
+  listen: "Listen",
+  stop: "Stop",
+  close: "Close",
+  source: "Source",
+  voiceNotAvailable: "Voice not available on this device",
+  loading: "Loading…",
 };
 
 const zh: Dictionary = {
@@ -151,6 +164,12 @@ const zh: Dictionary = {
   editTime: "编辑时间",
   todaysMedicines: "今日药物",
   noMedicines: "暂无药物",
+  listen: "听",
+  stop: "停止",
+  close: "关闭",
+  source: "来源",
+  voiceNotAvailable: "此设备没有语音",
+  loading: "加载中…",
 };
 
 const ms: Dictionary = {
@@ -197,6 +216,12 @@ const ms: Dictionary = {
   editTime: "Sunting masa",
   todaysMedicines: "Ubat hari ini",
   noMedicines: "Tiada ubat lagi",
+  listen: "Dengar",
+  stop: "Henti",
+  close: "Tutup",
+  source: "Sumber",
+  voiceNotAvailable: "Suara tidak tersedia pada peranti ini",
+  loading: "Memuatkan…",
 };
 
 const id: Dictionary = {
@@ -243,6 +268,12 @@ const id: Dictionary = {
   editTime: "Atur waktu",
   todaysMedicines: "Obat hari ini",
   noMedicines: "Belum ada obat",
+  listen: "Dengarkan",
+  stop: "Berhenti",
+  close: "Tutup",
+  source: "Sumber",
+  voiceNotAvailable: "Suara tidak tersedia di perangkat ini",
+  loading: "Memuat…",
 };
 
 export const dictionaries: Record<Language, Dictionary> = { en, zh, ms, id };

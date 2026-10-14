@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   type Language,
@@ -8,9 +8,18 @@ import {
   defaultLanguage,
   t,
 } from "@/lib/i18n";
-import { getMedicines, getDoseLog, markDoseTaken, removeDoseLogEntry } from "@/lib/storage";
+import {
+  getMedicines,
+  getDoseLog,
+  markDoseTaken,
+  removeDoseLogEntry,
+  getExplanationCache,
+  setExplanationCache,
+  type CachedExplanation,
+} from "@/lib/storage";
 import { getToday } from "@/lib/clock";
 import type { Medicine } from "@/lib/storage";
+import { getDrugId } from "@/lib/drug-info";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 
@@ -124,6 +133,7 @@ function DoseCard({
   onTake,
   onUndo,
   undoAvailable,
+  onListen,
 }: {
   medicine: Medicine;
   slot: Slot;
@@ -133,6 +143,7 @@ function DoseCard({
   onTake: () => void;
   onUndo: () => void;
   undoAvailable: boolean;
+  onListen: () => void;
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border-2 border-slate-200 bg-white p-4">
@@ -186,6 +197,13 @@ function DoseCard({
           {t(lang, "done")}
         </button>
       )}
+      <button
+        onClick={onListen}
+        className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-lg font-semibold text-slate-700 hover:bg-slate-50"
+        aria-label={`${t(lang, "listen")} — ${medicine.drug_name}`}
+      >
+        {t(lang, "listen")}
+      </button>
     </div>
   );
 }
@@ -199,6 +217,15 @@ export default function TodayPage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [doseLog, setDoseLog] = useState<ReturnType<typeof getDoseLog>>([]);
   const [undoMap, setUndoMap] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelData, setPanelData] = useState<{
+    medicine: Medicine;
+    explanation: CachedExplanation | null;
+    fetching: boolean;
+  } | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const today = getToday();
 
   // Load language and medicines
@@ -210,6 +237,56 @@ export default function TodayPage() {
     }
     setMedicines(getMedicines());
     setDoseLog(getDoseLog());
+    setIsLoading(false);
+  }, []);
+
+  // Prefetch missing explanations for all medicines in the current language
+  useEffect(() => {
+    if (isLoading) return;
+    const cache = getExplanationCache();
+    for (const med of medicines) {
+      const drugId = getDrugId(med.drug_name);
+      if (!drugId) continue;
+      const key = `${drugId}:${lang}`;
+      if (cache[key]) continue;
+      fetch("/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drugName: med.drug_name, language: lang }),
+      })
+        .then((res) => {
+          if (!res.ok) return null;
+          return res.json() as Promise<{
+            known: boolean;
+            text: string;
+            source_url?: string;
+            source_title?: string;
+            fallback?: boolean;
+          }>;
+        })
+        .then((data) => {
+          if (!data) return;
+          setExplanationCache(key, {
+            text: data.text,
+            sourceUrl: data.source_url ?? "",
+            sourceTitle: data.source_title ?? "",
+            known: data.known,
+            fallback: data.fallback,
+          });
+        })
+        .catch(() => {
+          // Silently ignore background prefetch errors
+        });
+    }
+  }, [isLoading, medicines, lang]);
+
+  // Cleanup speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, []);
 
   const isTaken = useCallback(
@@ -263,7 +340,99 @@ export default function TodayPage() {
     return (undoMap[key] ?? 0) > Date.now();
   }
 
+  // ---------------------------------------------------------------------------
+  // Explanation panel + speech synthesis
+  // ---------------------------------------------------------------------------
+  async function openExplanationPanel(medicine: Medicine) {
+    setPanelOpen(true);
+    setPanelData({ medicine, explanation: null, fetching: true });
+
+    const drugId = getDrugId(medicine.drug_name);
+    let explanation: CachedExplanation | null = null;
+
+    if (drugId) {
+      const cacheKey = `${drugId}:${lang}`;
+      const cached = getExplanationCache()[cacheKey];
+      if (cached) {
+        explanation = cached;
+      } else {
+        try {
+          const res = await fetch("/api/explain", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ drugName: medicine.drug_name, language: lang }),
+          });
+          if (res.ok) {
+            const data = (await res.json()) as {
+              known: boolean;
+              text: string;
+              source_url?: string;
+              source_title?: string;
+              fallback?: boolean;
+            };
+            explanation = {
+              text: data.text,
+              sourceUrl: data.source_url ?? "",
+              sourceTitle: data.source_title ?? "",
+              known: data.known,
+              fallback: data.fallback,
+            };
+            setExplanationCache(cacheKey, explanation);
+          }
+        } catch {
+          // Ignore fetch errors — panel will show loading/fallback state
+        }
+      }
+    }
+
+    // If no explanation found (unknown drug or fetch failure), build pharmacist sentence
+    if (!explanation) {
+      explanation = {
+        text: t(lang, "pharmacistMessage"),
+        sourceUrl: "",
+        sourceTitle: "",
+        known: false,
+      };
+    }
+
+    setPanelData({ medicine, explanation, fetching: false });
+
+    // Auto-play speech
+    startSpeech(explanation.text);
+  }
+
+  function startSpeech(text: string) {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const langPrefix = lang === "zh" ? "zh" : lang === "ms" ? "ms" : lang === "id" ? "id" : "en";
+    const voice = voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix));
+    if (voice) utterance.voice = voice;
+    utterance.lang = lang === "zh" ? "zh-CN" : lang === "ms" ? "ms-MY" : lang === "id" ? "id-ID" : "en-SG";
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    speechUtteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function stopSpeech() {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+  }
+
+  function closePanel() {
+    stopSpeech();
+    setPanelOpen(false);
+    setPanelData(null);
+  }
+
+  // ---------------------------------------------------------------------------
   // Group medicines by slot
+  // ---------------------------------------------------------------------------
   const slotMedicines: Record<Slot, Medicine[]> = {
     morning: [],
     afternoon: [],
@@ -351,6 +520,7 @@ export default function TodayPage() {
                       onTake={() => handleTake(med.id, slot)}
                       onUndo={() => handleUndo(med.id, slot)}
                       undoAvailable={undoAvailable(med.id, slot)}
+                      onListen={() => openExplanationPanel(med)}
                     />
                   );
                 })}
@@ -395,18 +565,123 @@ export default function TodayPage() {
                   >
                     {t(lang, "editTime")}
                   </button>
+                  <button
+                    onClick={() => openExplanationPanel(med)}
+                    className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-lg font-semibold text-slate-700 hover:bg-slate-50"
+                    aria-label={`${t(lang, "listen")} — ${med.drug_name}`}
+                  >
+                    {t(lang, "listen")}
+                  </button>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {medicines.length === 0 && (
+        {!isLoading && medicines.length === 0 && (
           <p className="py-12 text-center text-lg text-slate-500">
             {t(lang, "noMedicines")}
           </p>
         )}
       </div>
+
+      {/* Explanation panel */}
+      {panelOpen && panelData && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
+          <div className="w-full max-w-sm rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">
+                {panelData.medicine.drug_name} {panelData.medicine.strength}
+              </h2>
+              <button
+                onClick={closePanel}
+                className="rounded-lg px-3 py-1 text-lg text-slate-600 hover:bg-slate-100"
+                aria-label={t(lang, "close")}
+              >
+                {t(lang, "close")}
+              </button>
+            </div>
+
+            {panelData.fetching ? (
+              <div className="flex flex-col items-center gap-3 py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+                <p className="text-lg text-slate-600">{t(lang, "loading")}</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="max-h-80 overflow-y-auto rounded-xl bg-slate-50 p-4">
+                  <p className="whitespace-pre-wrap text-xl leading-relaxed text-slate-900">
+                    {panelData.explanation?.text}
+                  </p>
+                  {panelData.explanation?.sourceUrl && (
+                    <a
+                      href={panelData.explanation.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-block text-base font-semibold text-blue-700 underline"
+                    >
+                      {t(lang, "source")}: {panelData.explanation.sourceTitle || "HealthHub"}
+                    </a>
+                  )}
+                  {!panelData.explanation?.sourceUrl && panelData.explanation?.known && (
+                    <p className="mt-3 text-base text-slate-600">
+                      {t(lang, "source")}: HealthHub
+                    </p>
+                  )}
+                  {panelData.explanation?.fallback && (
+                    <p className="mt-2 text-sm text-amber-700">
+                      {t(lang, "genericError")}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {isSpeaking ? (
+                    <button
+                      onClick={stopSpeech}
+                      className="w-full rounded-xl bg-red-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-red-700 active:bg-red-800"
+                    >
+                      {t(lang, "stop")}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (panelData.explanation) {
+                          startSpeech(panelData.explanation.text);
+                        }
+                      }}
+                      className="w-full rounded-xl bg-blue-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
+                    >
+                      {t(lang, "listen")}
+                    </button>
+                  )}
+                </div>
+
+                {/* Voice availability note */}
+                {typeof window !== "undefined" &&
+                  window.speechSynthesis &&
+                  panelData.explanation &&
+                  (() => {
+                    const voices = window.speechSynthesis.getVoices();
+                    const langPrefix =
+                      lang === "zh" ? "zh" : lang === "ms" ? "ms" : lang === "id" ? "id" : "en";
+                    const hasVoice = voices.some((v) =>
+                      v.lang.toLowerCase().startsWith(langPrefix)
+                    );
+                    if (!hasVoice) {
+                      return (
+                        <p className="text-center text-sm text-slate-500">
+                          {t(lang, "voiceNotAvailable")}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })()}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

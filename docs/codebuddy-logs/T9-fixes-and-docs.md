@@ -28,3 +28,31 @@ Do not touch .env.local. When done: run npm test, npm run typecheck and npm run 
 
 
 ## Result
+                                                                                                                              Semua tugas selesai. Ringkasan:
+
+**1) Bug fix** ΓÇö `lib/question-router.ts:69-71` sekarang memeriksa keyword missed-dose dari **semua 4 bahasa** (tidak hanya bahasa UI saat ini). Test case baru ditambahkan di `scripts/test-question-router.ts` untuk pertanyaan Indonesia dengan UI bahasa Inggris.
+
+**2) Test runner** ΓÇö `package.json` sekarang menjalankan `node scripts/test-adherence.ts && node scripts/test-question-router.ts`. Semua 41 test pass.
+
+**3) Dokumentasi bahasa Inggris**:
+- `SPEC.md` dan `TASKS.md` diterjemahkan ke bahasa Inggris; versi Indonesia disimpan di `docs/id/SPEC.id.md` dan `docs/id/TASKS.id.md`.
+- `TASKS.md` menandai T1ΓÇôT8 sebagai selesai.
+- `README.md` ditambah bagian Features, Demo mode, Architecture (flowchart Mermaid dengan trust boundaries), Key design trade-offs, Safety boundaries, Testing, dan Configuration.
+- `docs/DEV-LOG.md` dibuat dengan tabel task, bug review, dan sesi perbaikan.
+
+**Validasi**:
+- `npm test` ΓÇö pass
+- `npm run typecheck` ΓÇö pass
+- `npm run build` ΓÇö pass
+
+**Commit**:
+- `6e50f21` ΓÇö fix: check missed-dose keywords in all languages regardless of UI language
+- `d553688` ΓÇö docs: translate SPEC and TASKS to English, update README, add DEV-LOG
+
+## Stats
+
+- Duration: 5.7 min
+- Turns:                                                                                                                               111
+- Is error:                                                                                                                               False
+- Session id:                                                                                                                               01a13be4-ea35-7a1a-b66c-4de3962a702d
+- Cost/usage: {"input_tokens":1099963,"output_tokens":9649,"cache_creation_input_tokens":59579,"cache_read_input_tokens":1040384,"cache_creation":null,"server_tool_use":null,"service_tier":null}  total_cost_usd=                                                                                                                              0

@@ -83,7 +83,7 @@ flowchart TB
 
 - The **phone browser** (UI, `localStorage`, Web Speech) runs entirely on the user's device. No data leaves the browser except via the explicit API calls.
 - The **Next.js server routes** (`/api/read-label`, `/api/read-bp`, `/api/explain`) are the only components that hold the LLM API key. The key stays on the server and never reaches the client.
-- The **external LLM provider** receives only photos (vision model) or pre-validated text snippets (text model). It never receives patient identifiers.
+- The **external LLM provider** receives only photos (vision model) or HealthHub text snippets (text model). A label photo can show the patient's name; the app does not extract or store it, but the photo itself is sent to the provider. A production version would crop or blur the name area on the device before upload.
 - **`data/drug-info.json`** is a static file of HealthHub medication summaries. It is read by the server and returned to the client as part of explanations.
 - **Questions are answered by a deterministic router** (`lib/question-router.ts`) with **no LLM call**. Every question is redirected to a doctor or pharmacist.
 

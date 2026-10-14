@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   type Language,
@@ -12,16 +12,109 @@ import type { LabelResult } from "@/app/api/read-label/route";
 
 type Step = "capture" | "confirm" | "error";
 
+const TIME_SLOT_OPTIONS: Array<{ value: LabelResult["time_slots"][number]; label: string }> = [
+  { value: "morning", label: "Morning" },
+  { value: "afternoon", label: "Afternoon" },
+  { value: "evening", label: "Evening" },
+  { value: "bedtime", label: "Bedtime" },
+];
+
+const FOOD_OPTIONS: Array<{ value: LabelResult["food"]; label: string }> = [
+  { value: "after_food", label: "After food" },
+  { value: "before_food", label: "Before food" },
+  { value: "with_food", label: "With food" },
+  { value: "any", label: "Any (with or without food)" },
+];
+
+// ---------------------------------------------------------------------------
+// Browser-side image resize: max 1280px longest side, JPEG quality 0.8
+// Returns { full: dataUrl, mime: string }
+// ---------------------------------------------------------------------------
+async function resizeImage(
+  file: File,
+  maxDimension: number,
+  quality: number
+): Promise<{ dataUrl: string; mime: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas context not available"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      resolve({ dataUrl, mime: "image/jpeg" });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+    img.src = url;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Create a thumbnail (max 320px) for localStorage
+// ---------------------------------------------------------------------------
+async function createThumbnail(dataUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      const maxDim = 320;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas context not available"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.7));
+    };
+    img.onerror = () => reject(new Error("Failed to load image for thumbnail"));
+    img.src = dataUrl;
+  });
+}
+
 export default function AddMedicinePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [step, setStep] = useState<Step>("capture");
   const [image, setImage] = useState<string | null>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LabelResult | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string>("");
   const [editedResult, setEditedResult] = useState<LabelResult | null>(null);
+  const [isRejected, setIsRejected] = useState(false);
 
   // Load language
   useEffect(() => {
@@ -32,22 +125,33 @@ export default function AddMedicinePage() {
   }, []);
 
   // Handle file selection (camera or gallery)
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setImage(dataUrl);
-      sendToApi(dataUrl);
-    };
-    reader.readAsDataURL(file);
+
+    // Reset input so the same file can be selected again
+    e.target.value = "";
+
+    try {
+      // Resize to max 1280px, JPEG quality 0.8
+      const resized = await resizeImage(file, 1280, 0.8);
+      setImage(resized.dataUrl);
+
+      // Create thumbnail for localStorage
+      const thumb = await createThumbnail(resized.dataUrl);
+      setThumbnail(thumb);
+
+      sendToApi(resized.dataUrl);
+    } catch {
+      setIsRejected(false);
+      setStep("error");
+    }
   }
 
   async function sendToApi(dataUrl: string) {
     setLoading(true);
     setStep("capture");
-    setErrorMsg("");
+    setIsRejected(false);
     try {
       const res = await fetch("/api/read-label", {
         method: "POST",
@@ -61,7 +165,13 @@ export default function AddMedicinePage() {
       };
 
       if (!res.ok) {
-        setErrorMsg(data.error || t(lang, "pharmacistMessage"));
+        // 422 with rejected=true -> pharmacist message
+        // anything else -> generic error
+        if (res.status === 422 && data.rejected) {
+          setIsRejected(true);
+        } else {
+          setIsRejected(false);
+        }
         setStep("error");
         setLoading(false);
         return;
@@ -72,11 +182,11 @@ export default function AddMedicinePage() {
         setEditedResult(data.result);
         setStep("confirm");
       } else {
-        setErrorMsg(t(lang, "pharmacistMessage"));
+        setIsRejected(true);
         setStep("error");
       }
     } catch {
-      setErrorMsg(t(lang, "pharmacistMessage"));
+      setIsRejected(false);
       setStep("error");
     } finally {
       setLoading(false);
@@ -85,6 +195,14 @@ export default function AddMedicinePage() {
 
   function isUnclear(field: string): boolean {
     return editedResult?.unclear_fields.includes(field) ?? false;
+  }
+
+  function toggleUnclear(field: string, unclear: boolean) {
+    if (!editedResult) return;
+    const set = new Set(editedResult.unclear_fields);
+    if (unclear) set.add(field);
+    else set.delete(field);
+    setEditedResult({ ...editedResult, unclear_fields: Array.from(set) });
   }
 
   function updateField<K extends keyof LabelResult>(
@@ -96,14 +214,14 @@ export default function AddMedicinePage() {
   }
 
   function handleConfirm() {
-    if (!editedResult) return;
+    if (!editedResult || !thumbnail) return;
     const existing = JSON.parse(
       localStorage.getItem("tpb-medicines") || "[]"
     ) as Array<LabelResult & { id: string; photo: string }>;
     const newEntry = {
       ...editedResult,
       id: crypto.randomUUID(),
-      photo: image || "",
+      photo: thumbnail,
     };
     localStorage.setItem(
       "tpb-medicines",
@@ -112,11 +230,30 @@ export default function AddMedicinePage() {
     router.push("/");
   }
 
+  // Restore capture attribute so "Take photo" always opens camera
+  const restoreCapture = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute("capture", "environment");
+    }
+  }, []);
+
+  function openGallery() {
+    if (fileInputRef.current) {
+      fileInputRef.current.removeAttribute("capture");
+      fileInputRef.current.click();
+    }
+  }
+
+  function openCamera() {
+    restoreCapture();
+    fileInputRef.current?.click();
+  }
+
   // -------------------------------------------------------------------------
   // Render helpers
   // -------------------------------------------------------------------------
 
-  function renderField<K extends keyof LabelResult>(
+  function renderTextField<K extends keyof LabelResult>(
     label: string,
     key: K,
     value: string | number,
@@ -159,7 +296,7 @@ export default function AddMedicinePage() {
   }
 
   // -------------------------------------------------------------------------
-  // Capture step
+  // Capture / Error step
   // -------------------------------------------------------------------------
   if (step === "capture" || step === "error") {
     return (
@@ -199,12 +336,17 @@ export default function AddMedicinePage() {
         {/* Error */}
         {step === "error" && !loading && (
           <div className="w-full max-w-sm rounded-xl border-2 border-red-200 bg-red-50 p-6 text-center">
-            <p className="text-lg font-semibold text-red-700">{errorMsg}</p>
+            <p className="text-lg font-semibold text-red-700">
+              {isRejected
+                ? t(lang, "pharmacistMessage")
+                : t(lang, "genericError")}
+            </p>
             <button
               onClick={() => {
                 setStep("capture");
                 setImage(null);
-                setErrorMsg("");
+                setThumbnail(null);
+                setIsRejected(false);
               }}
               className="mt-4 rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white hover:bg-blue-700"
             >
@@ -225,21 +367,16 @@ export default function AddMedicinePage() {
               className="hidden"
             />
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={openCamera}
               className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
             >
-              📷 {t(lang, "takePhoto")}
+              {t(lang, "takePhoto")}
             </button>
             <button
-              onClick={() => {
-                if (fileInputRef.current) {
-                  fileInputRef.current.removeAttribute("capture");
-                  fileInputRef.current.click();
-                }
-              }}
+              onClick={openGallery}
               className="flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
             >
-              🖼️ {t(lang, "uploadPhoto")}
+              {t(lang, "uploadPhoto")}
             </button>
           </div>
         )}
@@ -266,56 +403,159 @@ export default function AddMedicinePage() {
       </header>
 
       <div className="flex w-full max-w-sm flex-col gap-6">
-        {/* Photo + extracted data side by side on larger screens, stacked on mobile */}
-        <div className="flex flex-col gap-6">
-          {/* Photo */}
-          {image && (
-            <div className="overflow-hidden rounded-xl border-2 border-slate-200">
-              <img
-                src={image}
-                alt="Medication label"
-                className="w-full object-contain"
+        {/* Photo */}
+        {image && (
+          <div className="overflow-hidden rounded-xl border-2 border-slate-200">
+            <img
+              src={image}
+              alt="Medication label"
+              className="w-full object-contain"
+            />
+          </div>
+        )}
+
+        {/* Extracted fields */}
+        {editedResult && (
+          <div className="flex flex-col gap-4">
+            {renderTextField(t(lang, "drugName"), "drug_name", editedResult.drug_name)}
+            {renderTextField(t(lang, "strength"), "strength", editedResult.strength)}
+            {renderTextField(t(lang, "dose"), "dose_per_time", editedResult.dose_per_time)}
+            {renderTextField(
+              t(lang, "timesPerDay"),
+              "times_per_day",
+              editedResult.times_per_day,
+              "number"
+            )}
+
+            {/* Time slots: four checkboxes */}
+            <div className="flex flex-col gap-2">
+              <label
+                className={`text-base font-semibold ${
+                  isUnclear("time_slots") ? "text-red-600" : "text-slate-700"
+                }`}
+              >
+                {t(lang, "timeSlots")}
+                {isUnclear("time_slots") && (
+                  <span className="ml-2 text-sm font-normal text-red-500">
+                    ({t(lang, "unclearFields")})
+                  </span>
+                )}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {TIME_SLOT_OPTIONS.map((opt) => {
+                  const checked = editedResult.time_slots.includes(opt.value);
+                  return (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-2 rounded-lg border-2 px-3 py-3 text-lg ${
+                        checked
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          const slots = new Set(editedResult.time_slots);
+                          if (e.target.checked) slots.add(opt.value);
+                          else slots.delete(opt.value);
+                          updateField(
+                            "time_slots",
+                            Array.from(slots) as LabelResult["time_slots"]
+                          );
+                        }}
+                        className="h-5 w-5"
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Food: select dropdown */}
+            <div className="flex flex-col gap-1">
+              <label
+                className={`text-base font-semibold ${
+                  isUnclear("food") ? "text-red-600" : "text-slate-700"
+                }`}
+              >
+                {t(lang, "food")}
+                {isUnclear("food") && (
+                  <span className="ml-2 text-sm font-normal text-red-500">
+                    ({t(lang, "unclearFields")})
+                  </span>
+                )}
+              </label>
+              <select
+                value={editedResult.food}
+                onChange={(e) =>
+                  updateField("food", e.target.value as LabelResult["food"])
+                }
+                className={`rounded-lg border-2 px-4 py-3 text-lg ${
+                  isUnclear("food")
+                    ? "border-red-400 bg-red-50 text-red-900"
+                    : "border-slate-200 bg-white text-slate-900"
+                }`}
+              >
+                {FOOD_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Special instructions: textarea, one per line -> array */}
+            <div className="flex flex-col gap-1">
+              <label
+                className={`text-base font-semibold ${
+                  isUnclear("special_instructions")
+                    ? "text-red-600"
+                    : "text-slate-700"
+                }`}
+              >
+                {t(lang, "specialInstructions")}
+                {isUnclear("special_instructions") && (
+                  <span className="ml-2 text-sm font-normal text-red-500">
+                    ({t(lang, "unclearFields")})
+                  </span>
+                )}
+              </label>
+              <textarea
+                value={editedResult.special_instructions.join("\n")}
+                onChange={(e) =>
+                  updateField(
+                    "special_instructions",
+                    e.target.value
+                      .split("\n")
+                      .map((s) => s.trim())
+                      .filter((s) => s.length > 0)
+                  )
+                }
+                rows={3}
+                className={`rounded-lg border-2 px-4 py-3 text-lg ${
+                  isUnclear("special_instructions")
+                    ? "border-red-400 bg-red-50 text-red-900"
+                    : "border-slate-200 bg-white text-slate-900"
+                }`}
               />
             </div>
-          )}
 
-          {/* Extracted fields */}
-          {editedResult && (
-            <div className="flex flex-col gap-4">
-              {renderField(t(lang, "drugName"), "drug_name", editedResult.drug_name)}
-              {renderField(t(lang, "strength"), "strength", editedResult.strength)}
-              {renderField(t(lang, "dose"), "dose_per_time", editedResult.dose_per_time)}
-              {renderField(
-                t(lang, "timesPerDay"),
-                "times_per_day",
-                editedResult.times_per_day,
-                "number"
-              )}
-              {renderField(
-                t(lang, "timeSlots"),
-                "time_slots",
-                editedResult.time_slots.join(", ")
-              )}
-              {renderField(t(lang, "food"), "food", editedResult.food)}
-              {renderField(
-                t(lang, "specialInstructions"),
-                "special_instructions",
-                editedResult.special_instructions.join("; ")
-              )}
-              {renderField(
-                t(lang, "quantityDispensed"),
-                "quantity_dispensed",
-                editedResult.quantity_dispensed,
-                "number"
-              )}
-              {renderField(
-                t(lang, "dispensedDate"),
-                "dispensed_date",
-                editedResult.dispensed_date
-              )}
-            </div>
-          )}
-        </div>
+            {renderTextField(
+              t(lang, "quantityDispensed"),
+              "quantity_dispensed",
+              editedResult.quantity_dispensed,
+              "number"
+            )}
+            {renderTextField(
+              t(lang, "dispensedDate"),
+              "dispensed_date",
+              editedResult.dispensed_date
+            )}
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3 pt-4">
@@ -323,12 +563,13 @@ export default function AddMedicinePage() {
             onClick={handleConfirm}
             className="rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
           >
-            ✓ {t(lang, "confirm")}
+            {t(lang, "confirm")}
           </button>
           <button
             onClick={() => {
               setStep("capture");
               setImage(null);
+              setThumbnail(null);
               setResult(null);
               setEditedResult(null);
             }}

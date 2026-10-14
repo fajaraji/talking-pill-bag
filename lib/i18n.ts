@@ -38,6 +38,7 @@ type StringKey =
   | "dispensedDate"
   | "unclearFields"
   | "pharmacistMessage"
+  | "genericError"
   | "back"
   | "retry";
 
@@ -67,6 +68,7 @@ const en: Dictionary = {
   unclearFields: "Unclear fields",
   pharmacistMessage:
     "I'm not able to identify that medication, please check with your pharmacist.",
+  genericError: "Something went wrong, please try again.",
   back: "Back",
   retry: "Retry",
 };
@@ -94,6 +96,7 @@ const zh: Dictionary = {
   dispensedDate: "配发日期",
   unclearFields: "不清楚的项目",
   pharmacistMessage: "无法识别该药物，请咨询药剂师。",
+  genericError: "出了点问题，请重试。",
   back: "返回",
   retry: "重试",
 };
@@ -122,6 +125,7 @@ const ms: Dictionary = {
   unclearFields: "Medan tidak jelas",
   pharmacistMessage:
     "Saya tidak dapat mengenal pasti ubat tersebut, sila semak dengan ahli farmasi anda.",
+  genericError: "Sesuatu yang tidak kena, sila cuba semula.",
   back: "Kembali",
   retry: "Cuba semula",
 };
@@ -150,6 +154,7 @@ const id: Dictionary = {
   unclearFields: "Bagian tidak jelas",
   pharmacistMessage:
     "Saya tidak bisa mengenali obat ini, silakan periksa ke apoteker.",
+  genericError: "Terjadi kesalahan, silakan coba lagi.",
   back: "Kembali",
   retry: "Coba lagi",
 };

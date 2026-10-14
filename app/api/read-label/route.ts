@@ -39,8 +39,29 @@ function isRejected(result: LabelResult): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Server-side post-checks:
+// - If times_per_day > 0 but time_slots is empty or length mismatch,
+//   add "time_slots" to unclear_fields.
+// ---------------------------------------------------------------------------
+function applyPostChecks(result: LabelResult): LabelResult {
+  const unclear = new Set(result.unclear_fields);
+  if (
+    result.times_per_day > 0 &&
+    (result.time_slots.length === 0 ||
+      result.time_slots.length !== result.times_per_day)
+  ) {
+    unclear.add("time_slots");
+  }
+  return {
+    ...result,
+    unclear_fields: Array.from(unclear),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Prompt sent to the vision model.
 // Forces food enum and time_slots enum per SPEC.
+// Includes Singapore DD/MM/YYYY date format guidance.
 // ---------------------------------------------------------------------------
 function buildSystemPrompt(): string {
   return `You are a medication label reader. Analyze the image of a medication label and return ONLY a JSON object with this exact shape:
@@ -67,7 +88,12 @@ RULES:
 4. time_slots must ONLY use the four values: "morning", "afternoon", "evening", "bedtime".
 5. food must ONLY be one of: "after_food", "before_food", "with_food", "any".
 6. Put any field you are uncertain about into unclear_fields (use the exact JSON key name, e.g. "strength").
-7. Do NOT add any keys outside the schema. Do NOT include markdown formatting.`;
+7. Do NOT add any keys outside the schema. Do NOT include markdown formatting.
+
+DATE FORMAT:
+- Singapore labels use DD/MM/YYYY (e.g. "01/10/2026" means 2026-10-01).
+- Convert to YYYY-MM-DD in the output.
+- If the date is not clearly visible, leave dispensed_date empty and add "dispensed_date" to unclear_fields.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,8 +122,10 @@ export async function POST(request: NextRequest) {
     const visionModel = process.env.LLM_VISION_MODEL;
 
     if (!baseUrl || !apiKey || !visionModel) {
+      // Log server-side only, never leak to client
+      console.error("[read-label] Server misconfiguration: LLM env vars missing");
       return NextResponse.json(
-        { error: "Server misconfiguration: LLM env vars missing." },
+        { error: "Server error." },
         { status: 500 }
       );
     }
@@ -134,8 +162,9 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const text = await response.text();
+      console.error(`[read-label] LLM request failed: ${response.status} ${text}`);
       return NextResponse.json(
-        { error: `LLM request failed: ${response.status} ${text}` },
+        { error: "Something went wrong, please try again." },
         { status: 502 }
       );
     }
@@ -149,36 +178,44 @@ export async function POST(request: NextRequest) {
     const rawContent = completion.choices?.[0]?.message?.content;
 
     if (!rawContent) {
+      console.error("[read-label] LLM returned empty content");
       return NextResponse.json(
-        { error: "LLM returned empty content." },
+        { error: "Something went wrong, please try again." },
         { status: 502 }
       );
     }
 
-    // Parse and validate with zod
+    // Parse JSON
     let parsed: unknown;
     try {
       parsed = JSON.parse(rawContent);
     } catch {
+      console.error("[read-label] LLM output is not valid JSON");
       return NextResponse.json(
-        { error: "LLM output is not valid JSON." },
-        { status: 502 }
+        { error: "Something went wrong, please try again.", rejected: true },
+        { status: 422 }
       );
     }
 
+    // Validate with zod
     const validation = labelResultSchema.safeParse(parsed);
 
     if (!validation.success) {
+      console.error(
+        "[read-label] Zod validation failed:",
+        validation.error.format()
+      );
       return NextResponse.json(
         {
-          error: "LLM output failed schema validation.",
-          details: validation.error.format(),
+          error:
+            "I'm not able to identify that medication, please check with your pharmacist.",
+          rejected: true,
         },
-        { status: 502 }
+        { status: 422 }
       );
     }
 
-    const result = validation.data;
+    let result = applyPostChecks(validation.data);
 
     if (isRejected(result)) {
       return NextResponse.json(
@@ -195,6 +232,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[read-label] Unhandled error:", message);
+    return NextResponse.json(
+      { error: "Something went wrong, please try again." },
+      { status: 500 }
+    );
   }
 }

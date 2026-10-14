@@ -1,4 +1,4 @@
-import drugInfoData from "@/data/drug-info.json";
+import drugInfoData from "../data/drug-info.json" with { type: "json" };
 
 export interface DrugInfoEntry {
   id: string;

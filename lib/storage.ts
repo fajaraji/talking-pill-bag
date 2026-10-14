@@ -271,8 +271,12 @@ export function clearBPTarget(): void {
 // ---------------------------------------------------------------------------
 
 export interface RedirectedQuestion {
+  medicineId: string;
+  drugName: string;
   question: string;
-  date: string; // YYYY-MM-DD
+  askedOn: string; // YYYY-MM-DD
+  // Legacy fields kept for backward compatibility
+  date?: string;
 }
 
 export function getRedirectedQuestions(): RedirectedQuestion[] {
@@ -281,7 +285,14 @@ export function getRedirectedQuestions(): RedirectedQuestion[] {
     const raw = localStorage.getItem(QUESTIONS_REDIRECTED_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as RedirectedQuestion[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Migrate legacy entries (question + date) to new format
+    return parsed.map((q) => ({
+      medicineId: q.medicineId ?? "unknown",
+      drugName: q.drugName ?? q.question.split(" ")[0] ?? "Unknown",
+      question: q.question,
+      askedOn: q.askedOn ?? q.date ?? getToday(),
+    }));
   } catch {
     return [];
   }

@@ -24,6 +24,8 @@ import { useVoices } from "@/lib/use-voices";
 import { getAdherencePrompts } from "@/lib/adherence";
 import { getMissedReasons, saveMissedReason, type MissedReasonEntry } from "@/lib/storage";
 import { getDaysLeft } from "@/lib/supply";
+import { routeQuestion } from "@/lib/question-router";
+import { saveRedirectedQuestion } from "@/lib/storage";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 
@@ -235,6 +237,13 @@ export default function TodayPage() {
   const [realToday, setRealToday] = useState("");
   const [demoActive, setDemoActive] = useState(false);
   const [justReasoned, setJustReasoned] = useState<Record<string, boolean>>({});
+  const [questionInput, setQuestionInput] = useState("");
+  const [questionResult, setQuestionResult] = useState<{
+    reply: string;
+    ifMissedQuote?: string;
+    sourceUrl?: string;
+    sourceTitle?: string;
+  } | null>(null);
 
   // Load language, medicines, demo state, and today (client-only to avoid hydration mismatch)
   useEffect(() => {
@@ -442,6 +451,28 @@ export default function TodayPage() {
     stopSpeech();
     setPanelOpen(false);
     setPanelData(null);
+    setQuestionInput("");
+    setQuestionResult(null);
+  }
+
+  function handleSendQuestion() {
+    if (!panelData || !questionInput.trim() || !today) return;
+    const result = routeQuestion({
+      question: questionInput.trim(),
+      medicineId: panelData.medicine.id,
+      drugName: panelData.medicine.drug_name,
+      language: lang,
+      today,
+      cachedExplanation: panelData.explanation,
+    });
+    saveRedirectedQuestion(result.saveToQuestions);
+    setQuestionResult({
+      reply: result.reply,
+      ifMissedQuote: result.ifMissedQuote,
+      sourceUrl: result.sourceUrl,
+      sourceTitle: result.sourceTitle,
+    });
+    setQuestionInput("");
   }
 
   // ---------------------------------------------------------------------------
@@ -526,24 +557,6 @@ export default function TodayPage() {
             {formatDate(lang, today)}
           </p>
         )}
-        <button
-          onClick={() => router.push("/bp")}
-          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          {t(lang, "bpLink")} →
-        </button>
-        <button
-          onClick={() => router.push("/questions")}
-          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          {t(lang, "questionsTitle")} →
-        </button>
-        <button
-          onClick={() => router.push("/summary")}
-          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          {t(lang, "weeklySummary")} →
-        </button>
         {totalDoses > 0 && (
           <p className="text-center text-base font-medium text-slate-600">
             {takenDoses} / {totalDoses} {t(lang, "dosesTaken")}
@@ -723,6 +736,28 @@ export default function TodayPage() {
         )}
       </div>
 
+      {/* Navigation links (compact group at bottom) */}
+      <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+        <button
+          onClick={() => router.push("/bp")}
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          {t(lang, "bpLink")} →
+        </button>
+        <button
+          onClick={() => router.push("/questions")}
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          {t(lang, "questionsTitle")} →
+        </button>
+        <button
+          onClick={() => router.push("/summary")}
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          {t(lang, "weeklySummary")} →
+        </button>
+      </div>
+
       {/* Demo controls */}
       {demoActive && (
         <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 p-4">
@@ -849,6 +884,59 @@ export default function TodayPage() {
                     }
                     return null;
                   })()}
+
+                {/* Ask a question */}
+                <div className="mt-2 flex flex-col gap-3 rounded-xl border-2 border-slate-200 bg-slate-50 p-4">
+                  <label className="text-base font-semibold text-slate-700">
+                    {t(lang, "askQuestion")}
+                  </label>
+                  <input
+                    type="text"
+                    value={questionInput}
+                    onChange={(e) => setQuestionInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSendQuestion();
+                    }}
+                    placeholder={t(lang, "askQuestionPlaceholder")}
+                    className="w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-lg text-slate-900"
+                  />
+                  <button
+                    onClick={handleSendQuestion}
+                    disabled={!questionInput.trim()}
+                    className="w-full rounded-xl bg-green-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-green-700 active:bg-green-800 disabled:bg-slate-300"
+                    style={{ minHeight: 56 }}
+                  >
+                    {t(lang, "send")}
+                  </button>
+
+                  {questionResult && (
+                    <div className="flex flex-col gap-3 rounded-xl bg-white p-4">
+                      <p className="text-lg font-semibold text-blue-900">
+                        {questionResult.reply}
+                      </p>
+                      {questionResult.ifMissedQuote && (
+                        <div className="flex flex-col gap-2 rounded-xl bg-slate-50 p-3">
+                          <p className="text-base font-semibold text-slate-700">
+                            {t(lang, "whatHealthHubSaysAboutMissedDose")}
+                          </p>
+                          <p className="text-base leading-relaxed text-slate-900">
+                            {questionResult.ifMissedQuote}
+                          </p>
+                          {questionResult.sourceUrl && (
+                            <a
+                              href={questionResult.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block text-base font-semibold text-blue-700 underline"
+                            >
+                              {t(lang, "source")}: {questionResult.sourceTitle || "HealthHub"}
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

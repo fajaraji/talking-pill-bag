@@ -110,6 +110,12 @@ type StringKey =
   | "bpCouldNotRead"
   // Refill
   | "refillReminder"
+  // Ask a question
+  | "askQuestion"
+  | "askQuestionPlaceholder"
+  | "send"
+  | "questionRedirected"
+  | "whatHealthHubSaysAboutMissedDose"
   // Questions page
   | "questionsTitle"
   | "questionsForDoctor"
@@ -201,6 +207,12 @@ const en: Dictionary = {
     "Thank you. We'll add this to your questions for the doctor or pharmacist.",
   sideEffectsAck: "Please tell your doctor or pharmacist about this.",
   addToQuestions: "We'll add this to your questions for the doctor or pharmacist.",
+  askQuestion: "Ask a question about this medicine",
+  askQuestionPlaceholder: "Type your question here",
+  send: "Send",
+  questionRedirected:
+    "This question needs your doctor or pharmacist. We've added it to your questions list.",
+  whatHealthHubSaysAboutMissedDose: "What HealthHub says about a missed dose:",
   bpTitle: "Blood Pressure",
   bpLink: "Blood Pressure",
   addBPReading: "Add Reading",
@@ -315,6 +327,11 @@ const zh: Dictionary = {
   acknowledgement: "谢谢。我们会将此添加到您给医生或药剂师的问题中。",
   sideEffectsAck: "请把这件事告诉您的医生或药剂师。",
   addToQuestions: "我们会将此添加到您给医生或药剂师的问题中。",
+  askQuestion: "询问有关此药物的问题",
+  askQuestionPlaceholder: "在此输入您的问题",
+  send: "发送",
+  questionRedirected: "这个问题需要医生或药剂师来回答。我们已将其添加到您的问题列表中。",
+  whatHealthHubSaysAboutMissedDose: "HealthHub 关于漏服剂量的说明：",
   bpTitle: "血压",
   bpLink: "血压",
   addBPReading: "添加记录",
@@ -432,6 +449,12 @@ const ms: Dictionary = {
   sideEffectsAck: "Sila beritahu doktor atau ahli farmasi anda tentang perkara ini.",
   addToQuestions:
     "Kami akan menambah ini ke soalan anda untuk doktor atau ahli farmasi.",
+  askQuestion: "Tanya soalan tentang ubat ini",
+  askQuestionPlaceholder: "Taip soalan anda di sini",
+  send: "Hantar",
+  questionRedirected:
+    "Soalan ini perlu dijawab oleh doktor atau ahli farmasi anda. Kami telah menambahnya ke senarai soalan anda.",
+  whatHealthHubSaysAboutMissedDose: "Apa yang HealthHub katakan tentang terlepas dos:",
   bpTitle: "Tekanan Darah",
   bpLink: "Tekanan Darah",
   addBPReading: "Tambah Bacaan",
@@ -550,6 +573,12 @@ const id: Dictionary = {
   sideEffectsAck: "Silakan ceritakan hal ini kepada dokter atau apoteker Anda.",
   addToQuestions:
     "Kami akan menambahkan ini ke pertanyaan Anda untuk dokter atau apoteker.",
+  askQuestion: "Tanyakan pertanyaan tentang obat ini",
+  askQuestionPlaceholder: "Ketik pertanyaan Anda di sini",
+  send: "Kirim",
+  questionRedirected:
+    "Pertanyaan ini perlu dijawab oleh dokter atau apoteker Anda. Kami telah menambahkannya ke daftar pertanyaan Anda.",
+  whatHealthHubSaysAboutMissedDose: "Apa yang HealthHub katakan tentang dosis yang terlewat:",
   bpTitle: "Tekanan Darah",
   bpLink: "Tekanan Darah",
   addBPReading: "Tambah Catatan",

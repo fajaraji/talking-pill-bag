@@ -158,7 +158,7 @@ export default function QuestionsPage() {
     const redirected = getRedirectedQuestions();
     for (const q of redirected) {
       items.push({
-        id: `redirected-${q.date}-${q.question}`,
+        id: `redirected-${q.askedOn}-${q.question}`,
         text: t(lang, "redirectedQuestion").replace("{question}", q.question),
         auto: true,
       });

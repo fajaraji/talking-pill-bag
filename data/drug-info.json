@@ -1,0 +1,108 @@
+[
+  {
+    "id": "amlodipine",
+    "names": ["Amlodipine"],
+    "used_for": "Amlodipine lowers blood pressure. It works by relaxing and widening the blood vessels.",
+    "how_to_take": "You can take it with or without food. Do not stop taking it without checking with your healthcare professional.",
+    "if_missed": "Take it as soon as you remember, then take the next dose at the usual time. Do not take two doses to make up for the missed dose.",
+    "common_side_effects": [
+      "Leg swelling",
+      "Headache",
+      "Face looks red and feels warm",
+      "Dizziness or lightheadedness when getting up from sitting or lying down"
+    ],
+    "seek_help_if": [
+      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See your healthcare professional immediately.",
+      "Signs of liver problems: dark urine, light-coloured stools, nausea, vomiting, loss of appetite, stomach pain, or yellow eyes or skin. See a doctor immediately."
+    ],
+    "source_url": "https://www.healthhub.sg/a-z/medications/amlodipine",
+    "source_title": "Amlodipine",
+    "source_last_reviewed": "2026-03-02",
+    "retrieved": "2026-10-12"
+  },
+  {
+    "id": "metformin",
+    "names": ["Metformin"],
+    "used_for": "Metformin helps control diabetes. It helps your body use insulin better and lowers the amount of sugar your liver makes. It works together with a healthy diet and regular exercise.",
+    "how_to_take": "Take it with or after food. This lowers the chance of stomach discomfort, nausea or diarrhoea.",
+    "if_missed": "Take the missed dose with food as soon as you remember. If your next dose is almost due, just take your usual dose. Do not double the dose or take extra to make up for it.",
+    "common_side_effects": [
+      "Diarrhoea",
+      "Nausea, vomiting or stomach discomfort"
+    ],
+    "seek_help_if": [
+      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See your healthcare professional immediately.",
+      "Signs of lactic acidosis (very rare but serious): loss of appetite, vomiting or stomach pain that goes on for some time, feeling generally unwell with feeling cold or very tired, or fast, shallow breathing. See your healthcare professional immediately."
+    ],
+    "source_url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/metformin",
+    "source_title": "Metformin",
+    "source_last_reviewed": "2026-07-27",
+    "retrieved": "2026-10-12"
+  },
+  {
+    "id": "atorvastatin",
+    "names": ["Atorvastatin"],
+    "used_for": "Atorvastatin is a statin. It lowers 'bad' cholesterol and triglycerides and raises 'good' cholesterol. This may lower your risk of heart attack and stroke.",
+    "how_to_take": "You can take it with or without food. Do not stop taking it without checking with your healthcare professional, because your 'bad' cholesterol may go up again.",
+    "if_missed": "Take it as soon as you remember. If your next dose is nearly due, just take your usual dose. Do not double the dose.",
+    "common_side_effects": [
+      "Mild muscle aches or weakness",
+      "Feeling tired",
+      "Stomach upset, such as stomach pain, constipation or diarrhoea",
+      "Headache",
+      "Joint pain or back pain"
+    ],
+    "seek_help_if": [
+      "Signs of muscle breakdown: severe muscle pain with no clear cause that does not go away, muscle weakness or cramps all over the body, or dark brown urine. See a doctor immediately.",
+      "Signs of liver problems: dark brown urine, pale or clay-coloured stools, nausea, vomiting, loss of appetite, or yellow skin or eyes. See a doctor immediately.",
+      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See a doctor immediately.",
+      "Common side effects that do not go away or become bothersome. Tell your healthcare professional."
+    ],
+    "source_url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/atorvastatin",
+    "source_title": "Atorvastatin",
+    "source_last_reviewed": "2026-05-22",
+    "retrieved": "2026-10-12"
+  },
+  {
+    "id": "omeprazole",
+    "names": ["Omeprazole"],
+    "used_for": "Omeprazole treats stomach and gut problems. These include acid reflux (when stomach acid comes back up the food pipe and causes heartburn) and ulcers. It is used to treat and to prevent ulcers.",
+    "how_to_take": "Take it 30 to 60 minutes before a meal. Swallow the capsule whole with water; do not chew or crush it. If swallowing is hard, ask your healthcare professional about other ways to take it. Do not stop taking it without checking with your healthcare professional.",
+    "if_missed": "Take it as soon as you remember, then take the next dose at the usual time. Do not take two doses to make up for the missed dose.",
+    "common_side_effects": [
+      "Headache",
+      "Stomach pain",
+      "Diarrhoea",
+      "Nausea or vomiting",
+      "Wind"
+    ],
+    "seek_help_if": [
+      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See a healthcare professional immediately.",
+      "Signs of low magnesium: muscle spasms, a fast or pounding heartbeat (palpitations), dizziness, or fits (seizures). See a healthcare professional immediately.",
+      "Common side effects that do not go away. Talk to your healthcare professional."
+    ],
+    "source_url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/omeprazole",
+    "source_title": "Omeprazole",
+    "source_last_reviewed": "2026-06-12",
+    "retrieved": "2026-10-12"
+  },
+  {
+    "id": "losartan",
+    "names": ["Losartan"],
+    "used_for": "Losartan lowers blood pressure. It blocks a substance in the body (angiotensin II) that makes blood vessels narrower. It can also be used for people with protein in their urine and some other heart conditions.",
+    "how_to_take": "You can take it with or without food. Do not stop taking it without checking with your healthcare provider.",
+    "if_missed": "Take it as soon as you remember. If it is almost time for your next dose, just take your usual dose. Do not double the dose or take extra to make up for it.",
+    "common_side_effects": [
+      "Dizziness or lightheadedness when getting up"
+    ],
+    "seek_help_if": [
+      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See your doctor.",
+      "Signs of liver problems (very rare): dark urine, pale stools, nausea, vomiting, loss of appetite, stomach pain, or yellow eyes or skin. See a doctor immediately.",
+      "If you become pregnant. Tell your doctor as soon as possible, because this medicine can harm an unborn baby."
+    ],
+    "source_url": "https://www.healthhub.sg/a-z/medications/losartan",
+    "source_title": "Losartan",
+    "source_last_reviewed": "2026-05-08",
+    "retrieved": "2026-10-12"
+  }
+]

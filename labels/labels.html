@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo medication labels (fictional)</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; background: #eee; margin: 16px; }
+  h1 { font-size: 16px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 16px; }
+  .label { background: #fff; width: 360px; border: 1px solid #999; padding: 12px 14px; box-sizing: border-box; }
+  .head { display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #000; padding-bottom: 4px; }
+  .patient { font-size: 12px; margin: 6px 0; }
+  .drug { font-size: 18px; font-weight: bold; margin: 6px 0 2px; }
+  .instr { font-size: 15px; margin: 4px 0; text-transform: uppercase; }
+  .meta { font-size: 11px; display: flex; justify-content: space-between; margin-top: 6px; }
+  .aux { display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 6px; margin: 4px 4px 0 0; }
+  .yellow { background: #ffe14d; } .orange { background: #ffb366; } .blue { background: #9fd3ff; }
+  .demo { font-size: 9px; color: #777; margin-top: 6px; }
+  .blurred { filter: blur(2.2px); }
+  .tag { font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+  .bp { background: #cfd8cf; width: 260px; border-radius: 18px; padding: 18px; font-family: "Courier New", monospace; border: 6px solid #444; }
+  .bp .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .bp .num { font-size: 48px; font-weight: bold; }
+  .bp .unit { font-size: 12px; }
+  @media print { body { background: #fff; } .tag { display: none; } }
+</style>
+</head>
+<body>
+<h1>Label obat tiruan untuk demo — semua nama pasien dan klinik FIKTIF. Cetak atau tampilkan di layar, lalu foto dengan HP.</h1>
+<div class="grid">
+
+  <div>
+    <div class="tag">Label 1 — Amlodipine</div>
+    <div class="label">
+      <div class="head"><span>SAMPLE HEALTH CLINIC (FICTIONAL)</span><span>Rx 100231</span></div>
+      <div class="patient">TAN AH MOI &nbsp;·&nbsp; 01/10/2026</div>
+      <div class="drug">AMLODIPINE 5 MG TABLET</div>
+      <div class="instr">Take ONE tablet in the MORNING</div>
+      <div class="instr">after food</div>
+      <span class="aux blue">FOR HIGH BLOOD PRESSURE</span>
+      <div class="meta"><span>Qty: 30 TAB</span><span>Dr. Example</span></div>
+      <div class="demo">DEMO LABEL — NOT A REAL PRESCRIPTION</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="tag">Label 2 — Metformin</div>
+    <div class="label">
+      <div class="head"><span>SAMPLE HEALTH CLINIC (FICTIONAL)</span><span>Rx 100232</span></div>
+      <div class="patient">TAN AH MOI &nbsp;·&nbsp; 01/10/2026</div>
+      <div class="drug">METFORMIN 500 MG TABLET</div>
+      <div class="instr">Take ONE tablet TWICE a day</div>
+      <div class="instr">(morning and evening) with or after food</div>
+      <span class="aux yellow">TAKE WITH OR AFTER FOOD</span>
+      <div class="meta"><span>Qty: 60 TAB</span><span>Dr. Example</span></div>
+      <div class="demo">DEMO LABEL — NOT A REAL PRESCRIPTION</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="tag">Label 3 — Atorvastatin</div>
+    <div class="label">
+      <div class="head"><span>SAMPLE HEALTH CLINIC (FICTIONAL)</span><span>Rx 100233</span></div>
+      <div class="patient">TAN AH MOI &nbsp;·&nbsp; 01/10/2026</div>
+      <div class="drug">ATORVASTATIN 20 MG TABLET</div>
+      <div class="instr">Take ONE tablet at NIGHT</div>
+      <div class="instr">before bedtime</div>
+      <span class="aux orange">AVOID LARGE AMOUNTS OF GRAPEFRUIT JUICE</span>
+      <div class="meta"><span>Qty: 30 TAB</span><span>Dr. Example</span></div>
+      <div class="demo">DEMO LABEL — NOT A REAL PRESCRIPTION</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="tag">Label 4 — Omeprazole</div>
+    <div class="label">
+      <div class="head"><span>SAMPLE HEALTH CLINIC (FICTIONAL)</span><span>Rx 100234</span></div>
+      <div class="patient">TAN AH MOI &nbsp;·&nbsp; 01/10/2026</div>
+      <div class="drug">OMEPRAZOLE 20 MG CAPSULE</div>
+      <div class="instr">Take ONE capsule in the MORNING</div>
+      <div class="instr">30 minutes before breakfast</div>
+      <span class="aux yellow">SWALLOW WHOLE. DO NOT CRUSH OR CHEW</span>
+      <div class="meta"><span>Qty: 28 CAP</span><span>Dr. Example</span></div>
+      <div class="demo">DEMO LABEL — NOT A REAL PRESCRIPTION</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="tag">Label 5 — sengaja buram (AI harus menolak menebak)</div>
+    <div class="label blurred">
+      <div class="head"><span>SAMPLE HEALTH CLINIC (FICTIONAL)</span><span>Rx 100235</span></div>
+      <div class="patient">TAN AH MOI &nbsp;·&nbsp; 01/10/2026</div>
+      <div class="drug">LOSARTAN 50 MG TABLET</div>
+      <div class="instr">Take ONE tablet ONCE a day</div>
+      <div class="instr">in the morning</div>
+      <span class="aux blue">FOR HIGH BLOOD PRESSURE</span>
+      <div class="meta"><span>Qty: 30 TAB</span><span>Dr. Example</span></div>
+      <div class="demo">DEMO LABEL — NOT A REAL PRESCRIPTION</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="tag">Label 6 — obat fiktif (harus "tanya apoteker")</div>
+    <div class="label">
+      <div class="head"><span>SAMPLE HEALTH CLINIC (FICTIONAL)</span><span>Rx 100236</span></div>
+      <div class="patient">TAN AH MOI &nbsp;·&nbsp; 01/10/2026</div>
+      <div class="drug">VELMORIN 10 MG TABLET</div>
+      <div class="instr">Take ONE tablet ONCE a day</div>
+      <div class="instr">as directed</div>
+      <div class="meta"><span>Qty: 30 TAB</span><span>Dr. Example</span></div>
+      <div class="demo">DEMO LABEL — NOT A REAL PRESCRIPTION (FICTIONAL DRUG)</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="tag">Layar alat tensi tiruan (untuk T6)</div>
+    <div class="bp">
+      <div class="row"><span class="unit">SYS mmHg</span><span class="num">148</span></div>
+      <div class="row"><span class="unit">DIA mmHg</span><span class="num">92</span></div>
+      <div class="row"><span class="unit">PUL /min</span><span class="num">76</span></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

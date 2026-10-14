@@ -67,8 +67,9 @@ export function routeQuestion(args: {
   const reply = getRedirectReply(language);
 
   const lowerQ = question.toLowerCase();
-  const keywords = MISSED_DOSE_KEYWORDS[language] ?? MISSED_DOSE_KEYWORDS.en;
-  const mentionsMissed = keywords.some((k) => lowerQ.includes(k.toLowerCase()));
+  // Check keywords of ALL languages — the user may ask in a language different from the UI.
+  const allKeywords = Object.values(MISSED_DOSE_KEYWORDS).flat();
+  const mentionsMissed = allKeywords.some((k) => lowerQ.includes(k.toLowerCase()));
 
   let ifMissedQuote: string | undefined;
   let sourceUrl: string | undefined;

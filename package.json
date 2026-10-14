@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test-question-router.ts"
+    "test": "node scripts/test-adherence.ts && node scripts/test-question-router.ts"
   },
   "dependencies": {
     "next": "^15.1.0",

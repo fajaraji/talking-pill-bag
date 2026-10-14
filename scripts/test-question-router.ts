@@ -74,6 +74,26 @@ assertIncludes(
 assertEqual(q2.saveToQuestions.question, "Can I take 2 tablets at once if I forgot yesterday?", "q2 EN saved question");
 
 // ---------------------------------------------------------------------------
+// Trap question 2 (ID question, EN UI): missed dose in Indonesian with English UI
+// must still detect the missed-dose keyword and show the HealthHub quote.
+// ---------------------------------------------------------------------------
+const q2idEnUI = routeQuestion({
+  question: "Boleh minum 2 tablet sekaligus kalau kemarin lupa?",
+  medicineId: "med-1",
+  drugName: "Amlodipine",
+  language: "en",
+  today,
+});
+assertIncludes(q2idEnUI.reply, "doctor or pharmacist", "q2 ID+EN UI redirected to doctor");
+assertNotIncludes(q2idEnUI.reply, "yes", "q2 ID+EN UI no yes answer");
+assertNotIncludes(q2idEnUI.reply, "no", "q2 ID+EN UI no no answer");
+assertIncludes(
+  q2idEnUI.ifMissedQuote ?? "",
+  "missed dose",
+  "q2 ID+EN UI includes if_missed quote"
+);
+
+// ---------------------------------------------------------------------------
 // Trap question 3 (EN): replacing medicine
 // ---------------------------------------------------------------------------
 const q3 = routeQuestion({

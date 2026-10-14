@@ -80,7 +80,34 @@ type StringKey =
   | "other"
   | "acknowledgement"
   | "sideEffectsAck"
-  | "addToQuestions";
+  | "addToQuestions"
+  // Blood pressure
+  | "bpTitle"
+  | "bpLink"
+  | "addBPReading"
+  | "enterManually"
+  | "systolic"
+  | "diastolic"
+  | "pulse"
+  | "save"
+  | "cancel"
+  | "delete"
+  | "targetFromDoctor"
+  | "setTarget"
+  | "clearTarget"
+  | "trend14Days"
+  | "averageThisWeek"
+  | "higherThanTarget"
+  | "noteForDoctor"
+  | "veryHighReading"
+  | "contactDoctorToday"
+  | "callEmergency"
+  | "noReadingsYet"
+  | "readings"
+  | "date"
+  | "time"
+  | "bpConfirmPrompt"
+  | "bpCouldNotRead";
 
 type Dictionary = Record<StringKey, string>;
 
@@ -148,6 +175,32 @@ const en: Dictionary = {
     "Thank you. We'll add this to your questions for the doctor or pharmacist.",
   sideEffectsAck: "Please tell your doctor or pharmacist about this.",
   addToQuestions: "We'll add this to your questions for the doctor or pharmacist.",
+  bpTitle: "Blood Pressure",
+  bpLink: "Blood Pressure",
+  addBPReading: "Add Reading",
+  enterManually: "Enter manually",
+  systolic: "Systolic",
+  diastolic: "Diastolic",
+  pulse: "Pulse",
+  save: "Save",
+  cancel: "Cancel",
+  delete: "Delete",
+  targetFromDoctor: "Target from your doctor",
+  setTarget: "Set target",
+  clearTarget: "Clear target",
+  trend14Days: "Trend (14 days)",
+  averageThisWeek: "Your average this week: {avg}.",
+  higherThanTarget: "Higher than the target you entered on {count} of {total} days.",
+  noteForDoctor: "Note this for your doctor.",
+  veryHighReading: "This reading is very high.",
+  contactDoctorToday: "Contact your doctor or clinic today.",
+  callEmergency: "If you feel very unwell, call 995.",
+  noReadingsYet: "No readings yet.",
+  readings: "Readings",
+  date: "Date",
+  time: "Time",
+  bpConfirmPrompt: "Please check the numbers and tap Save.",
+  bpCouldNotRead: "Could not read the monitor. Please enter the numbers manually.",
 };
 
 const zh: Dictionary = {
@@ -212,6 +265,32 @@ const zh: Dictionary = {
   acknowledgement: "谢谢。我们会将此添加到您给医生或药剂师的问题中。",
   sideEffectsAck: "请把这件事告诉您的医生或药剂师。",
   addToQuestions: "我们会将此添加到您给医生或药剂师的问题中。",
+  bpTitle: "血压",
+  bpLink: "血压",
+  addBPReading: "添加记录",
+  enterManually: "手动输入",
+  systolic: "收缩压",
+  diastolic: "舒张压",
+  pulse: "脉搏",
+  save: "保存",
+  cancel: "取消",
+  delete: "删除",
+  targetFromDoctor: "医生建议的目标",
+  setTarget: "设定目标",
+  clearTarget: "清除目标",
+  trend14Days: "趋势（14天）",
+  averageThisWeek: "本周平均：{avg}。",
+  higherThanTarget: "在您输入的目标中，有{count}/{total}天偏高。",
+  noteForDoctor: "请记录下来告诉医生。",
+  veryHighReading: "此读数非常高。",
+  contactDoctorToday: "今天请联系您的医生或诊所。",
+  callEmergency: "如果您感觉非常不适，请拨打995。",
+  noReadingsYet: "尚无记录。",
+  readings: "记录",
+  date: "日期",
+  time: "时间",
+  bpConfirmPrompt: "请检查数字后点击保存。",
+  bpCouldNotRead: "无法读取显示器。请手动输入数字。",
 };
 
 const ms: Dictionary = {
@@ -280,6 +359,32 @@ const ms: Dictionary = {
   sideEffectsAck: "Sila beritahu doktor atau ahli farmasi anda tentang perkara ini.",
   addToQuestions:
     "Kami akan menambah ini ke soalan anda untuk doktor atau ahli farmasi.",
+  bpTitle: "Tekanan Darah",
+  bpLink: "Tekanan Darah",
+  addBPReading: "Tambah Bacaan",
+  enterManually: "Masukkan secara manual",
+  systolic: "Sistolik",
+  diastolic: "Diastolik",
+  pulse: "Denyutan",
+  save: "Simpan",
+  cancel: "Batal",
+  delete: "Padam",
+  targetFromDoctor: "Sasaran daripada doktor anda",
+  setTarget: "Tetapkan sasaran",
+  clearTarget: "Kosongkan sasaran",
+  trend14Days: "Trend (14 hari)",
+  averageThisWeek: "Purata minggu ini: {avg}.",
+  higherThanTarget: "Lebih tinggi daripada sasaran yang anda masukkan pada {count} daripada {total} hari.",
+  noteForDoctor: "Catat ini untuk doktor anda.",
+  veryHighReading: "Bacaan ini sangat tinggi.",
+  contactDoctorToday: "Hubungi doktor atau klinik anda hari ini.",
+  callEmergency: "Jika anda berasa sangat tidak sihat, hubungi 995.",
+  noReadingsYet: "Tiada bacaan lagi.",
+  readings: "Bacaan",
+  date: "Tarikh",
+  time: "Masa",
+  bpConfirmPrompt: "Sila semak nombor dan ketik Simpan.",
+  bpCouldNotRead: "Tidak dapat membaca monitor. Sila masukkan nombor secara manual.",
 };
 
 const id: Dictionary = {
@@ -348,6 +453,32 @@ const id: Dictionary = {
   sideEffectsAck: "Silakan ceritakan hal ini kepada dokter atau apoteker Anda.",
   addToQuestions:
     "Kami akan menambahkan ini ke pertanyaan Anda untuk dokter atau apoteker.",
+  bpTitle: "Tekanan Darah",
+  bpLink: "Tekanan Darah",
+  addBPReading: "Tambah Catatan",
+  enterManually: "Masukkan manual",
+  systolic: "Sistolik",
+  diastolic: "Diastolik",
+  pulse: "Denyut nadi",
+  save: "Simpan",
+  cancel: "Batal",
+  delete: "Hapus",
+  targetFromDoctor: "Sasaran dari dokter Anda",
+  setTarget: "Atur sasaran",
+  clearTarget: "Hapus sasaran",
+  trend14Days: "Tren (14 hari)",
+  averageThisWeek: "Rata-rata minggu ini: {avg}.",
+  higherThanTarget: "Lebih tinggi dari sasaran yang Anda masukkan pada {count} dari {total} hari.",
+  noteForDoctor: "Catat ini untuk dokter Anda.",
+  veryHighReading: "Bacaan ini sangat tinggi.",
+  contactDoctorToday: "Hubungi dokter atau klinik Anda hari ini.",
+  callEmergency: "Jika Anda merasa sangat tidak enak badan, hubungi 995.",
+  noReadingsYet: "Belum ada catatan.",
+  readings: "Catatan",
+  date: "Tanggal",
+  time: "Waktu",
+  bpConfirmPrompt: "Silakan periksa angkanya lalu ketuk Simpan.",
+  bpCouldNotRead: "Tidak bisa membaca monitor. Silakan masukkan angka secara manual.",
 };
 
 export const dictionaries: Record<Language, Dictionary> = { en, zh, ms, id };

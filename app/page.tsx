@@ -125,6 +125,13 @@ export default function HomePage() {
         >
           {t(lang, "addMedicine")}
         </button>
+        <button
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
+          onClick={() => router.push("/bp")}
+          aria-label={t(lang, "bpLink")}
+        >
+          {t(lang, "bpLink")}
+        </button>
       </div>
     </main>
   );

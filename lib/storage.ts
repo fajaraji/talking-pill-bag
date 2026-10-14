@@ -5,6 +5,8 @@ const MEDICINES_KEY = "tpb-medicines";
 const DOSE_LOG_KEY = "tpb-dose-log";
 const EXPLANATIONS_KEY = "tpb-explanations";
 const MISSED_REASONS_KEY = "tpb-missed-reasons";
+const BP_LOG_KEY = "tpb-bp-log";
+const BP_TARGET_KEY = "tpb-bp-target";
 
 export interface Medicine extends LabelResult {
   id: string;
@@ -186,4 +188,77 @@ export function saveMissedReason(entry: MissedReasonEntry): void {
   if (typeof window === "undefined") return;
   const existing = getMissedReasons();
   localStorage.setItem(MISSED_REASONS_KEY, JSON.stringify([...existing, entry]));
+}
+
+// ---------------------------------------------------------------------------
+// Blood pressure readings
+// ---------------------------------------------------------------------------
+
+export interface BPReading {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  systolic: number;
+  diastolic: number;
+  pulse: number | null;
+}
+
+export interface BPTarget {
+  systolic: number;
+  diastolic: number;
+}
+
+export function getBPReadings(): BPReading[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(BP_LOG_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as BPReading[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveBPReading(reading: BPReading): void {
+  if (typeof window === "undefined") return;
+  const existing = getBPReadings();
+  localStorage.setItem(BP_LOG_KEY, JSON.stringify([...existing, reading]));
+}
+
+export function deleteBPReading(id: string): void {
+  if (typeof window === "undefined") return;
+  const existing = getBPReadings();
+  localStorage.setItem(
+    BP_LOG_KEY,
+    JSON.stringify(existing.filter((r) => r.id !== id))
+  );
+}
+
+export function getBPTarget(): BPTarget | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(BP_TARGET_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as BPTarget;
+    if (
+      typeof parsed.systolic === "number" &&
+      typeof parsed.diastolic === "number"
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function setBPTarget(target: BPTarget): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(BP_TARGET_KEY, JSON.stringify(target));
+}
+
+export function clearBPTarget(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(BP_TARGET_KEY);
 }

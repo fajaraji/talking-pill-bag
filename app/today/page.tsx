@@ -230,11 +230,12 @@ export default function TodayPage() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const { voices, loading: voicesLoading } = useVoices();
-  const today = getToday();
+  const [today, setToday] = useState("");
+  const [realToday, setRealToday] = useState("");
   const [demoActive, setDemoActive] = useState(false);
   const [justReasoned, setJustReasoned] = useState<Record<string, boolean>>({});
 
-  // Load language, medicines, and demo state
+  // Load language, medicines, demo state, and today (client-only to avoid hydration mismatch)
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
     if (stored && languages.some((l) => l.code === stored)) {
@@ -244,6 +245,12 @@ export default function TodayPage() {
     setMedicines(getMedicines());
     setDoseLog(getDoseLog());
     setDemoActive(isDemoMode());
+    setToday(getToday());
+    const real = new Date();
+    const y = real.getFullYear();
+    const m = String(real.getMonth() + 1).padStart(2, "0");
+    const d = String(real.getDate()).padStart(2, "0");
+    setRealToday(`${y}-${m}-${d}`);
     setIsLoading(false);
   }, []);
 
@@ -439,12 +446,9 @@ export default function TodayPage() {
   // ---------------------------------------------------------------------------
   // Adherence prompts
   // ---------------------------------------------------------------------------
-  const adherencePrompts = getAdherencePrompts(
-    medicines,
-    doseLog,
-    getMissedReasons(),
-    today
-  );
+  const adherencePrompts = today
+    ? getAdherencePrompts(medicines, doseLog, getMissedReasons(), today)
+    : [];
 
   function handleReason(medicineId: string, reason: string, missedCount: number) {
     const entry: MissedReasonEntry = {
@@ -516,9 +520,17 @@ export default function TodayPage() {
           </h1>
           <div className="w-16" />
         </div>
-        <p className="text-center text-lg text-slate-700">
-          {formatDate(lang, today)}
-        </p>
+        {today && (
+          <p className="text-center text-lg text-slate-700">
+            {formatDate(lang, today)}
+          </p>
+        )}
+        <button
+          onClick={() => router.push("/bp")}
+          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          {t(lang, "bpLink")} →
+        </button>
         {totalDoses > 0 && (
           <p className="text-center text-base font-medium text-slate-600">
             {takenDoses} / {totalDoses} {t(lang, "dosesTaken")}
@@ -526,60 +538,64 @@ export default function TodayPage() {
         )}
       </header>
 
+      {/* Adherence acknowledgements (shown after reason is saved) */}
+      {Object.keys(justReasoned).length > 0 && (
+        <div className="flex w-full max-w-sm flex-col gap-4 self-center">
+          {medicines
+            .filter((m) => justReasoned[m.id])
+            .map((medicine) => (
+              <div
+                key={`ack-${medicine.id}`}
+                className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4"
+              >
+                <p className="text-lg text-blue-900">
+                  {t(lang, "acknowledgement")}
+                </p>
+                {justReasoned[medicine.id + "-sideEffects"] && (
+                  <p className="mt-2 text-lg font-semibold text-blue-900">
+                    {t(lang, "sideEffectsAck")}
+                  </p>
+                )}
+              </div>
+            ))}
+        </div>
+      )}
+
       {/* Adherence prompts */}
       {adherencePrompts.length > 0 && (
         <div className="flex w-full max-w-sm flex-col gap-4 self-center">
-          {adherencePrompts.map(({ medicine, missedCount }) => {
-            if (justReasoned[medicine.id]) {
-              return (
-                <div
-                  key={medicine.id}
-                  className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4"
-                >
-                  <p className="text-lg text-blue-900">
-                    {t(lang, "acknowledgement")}
-                  </p>
-                  {justReasoned[medicine.id + "-sideEffects"] && (
-                    <p className="mt-2 text-lg font-semibold text-blue-900">
-                      {t(lang, "sideEffectsAck")}
-                    </p>
-                  )}
-                </div>
-              );
-            }
-            return (
-              <div
-                key={medicine.id}
-                className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
-              >
-                <p className="mb-3 text-lg font-semibold text-amber-900">
-                  {t(lang, "missedPrompt")
-                    .replace("{drug}", medicine.drug_name)
-                    .replace("{n}", String(missedCount))}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { key: "forgot", label: t(lang, "forgot") },
-                    { key: "sideEffects", label: t(lang, "sideEffects") },
-                    { key: "feltWell", label: t(lang, "feltWell") },
-                    { key: "ranOut", label: t(lang, "ranOut") },
-                    { key: "other", label: t(lang, "other") },
-                  ].map((btn) => (
-                    <button
-                      key={btn.key}
-                      onClick={() =>
-                        handleReason(medicine.id, btn.key, missedCount)
-                      }
-                      className="rounded-xl bg-white px-4 py-3 text-lg font-semibold text-amber-800 shadow-sm hover:bg-amber-100"
-                      style={{ minHeight: 48 }}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
+          {adherencePrompts.map(({ medicine, missedCount }) => (
+            <div
+              key={medicine.id}
+              className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+            >
+              <p className="mb-3 text-lg font-semibold text-amber-900">
+                {t(lang, "missedPrompt")
+                  .replace("{drug}", medicine.drug_name)
+                  .replace("{n}", String(missedCount))}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { key: "forgot", label: t(lang, "forgot") },
+                  { key: "sideEffects", label: t(lang, "sideEffects") },
+                  { key: "feltWell", label: t(lang, "feltWell") },
+                  { key: "ranOut", label: t(lang, "ranOut") },
+                  { key: "other", label: t(lang, "other") },
+                ].map((btn) => (
+                  <button
+                    key={btn.key}
+                    onClick={() =>
+                      handleReason(medicine.id, btn.key, missedCount)
+                    }
+                    className="rounded-xl bg-white px-4 py-3 text-lg font-semibold text-amber-800 shadow-sm hover:bg-amber-100"
+                    style={{ minHeight: 48 }}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
 
@@ -679,13 +695,7 @@ export default function TodayPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             {t(lang, "demoMode")}
           </p>
-          {today !== (() => {
-            const real = new Date();
-            const y = real.getFullYear();
-            const m = String(real.getMonth() + 1).padStart(2, "0");
-            const d = String(real.getDate()).padStart(2, "0");
-            return `${y}-${m}-${d}`;
-          })() && (
+          {today && today !== realToday && (
             <p className="text-base text-slate-700">
               {t(lang, "simulatedDate")}: {formatDate(lang, today)}
             </p>

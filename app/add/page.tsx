@@ -11,6 +11,7 @@ import {
 import type { LabelResult } from "@/app/api/read-label/route";
 import { saveMedicine, getMedicines, updateMedicine, setExplanationCache } from "@/lib/storage";
 import { getDrugId } from "@/lib/drug-info";
+import { getToday } from "@/lib/clock";
 
 type Step = "capture" | "confirm" | "error";
 
@@ -284,6 +285,7 @@ function AddMedicinePageInner() {
         ...editedResult,
         id: editId,
         photo: thumbnail,
+        addedOn: getToday(),
       };
       updateMedicine(updatedEntry);
       prefetchExplanations(updatedEntry.drug_name, lang);
@@ -293,6 +295,7 @@ function AddMedicinePageInner() {
         ...editedResult,
         id: crypto.randomUUID(),
         photo: thumbnail,
+        addedOn: getToday(),
       };
       saveMedicine(newEntry);
       prefetchExplanations(newEntry.drug_name, lang);

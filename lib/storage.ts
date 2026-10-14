@@ -1,12 +1,15 @@
 import type { LabelResult } from "@/app/api/read-label/route";
+import { getToday, getNow } from "@/lib/clock";
 
 const MEDICINES_KEY = "tpb-medicines";
 const DOSE_LOG_KEY = "tpb-dose-log";
 const EXPLANATIONS_KEY = "tpb-explanations";
+const MISSED_REASONS_KEY = "tpb-missed-reasons";
 
 export interface Medicine extends LabelResult {
   id: string;
   photo: string;
+  addedOn?: string; // YYYY-MM-DD
 }
 
 export interface DoseLogEntry {
@@ -26,7 +29,19 @@ export function getMedicines(): Medicine[] {
     const raw = localStorage.getItem(MEDICINES_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Medicine[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    let changed = false;
+    const migrated = parsed.map((med) => {
+      if (!med.addedOn) {
+        changed = true;
+        return { ...med, addedOn: getToday() };
+      }
+      return med;
+    });
+    if (changed) {
+      localStorage.setItem(MEDICINES_KEY, JSON.stringify(migrated));
+    }
+    return migrated;
   } catch {
     return [];
   }
@@ -85,7 +100,7 @@ export function markDoseTaken(
     medicineId,
     date,
     slot,
-    takenAt: new Date().toISOString(),
+    takenAt: getNow().toISOString(),
   };
   const existing = getDoseLog();
   localStorage.setItem(DOSE_LOG_KEY, JSON.stringify([...existing, entry]));
@@ -142,4 +157,33 @@ export function setExplanationCache(
   const existing = getExplanationCache();
   existing[key] = value;
   localStorage.setItem(EXPLANATIONS_KEY, JSON.stringify(existing));
+}
+
+// ---------------------------------------------------------------------------
+// Missed-dose reasons
+// ---------------------------------------------------------------------------
+
+export interface MissedReasonEntry {
+  medicineId: string;
+  reason: string;
+  missedCount: number;
+  recordedOn: string; // YYYY-MM-DD
+}
+
+export function getMissedReasons(): MissedReasonEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(MISSED_REASONS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as MissedReasonEntry[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveMissedReason(entry: MissedReasonEntry): void {
+  if (typeof window === "undefined") return;
+  const existing = getMissedReasons();
+  localStorage.setItem(MISSED_REASONS_KEY, JSON.stringify([...existing, entry]));
 }

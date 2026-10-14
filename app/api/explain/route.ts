@@ -38,6 +38,18 @@ async function fetchWithTimeout(
   }
 }
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/`{1,3}[^`]*`{1,3}/g, "")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .trim();
+}
+
 async function translateWithLlm(
   sourceText: string,
   language: string
@@ -65,6 +77,7 @@ RULES:
 2. Do NOT add, remove, or change any medical fact.
 3. Do NOT give advice beyond what is in the source text.
 4. Keep the structure: what it is used for, how to take it, what to do if a dose is missed, common side effects, and when to seek help.
+5. Return PLAIN TEXT ONLY. Do NOT use markdown formatting (no asterisks, underscores, backticks, or hash symbols).
 
 SOURCE TEXT:
 ${sourceText}`;
@@ -155,10 +168,12 @@ export async function POST(request: NextRequest) {
 
     const sourceText = buildSourceText(entry);
 
+    const cleanSourceText = stripMarkdown(sourceText);
+
     if (language === "en") {
       const response: ExplainResponse = {
         known: true,
-        text: sourceText,
+        text: cleanSourceText,
         source_url: entry.source_url,
         source_title: entry.source_title,
       };
@@ -170,7 +185,7 @@ export async function POST(request: NextRequest) {
     if (translated) {
       const response: ExplainResponse = {
         known: true,
-        text: translated,
+        text: stripMarkdown(translated),
         source_url: entry.source_url,
         source_title: entry.source_title,
       };
@@ -180,7 +195,7 @@ export async function POST(request: NextRequest) {
     // Fallback to English source text
     const response: ExplainResponse = {
       known: true,
-      text: sourceText,
+      text: cleanSourceText,
       source_url: entry.source_url,
       source_title: entry.source_title,
       fallback: true,

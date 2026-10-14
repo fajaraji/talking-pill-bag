@@ -65,7 +65,22 @@ type StringKey =
   | "close"
   | "source"
   | "voiceNotAvailable"
-  | "loading";
+  | "loading"
+  // Demo mode
+  | "demoMode"
+  | "simulatedDate"
+  | "advanceDay"
+  | "resetClock"
+  // Adherence
+  | "missedPrompt"
+  | "forgot"
+  | "sideEffects"
+  | "feltWell"
+  | "ranOut"
+  | "other"
+  | "acknowledgement"
+  | "sideEffectsAck"
+  | "addToQuestions";
 
 type Dictionary = Record<StringKey, string>;
 
@@ -119,6 +134,20 @@ const en: Dictionary = {
   source: "Source",
   voiceNotAvailable: "Voice not available on this device",
   loading: "Loading…",
+  demoMode: "Demo mode",
+  simulatedDate: "Simulated date",
+  advanceDay: "+1 day",
+  resetClock: "Reset",
+  missedPrompt: "You missed {drug} {n} times this week. What happened?",
+  forgot: "Forgot",
+  sideEffects: "Side effects",
+  feltWell: "Felt well",
+  ranOut: "Ran out",
+  other: "Other",
+  acknowledgement:
+    "Thank you. We'll add this to your questions for the doctor or pharmacist.",
+  sideEffectsAck: "Please tell your doctor or pharmacist about this.",
+  addToQuestions: "We'll add this to your questions for the doctor or pharmacist.",
 };
 
 const zh: Dictionary = {
@@ -170,6 +199,19 @@ const zh: Dictionary = {
   source: "来源",
   voiceNotAvailable: "此设备没有语音",
   loading: "加载中…",
+  demoMode: "演示模式",
+  simulatedDate: "模拟日期",
+  advanceDay: "+1 天",
+  resetClock: "重置",
+  missedPrompt: "您本周错过了 {drug} {n} 次。发生了什么事？",
+  forgot: "忘记了",
+  sideEffects: "副作用",
+  feltWell: "感觉良好",
+  ranOut: "药物用完",
+  other: "其他",
+  acknowledgement: "谢谢。我们会将此添加到您给医生或药剂师的问题中。",
+  sideEffectsAck: "请把这件事告诉您的医生或药剂师。",
+  addToQuestions: "我们会将此添加到您给医生或药剂师的问题中。",
 };
 
 const ms: Dictionary = {
@@ -222,6 +264,22 @@ const ms: Dictionary = {
   source: "Sumber",
   voiceNotAvailable: "Suara tidak tersedia pada peranti ini",
   loading: "Memuatkan…",
+  demoMode: "Mod demo",
+  simulatedDate: "Tarikh simulasi",
+  advanceDay: "+1 hari",
+  resetClock: "Tetap semula",
+  missedPrompt:
+    "Anda terlepas {drug} {n} kali minggu ini. Apa yang berlaku?",
+  forgot: "Lupa",
+  sideEffects: "Kesan sampingan",
+  feltWell: "Rasa sihat",
+  ranOut: "Ubat habis",
+  other: "Lain-lain",
+  acknowledgement:
+    "Terima kasih. Kami akan menambah ini ke soalan anda untuk doktor atau ahli farmasi.",
+  sideEffectsAck: "Sila beritahu doktor atau ahli farmasi anda tentang perkara ini.",
+  addToQuestions:
+    "Kami akan menambah ini ke soalan anda untuk doktor atau ahli farmasi.",
 };
 
 const id: Dictionary = {
@@ -274,6 +332,22 @@ const id: Dictionary = {
   source: "Sumber",
   voiceNotAvailable: "Suara tidak tersedia di perangkat ini",
   loading: "Memuat…",
+  demoMode: "Mode demo",
+  simulatedDate: "Tanggal simulasi",
+  advanceDay: "+1 hari",
+  resetClock: "Atur ulang",
+  missedPrompt:
+    "Anda melewatkan {drug} {n} kali minggu ini. Apa yang terjadi?",
+  forgot: "Lupa",
+  sideEffects: "Efek samping",
+  feltWell: "Merasa sehat",
+  ranOut: "Obat habis",
+  other: "Lainnya",
+  acknowledgement:
+    "Terima kasih. Kami akan menambahkan ini ke pertanyaan Anda untuk dokter atau apoteker.",
+  sideEffectsAck: "Silakan ceritakan hal ini kepada dokter atau apoteker Anda.",
+  addToQuestions:
+    "Kami akan menambahkan ini ke pertanyaan Anda untuk dokter atau apoteker.",
 };
 
 export const dictionaries: Record<Language, Dictionary> = { en, zh, ms, id };

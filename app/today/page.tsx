@@ -17,9 +17,12 @@ import {
   setExplanationCache,
   type CachedExplanation,
 } from "@/lib/storage";
-import { getToday } from "@/lib/clock";
+import { getToday, getNow, isDemoMode, advanceDemoDays, resetDemoClock } from "@/lib/clock";
 import type { Medicine } from "@/lib/storage";
 import { getDrugId } from "@/lib/drug-info";
+import { useVoices } from "@/lib/use-voices";
+import { getAdherencePrompts } from "@/lib/adherence";
+import { getMissedReasons, saveMissedReason, type MissedReasonEntry } from "@/lib/storage";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 
@@ -226,9 +229,12 @@ export default function TodayPage() {
   } | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const { voices, loading: voicesLoading } = useVoices();
   const today = getToday();
+  const [demoActive, setDemoActive] = useState(false);
+  const [justReasoned, setJustReasoned] = useState<Record<string, boolean>>({});
 
-  // Load language and medicines
+  // Load language, medicines, and demo state
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
     if (stored && languages.some((l) => l.code === stored)) {
@@ -237,6 +243,7 @@ export default function TodayPage() {
     }
     setMedicines(getMedicines());
     setDoseLog(getDoseLog());
+    setDemoActive(isDemoMode());
     setIsLoading(false);
   }, []);
 
@@ -405,7 +412,6 @@ export default function TodayPage() {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
     const langPrefix = lang === "zh" ? "zh" : lang === "ms" ? "ms" : lang === "id" ? "id" : "en";
     const voice = voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix));
     if (voice) utterance.voice = voice;
@@ -428,6 +434,31 @@ export default function TodayPage() {
     stopSpeech();
     setPanelOpen(false);
     setPanelData(null);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Adherence prompts
+  // ---------------------------------------------------------------------------
+  const adherencePrompts = getAdherencePrompts(
+    medicines,
+    doseLog,
+    getMissedReasons(),
+    today
+  );
+
+  function handleReason(medicineId: string, reason: string, missedCount: number) {
+    const entry: MissedReasonEntry = {
+      medicineId,
+      reason,
+      missedCount,
+      recordedOn: today,
+    };
+    saveMissedReason(entry);
+    setJustReasoned((prev) => ({
+      ...prev,
+      [medicineId]: true,
+      ...(reason === "sideEffects" ? { [medicineId + "-sideEffects"]: true } : {}),
+    }));
   }
 
   // ---------------------------------------------------------------------------
@@ -494,6 +525,63 @@ export default function TodayPage() {
           </p>
         )}
       </header>
+
+      {/* Adherence prompts */}
+      {adherencePrompts.length > 0 && (
+        <div className="flex w-full max-w-sm flex-col gap-4 self-center">
+          {adherencePrompts.map(({ medicine, missedCount }) => {
+            if (justReasoned[medicine.id]) {
+              return (
+                <div
+                  key={medicine.id}
+                  className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4"
+                >
+                  <p className="text-lg text-blue-900">
+                    {t(lang, "acknowledgement")}
+                  </p>
+                  {justReasoned[medicine.id + "-sideEffects"] && (
+                    <p className="mt-2 text-lg font-semibold text-blue-900">
+                      {t(lang, "sideEffectsAck")}
+                    </p>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <div
+                key={medicine.id}
+                className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+              >
+                <p className="mb-3 text-lg font-semibold text-amber-900">
+                  {t(lang, "missedPrompt")
+                    .replace("{drug}", medicine.drug_name)
+                    .replace("{n}", String(missedCount))}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { key: "forgot", label: t(lang, "forgot") },
+                    { key: "sideEffects", label: t(lang, "sideEffects") },
+                    { key: "feltWell", label: t(lang, "feltWell") },
+                    { key: "ranOut", label: t(lang, "ranOut") },
+                    { key: "other", label: t(lang, "other") },
+                  ].map((btn) => (
+                    <button
+                      key={btn.key}
+                      onClick={() =>
+                        handleReason(medicine.id, btn.key, missedCount)
+                      }
+                      className="rounded-xl bg-white px-4 py-3 text-lg font-semibold text-amber-800 shadow-sm hover:bg-amber-100"
+                      style={{ minHeight: 48 }}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Dose sections */}
       <div className="flex w-full max-w-sm flex-col gap-6 self-center">
@@ -585,6 +673,46 @@ export default function TodayPage() {
         )}
       </div>
 
+      {/* Demo controls */}
+      {demoActive && (
+        <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 p-4">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            {t(lang, "demoMode")}
+          </p>
+          {today !== (() => {
+            const real = new Date();
+            const y = real.getFullYear();
+            const m = String(real.getMonth() + 1).padStart(2, "0");
+            const d = String(real.getDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
+          })() && (
+            <p className="text-base text-slate-700">
+              {t(lang, "simulatedDate")}: {formatDate(lang, today)}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                advanceDemoDays(1);
+                window.location.reload();
+              }}
+              className="rounded-lg bg-slate-800 px-4 py-2 text-base font-semibold text-white hover:bg-slate-900"
+            >
+              {t(lang, "advanceDay")}
+            </button>
+            <button
+              onClick={() => {
+                resetDemoClock();
+                window.location.reload();
+              }}
+              className="rounded-lg border-2 border-slate-400 bg-white px-4 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              {t(lang, "resetClock")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Explanation panel */}
       {panelOpen && panelData && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
@@ -661,8 +789,8 @@ export default function TodayPage() {
                 {typeof window !== "undefined" &&
                   window.speechSynthesis &&
                   panelData.explanation &&
+                  !voicesLoading &&
                   (() => {
-                    const voices = window.speechSynthesis.getVoices();
                     const langPrefix =
                       lang === "zh" ? "zh" : lang === "ms" ? "ms" : lang === "id" ? "id" : "en";
                     const hasVoice = voices.some((v) =>

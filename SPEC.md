@@ -1,89 +1,82 @@
 # SPEC — Talking Pill Bag
 
-Nama proyek: **Talking Pill Bag** (repo: `talking-pill-bag`). Nama Indonesia untuk diskusi internal: "Kantong Obat yang Bisa Ngomong".
-Semua yang masuk repo (nama file, kode, komentar, commit, README, deskripsi GitHub) memakai bahasa Inggris — lihat `.codebuddy/rules/project.md`.
+Project name: **Talking Pill Bag** (repo: `talking-pill-bag`). Indonesian name for internal discussion: "Kantong Obat yang Bisa Ngomong".
+Everything that enters the repo (file names, code, comments, commits, README, GitHub description) must be in English — see `.codebuddy/rules/project.md`.
 
 Hackathon: Tencent Cloud AI CAN DO IT Singapore 2026 — Healthcare Track, **Challenge 2: AI Healthier Every Day**.
-Deadline submit: 16 Oktober 2026.
+Submission deadline: 16 October 2026.
 
-## 1. Ringkasan
+## 1. Summary
 
-Aplikasi web (mobile-first) untuk orang yang mengurus obat lansia: anak, cucu, atau helper.
-Penyiap memfoto label obat sekali → AI membaca label → jadwal bergambar, penjelasan suara,
-pengingat dengan tombol "Sudah", catatan tensi dari foto alat tensi, pengingat isi ulang,
-dan daftar pertanyaan untuk dokter atau apoteker.
+A web application (mobile-first) for people who manage medicines for elderly users: children, grandchildren, or helpers.
+The preparer photographs a medicine label once → AI reads the label → a picture schedule, spoken explanation,
+reminders with a "Done" button, blood-pressure notes from a photo of a BP monitor, refill reminders,
+and a list of questions for the doctor or pharmacist.
 
-Fokus populasi demo: **lansia dengan hipertensi** yang minum beberapa obat kronis.
+Demo focus population: **elderly with hypertension** who take several chronic medicines.
 
-## 2. Pengguna dan peran
+## 2. Users and roles
 
-| Peran | Siapa | Layar yang dipakai |
+| Role | Who | Screens used |
 |---|---|---|
-| Penyiap | Anak / cucu / helper | Tambah obat (foto), cek hasil bacaan, atur bahasa |
-| Penerima | Nenek / kakek | Layar "Hari Ini": huruf besar, tombol besar "Sudah", tombol dengar |
-| Pemantau | Anak yang tinggal terpisah | Ringkasan mingguan |
+| Preparer | Child / grandchild / helper | Add Medicine (photo), check reading result, set language |
+| Recipient | Grandmother / grandfather | "Today" screen: large letters, large "Done" button, listen button |
+| Monitor | Child living separately | Weekly summary |
 
-## 3. Batasan wajib (dari handbook — TIDAK BOLEH dilanggar)
+## 3. Mandatory boundaries (from the handbook — MUST NOT be violated)
 
-1. **Strictly bounded:** aplikasi TIDAK PERNAH menyarankan mengganti, menambah, mengurangi,
-   atau menghentikan obat, dan tidak mendiagnosis. Pertanyaan semacam itu dijawab dengan
-   "Pertanyaan ini perlu dijawab dokter atau apoteker" dan otomatis masuk daftar pertanyaan.
-2. **Honest about uncertainty:** kalau label tidak terbaca atau obat tidak ada di basis pengetahuan,
-   jawab persis: "I'm not able to identify that medication, please check with your pharmacist."
-   (beserta terjemahannya di bahasa yang dipilih). Jangan menebak.
-3. **Penjelasan obat hanya dari dua sumber:** teks label yang sudah dikonfirmasi manusia, dan
-   file `data/drug-info.json` (ringkasan dari HealthHub Medications A-Z). LLM boleh
-   menyederhanakan dan menerjemahkan teks itu, tidak boleh menambah fakta medis.
-4. **Human-in-the-loop:** hasil bacaan AI selalu tampil di samping foto aslinya dan harus
-   ditekan "Benar" (atau diperbaiki) sebelum masuk jadwal.
-5. Tidak ada data pasien asli. Demo memakai label tiruan di folder `labels/`.
+1. **Strictly bounded:** the app NEVER suggests changing, adding, reducing, or stopping a medicine, and does not diagnose. Questions of this kind are answered with "This question needs to be answered by a doctor or pharmacist" and are automatically added to the questions list.
+2. **Honest about uncertainty:** if the label is unreadable or the medicine is not in the knowledge base, answer exactly: "I'm not able to identify that medication, please check with your pharmacist." (plus its translation in the selected language). Do not guess.
+3. **Medicine explanations come from only two sources:** the confirmed label text, and the file `data/drug-info.json` (summaries from HealthHub Medications A-Z). The LLM may simplify and translate that text, but must not add medical facts.
+4. **Human-in-the-loop:** AI reading results are always displayed next to the original photo and must be pressed "Correct" (or corrected) before entering the schedule.
+5. No real patient data. The demo uses fictional labels in the `labels/` folder.
 
-## 4. Fitur (dipetakan ke 6 fitur Challenge 2)
+## 4. Features (mapped to the 6 Challenge 2 features)
 
-| # | Fitur | Fitur handbook |
+| # | Feature | Handbook feature |
 |---|---|---|
-| F1 | Foto label → AI ekstrak JSON → layar konfirmasi berdampingan dengan foto | Medication management |
-| F2 | Jadwal "Hari Ini" bergambar: Pagi / Siang / Malam / Sebelum Tidur, ikon sebelum/sesudah makan, foto obat, huruf besar | Medication management |
-| F3 | Tombol dengar: penjelasan singkat obat, dalam bahasa pilihan, suara via Web Speech API | Medication understanding |
-| F4 | Pengingat + tombol "Sudah". Jika obat terlewat ≥2 kali dalam 7 hari, tanya alasan (Lupa / Efek samping / Merasa sudah sehat / Obat habis / Lainnya) | Adherence support |
-| F5 | Foto layar alat tensi → AI baca sistolik/diastolik/nadi → konfirmasi → grafik tren 14 hari + kalimat sederhana, tanpa diagnosis | Health tracking |
-| F6 | Hitung sisa obat dari jumlah di label dan jadwal; pengingat isi ulang 7 hari sebelum habis | Preventive health |
-| F7 | Daftar pertanyaan untuk dokter: obat sering terlewat + alasannya, tren tensi, pertanyaan yang ditolak dijawab AI | Healthcare preparation |
-| F8 | Ringkasan mingguan untuk pemantau | Longitudinal |
+| F1 | Photo label → AI extracts JSON → confirmation screen side-by-side with photo | Medication management |
+| F2 | "Today" picture schedule: Morning / Afternoon / Evening / Bedtime, before/after food icons, medicine photo, large letters | Medication management |
+| F3 | Listen button: brief medicine explanation, in the chosen language, voice via Web Speech API | Medication understanding |
+| F4 | Reminder + "Done" button. If medicine is missed ≥2 times in 7 days, ask reason (Forgot / Side effects / Felt well / Ran out / Other) | Adherence support |
+| F5 | Photo of BP monitor screen → AI reads systolic/diastolic/pulse → confirmation → 14-day trend graph + simple sentence, without diagnosis | Health tracking |
+| F6 | Calculate remaining medicine from label quantity and schedule; refill reminder 7 days before running out | Preventive health |
+| F7 | List of questions for the doctor: frequently missed medicines + reasons, BP trends, questions refused by AI | Healthcare preparation |
+| F8 | Weekly summary for the monitor | Longitudinal |
 
-## 5. Bahasa
+## 5. Languages
 
-UI dan penjelasan: English, 中文 (Mandarin), Bahasa Melayu, Bahasa Indonesia.
-Teks UI statis disimpan di `lib/i18n.ts`. Terjemahan penjelasan obat boleh lewat LLM,
-tapi sumbernya tetap `data/drug-info.json`.
+UI and explanations: English, 中文 (Mandarin), Bahasa Melayu, Bahasa Indonesia.
+Static UI text is stored in `lib/i18n.ts`. Medicine explanation translations may go through the LLM,
+but the source remains `data/drug-info.json`.
 
-## 6. Arsitektur (sederhana, untuk 4 hari)
+## 6. Architecture (simple, for 4 days)
 
-- **Next.js (App Router) + TypeScript + Tailwind CSS**, satu repo.
-- **API route** `app/api/read-label/route.ts` dan `app/api/read-bp/route.ts`: menerima foto (base64),
-  memanggil vision LLM, mengembalikan JSON yang sudah divalidasi dengan **zod**.
-- **API route** `app/api/explain/route.ts`: menerima nama obat + bahasa, mengambil entri dari
-  `data/drug-info.json`, meminta LLM menyederhanakan/menerjemahkan **hanya teks itu**.
-  Obat tidak ada di JSON → kembalikan kalimat "tanya apoteker", tanpa memanggil LLM.
-- **LLM provider** lewat endpoint **OpenAI-compatible**, dikonfigurasi di `.env.local`:
+- **Next.js (App Router) + TypeScript + Tailwind CSS**, single repo.
+- **API route** `app/api/read-label/route.ts` and `app/api/read-bp/route.ts`: receive photo (base64),
+  call vision LLM, return JSON validated with **zod**.
+- **API route** `app/api/explain/route.ts`: receive medicine name + language, fetch entry from
+  `data/drug-info.json`, ask LLM to simplify/translate **only that text**.
+  Medicine not in JSON → return "ask pharmacist" sentence, without calling the LLM.
+- **LLM provider** via **OpenAI-compatible** endpoint, configured in `.env.local`:
   `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_VISION_MODEL`, `LLM_TEXT_MODEL`.
-  (Bisa Tencent Hunyuan, Gemini, OpenAI, dll. API key TIDAK PERNAH masuk ke kode atau Git.)
-- **Hasil uji model (14 Okt 2026, endpoint Nous Research):**
-  - `google/gemini-2.5-flash` (vision): membaca label 1–4 dan 6 dengan benar, menolak label 5 yang buram, sekitar 5 detik
-    dan sekitar US$0,002 per foto. Kirim `response_format: {"type":"json_object"}`. Field `food` dari model masih bebas
-    (misalnya "BEFORE BEDTIME"), jadi prompt harus memaksa enum di SPEC bagian 7 dan zod harus menolak nilai lain.
-  - `tencent/hy3` (teks) adalah **model reasoning**. Tanpa pengaturan, ia "berpikir" dulu sekitar 600 token. Kalau
-    `max_tokens` kecil, `content` kembali `null`. Selalu kirim `reasoning: {"enabled": false}` (jawaban langsung,
-    sekitar 40 token) dan `max_tokens` minimal 1000. Waktu respons 8–13 detik, jadi **simpan hasil penjelasan per
-    obat + bahasa di localStorage** (buat sekali saat obat dikonfirmasi, jangan saat tombol dengar ditekan).
-    Jika `content` kosong atau error → pakai teks bahasa Inggris dari `data/drug-info.json`.
-- **Penyimpanan:** `localStorage` di browser (cukup untuk demo; sebut di diagram sebagai batasan).
-- **Suara:** `window.speechSynthesis` (gratis, tanpa API).
-- **Waktu demo:** tombol tersembunyi "Mode demo: majukan waktu +1 hari" supaya pengingat,
-  tren, dan isi ulang bisa didemokan dalam video 5–8 menit.
-- Deploy: Vercel (atau Tencent EdgeOne Pages) untuk link demo (poin bonus).
+  (Can be Tencent Hunyuan, Gemini, OpenAI, etc. API key NEVER enters code or Git.)
+- **Model test results (14 Oct 2026, Nous Research endpoint):**
+  - `google/gemini-2.5-flash` (vision): read labels 1–4 and 6 correctly, refused blurred label 5, about 5 seconds
+    and about US$0.002 per photo. Send `response_format: {"type":"json_object"}`. The `food` field from the model is still free
+    (e.g. "BEFORE BEDTIME"), so the prompt must force the enum in SPEC section 7 and zod must reject other values.
+  - `tencent/hy3` (text) is a **reasoning model**. Without settings, it "thinks" first for about 600 tokens. If
+    `max_tokens` is small, `content` returns `null`. Always send `reasoning: {"enabled": false}` (direct answer,
+    about 40 tokens) and `max_tokens` at least 1000. Response time 8–13 seconds, so **store explanation results per
+    medicine + language in localStorage** (create once when medicine is confirmed, not when the listen button is pressed).
+    If `content` is empty or errors → use English text from `data/drug-info.json`.
+- **Storage:** `localStorage` in the browser (sufficient for demo; mention as a limitation in diagrams).
+- **Voice:** `window.speechSynthesis` (free, no API).
+- **Demo time:** hidden button "Demo mode: advance time +1 day" so reminders,
+  trends, and refills can be demonstrated in a 5–8 minute video.
+- Deploy: Vercel (or Tencent EdgeOne Pages) for demo link (bonus points).
 
-## 7. Skema data hasil baca label (output wajib dari `/api/read-label`)
+## 7. Label reading data schema (required output from `/api/read-label`)
 
 ```json
 {
@@ -102,12 +95,12 @@ tapi sumbernya tetap `data/drug-info.json`.
 }
 ```
 
-Aturan: jika `readable=false` atau `confidence < 0.7` atau `drug_name` kosong →
-tampilkan pesan "tanya apoteker", jangan buat jadwal. Field yang tidak terbaca masuk `unclear_fields`
-dan ditandai merah di layar konfirmasi.
+Rule: if `readable=false` or `confidence < 0.7` or `drug_name` empty →
+show "ask pharmacist" message, do not create schedule. Unreadable fields go into `unclear_fields`
+and are marked red on the confirmation screen.
 
-## 8. Definisi selesai (untuk demo)
+## 8. Definition of done (for demo)
 
-- Semua 6 label di `labels/` diuji: 4 terbaca benar, 1 buram ditolak, 1 obat tak dikenal → "tanya apoteker".
-- Seluruh alur bisa dijalankan di HP (lebar 375px) tanpa bantuan.
-- Tidak ada satu pun kalimat saran medis di output (uji dengan pertanyaan jebakan di TASKS.md).
+- All 6 labels in `labels/` are tested: 4 read correctly, 1 blurred rejected, 1 unknown medicine → "ask pharmacist".
+- The entire flow can be run on a phone (375px width) without assistance.
+- Not a single sentence of medical advice in output (test with trap questions in TASKS.md).

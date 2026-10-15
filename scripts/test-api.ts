@@ -11,6 +11,7 @@ async function req(
 ): Promise<{ status: number; data: unknown }> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "x-test-run": "1",
   };
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
@@ -47,12 +48,14 @@ async function run() {
   const createRes = await req("POST", "/api/v1/households", {
     displayName: "Test Family",
     language: "en",
+    isDemo: true,
   });
   assert(createRes.status === 200, "Create household returns 200");
   const caregiverToken = (createRes.data as { token?: string })?.token;
-  const household = (createRes.data as { household?: { id: string } })?.household;
+  const household = (createRes.data as { household?: { id: string; is_demo?: boolean } })?.household;
   assert(typeof caregiverToken === "string", "Returns caregiver token");
   assert(!!household?.id, "Returns household");
+  assert(household?.is_demo === true, "Household is flagged is_demo");
 
   // 2. Create pairing code
   console.log("2. Create pairing code");
@@ -67,6 +70,19 @@ async function run() {
   const joinUrl = (pairRes.data as { joinUrl?: string })?.joinUrl;
   assert(typeof shortCode === "string" && shortCode.length === 6, "Returns 6-digit short code");
   assert(typeof joinUrl === "string" && joinUrl.includes("?c="), "Returns join URL");
+
+  // Verify expiry times
+  const shortExpiresAt = (pairRes.data as { shortExpiresAt?: string })?.shortExpiresAt;
+  const longExpiresAt = (pairRes.data as { longExpiresAt?: string })?.longExpiresAt;
+  assert(!!shortExpiresAt, "Short code has shortExpiresAt");
+  assert(!!longExpiresAt, "Long code has longExpiresAt");
+  const shortExpiry = new Date(shortExpiresAt!);
+  const longExpiry = new Date(longExpiresAt!);
+  const now = new Date();
+  const approx15m = shortExpiry.getTime() - now.getTime();
+  const approx24h = longExpiry.getTime() - now.getTime();
+  assert(approx15m > 14 * 60 * 1000 && approx15m < 16 * 60 * 1000, "Short code expires in ~15 min");
+  assert(approx24h > 23 * 60 * 60 * 1000 && approx24h < 25 * 60 * 60 * 1000, "Long code expires in ~24h");
 
   // 3. Join as senior with short code
   console.log("3. Join as senior");
@@ -172,14 +188,6 @@ async function run() {
 
   // Try to access first household's medicine with other token (should be isolated by household)
   // Since the API scopes by token's household, any ID will return not-found or empty
-  const otherMedGet = await req(
-    "GET",
-    `/api/v1/medicines`,
-    undefined,
-    otherToken
-  );
-  // There's no GET /medicines list route, but state already proved isolation.
-  // Try deleting a medicine from first household with second household's token
   const otherDelete = await req(
     "DELETE",
     `/api/v1/medicines/${medicineId}`,
@@ -188,12 +196,14 @@ async function run() {
   );
   assert(otherDelete.status === 404, "Other household DELETE returns 404");
 
-  // 9. Expired or reused code fails
+  // 9. Reused code fails with generic error
   console.log("9. Reused code fails");
   const reuseRes = await req("POST", "/api/v1/join", { code: shortCode });
   assert(reuseRes.status === 400, "Reused code returns 400");
+  const reuseError = (reuseRes.data as { error?: string })?.error;
+  assert(reuseError === "Invalid or expired code.", "Reused code returns generic error");
 
-  // Expired code: create a code, manually expire it, try to join
+  // 10. Second code reuse and expiry
   const pairRes2 = await req(
     "POST",
     "/api/v1/pairing-codes",
@@ -203,20 +213,12 @@ async function run() {
   assert(pairRes2.status === 200, "Create second pairing code returns 200");
   const shortCode2 = (pairRes2.data as { shortCode?: string })?.shortCode;
 
-  // Since we can't manipulate the DB directly easily here, let's just verify the expiry is set
-  const expiresAt = (pairRes2.data as { expiresAt?: string })?.expiresAt;
-  assert(!!expiresAt, "Pairing code has expiresAt");
-  const expiryDate = new Date(expiresAt!);
-  const now = new Date();
-  assert(expiryDate > now, "Expires in the future");
-  const approx24h = expiryDate.getTime() - now.getTime();
-  assert(approx24h > 23 * 60 * 60 * 1000 && approx24h < 25 * 60 * 60 * 1000, "Expires in ~24h");
-
-  // Use the code, then verify it fails on second use (already tested above)
   const join2Res = await req("POST", "/api/v1/join", { code: shortCode2 });
   assert(join2Res.status === 200, "First use of second code returns 200");
   const join2Reuse = await req("POST", "/api/v1/join", { code: shortCode2 });
   assert(join2Reuse.status === 400, "Second use of second code returns 400");
+  const join2Error = (join2Reuse.data as { error?: string })?.error;
+  assert(join2Error === "Invalid or expired code.", "Second use returns generic error");
 
   // Summary
   console.log(`\n${passed} passed, ${failed} failed`);

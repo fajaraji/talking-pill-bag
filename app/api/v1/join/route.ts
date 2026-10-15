@@ -37,17 +37,18 @@ export async function POST(request: NextRequest) {
     const codeHash = hashToken(code);
 
     const rows = await sql`
-      SELECT household_id, role, expires_at, used_at
-      FROM pairing_codes
+      UPDATE pairing_codes
+      SET used_at = now()
       WHERE code_hash = ${codeHash}
+        AND used_at IS NULL
+        AND expires_at > now()
+      RETURNING household_id, role
     `;
 
     const row = rows[0] as
       | {
           household_id: string;
           role: string;
-          expires_at: string;
-          used_at: string | null;
         }
       | undefined;
 
@@ -57,27 +58,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    if (row.used_at) {
-      return NextResponse.json(
-        { error: "Code already used." },
-        { status: 400 }
-      );
-    }
-
-    if (new Date(row.expires_at) < new Date()) {
-      return NextResponse.json(
-        { error: "Code expired." },
-        { status: 400 }
-      );
-    }
-
-    const now = new Date().toISOString();
-    await sql`
-      UPDATE pairing_codes
-      SET used_at = ${now}
-      WHERE code_hash = ${codeHash}
-    `;
 
     const token = generateToken();
     const tokenHash = hashToken(token);

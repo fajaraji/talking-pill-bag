@@ -6,6 +6,7 @@ import { generateToken, hashToken } from "@/lib/auth";
 const createHouseholdSchema = z.object({
   displayName: z.string().min(1).max(100),
   language: z.enum(["en", "zh", "ms", "id"]).default("en"),
+  isDemo: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -20,12 +21,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { displayName, language } = parsed.data;
+    const isTestRun = request.headers.get("x-test-run") === "1";
+    const isDemo =
+      isTestRun && process.env.NODE_ENV !== "production"
+        ? (parsed.data.isDemo ?? false)
+        : false;
+
     const token = generateToken();
     const tokenHash = hashToken(token);
 
     const householdRows = await sql`
-      INSERT INTO households (display_name, language)
-      VALUES (${displayName}, ${language})
+      INSERT INTO households (display_name, language, is_demo)
+      VALUES (${displayName}, ${language}, ${isDemo})
       RETURNING id, display_name, language, bp_target_systolic, bp_target_diastolic, is_demo, created_at
     `;
     const household = householdRows[0] as {

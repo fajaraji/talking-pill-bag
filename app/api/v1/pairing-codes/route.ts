@@ -35,15 +35,16 @@ export async function POST(request: NextRequest) {
     const shortHash = hashToken(shortCode);
     const longHash = hashToken(longCode);
 
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const shortExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const longExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await sql`
       INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device)
-      VALUES (${shortHash}, ${auth.householdId}, ${role}, ${expiresAt.toISOString()}, ${auth.deviceId})
+      VALUES (${shortHash}, ${auth.householdId}, ${role}, ${shortExpiresAt.toISOString()}, ${auth.deviceId})
     `;
     await sql`
       INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device)
-      VALUES (${longHash}, ${auth.householdId}, ${role}, ${expiresAt.toISOString()}, ${auth.deviceId})
+      VALUES (${longHash}, ${auth.householdId}, ${role}, ${longExpiresAt.toISOString()}, ${auth.deviceId})
     `;
 
     const baseUrl =
@@ -53,7 +54,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       shortCode,
       joinUrl,
-      expiresAt: expiresAt.toISOString(),
+      shortExpiresAt: shortExpiresAt.toISOString(),
+      longExpiresAt: longExpiresAt.toISOString(),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

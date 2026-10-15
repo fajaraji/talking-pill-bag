@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import DemoLoader from "./demo-loader";
 
 export const metadata: Metadata = {
   title: "Talking Pill Bag",
@@ -19,7 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <DemoLoader />
+        {children}
+      </body>
     </html>
   );
 }

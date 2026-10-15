@@ -25,9 +25,11 @@ Built for the **Tencent Cloud AI CAN DO IT Hackathon Singapore 2026** — Health
 
 ## Demo mode
 
+Judges: open https://talking-pill-bag.vercel.app/?demo=1 to load a demo profile (fictional patient).
+
 A hidden demo-mode bar on the Today screen lets you simulate the passage of time:
 
-- Open `/today?demo=1` to show the demo controls.
+- Open any page with `?demo=1` to load the demo profile and show the demo controls.
 - **+1 day** advances the simulated date by one day (stored in `localStorage`), so reminders, missed-dose prompts, refill warnings, and the weekly summary can be demonstrated quickly.
 - **Reset** returns the simulated date to today.
 

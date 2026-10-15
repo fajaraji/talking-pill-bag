@@ -60,6 +60,7 @@ export default function QuestionsPage() {
   const [customQuestions, setCustomQuestions] = useState<ReturnType<typeof getCustomQuestions>>([]);
   const [doneIds, setDoneIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [profileName, setProfileName] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
@@ -72,6 +73,15 @@ export default function QuestionsPage() {
     setCustomQuestions(getCustomQuestions());
     setDoneIds(getDoneQuestionIds());
     setToday(getToday());
+    try {
+      const raw = localStorage.getItem("tpb-profile");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { name?: string };
+        setProfileName(parsed.name ?? "");
+      }
+    } catch {
+      // ignore
+    }
     setIsLoading(false);
   }, []);
 
@@ -203,6 +213,51 @@ export default function QuestionsPage() {
     window.print();
   }
 
+  function buildShareText(): string {
+    const lines: string[] = [];
+    lines.push(`${t(lang, "appTitle")} — ${t(lang, "questionsForDoctor")}`);
+    if (profileName) {
+      lines.push(`${profileName}`);
+    }
+    if (today) {
+      lines.push(today);
+    }
+    lines.push("");
+
+    if (medicines.length > 0) {
+      lines.push(`${t(lang, "currentMedicines")}:`);
+      for (const med of medicines) {
+        lines.push(`- ${med.drug_name} ${med.strength} — ${med.dose_per_time} (${med.time_slots.join(", ")})`);
+      }
+      lines.push("");
+    }
+
+    if (allQuestions.length > 0) {
+      lines.push(`${t(lang, "questionsForDoctor")}:`);
+      allQuestions.forEach((q, idx) => {
+        lines.push(`${idx + 1}. ${q.text}`);
+      });
+    } else {
+      lines.push(t(lang, "noQuestions"));
+    }
+
+    return lines.join("\n");
+  }
+
+  async function handleShare() {
+    const text = buildShareText();
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {
+        // Fall through to WhatsApp
+      }
+    }
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
       {/* Header */}
@@ -230,8 +285,8 @@ export default function QuestionsPage() {
         </div>
       </header>
 
-      {/* Print button */}
-      <div className="flex w-full max-w-sm flex-col gap-4 self-center no-print">
+      {/* Action buttons */}
+      <div className="flex w-full max-w-sm flex-col gap-3 self-center no-print">
         <button
           onClick={handlePrint}
           className="w-full rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
@@ -239,6 +294,15 @@ export default function QuestionsPage() {
         >
           {t(lang, "printSavePDF")}
         </button>
+        {allQuestions.length > 0 && (
+          <button
+            onClick={handleShare}
+            className="w-full rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
+            style={{ minHeight: 56 }}
+          >
+            {t(lang, "shareViaWhatsApp")}
+          </button>
+        )}
       </div>
 
       {/* Current medicines (visible on print) */}

@@ -130,6 +130,31 @@ type StringKey =
   | "noQuestions"
   | "currentMedicines"
   | "printDate"
+  // Personalisation / home page
+  | "whoIsThisFor"
+  | "namePlaceholder"
+  | "yourName"
+  | "settings"
+  | "changeNameLanguage"
+  | "todaysMedicinesNamed"
+  | "todaysMedicinesNeutral"
+  | "homeValueStatement"
+  | "step1Title"
+  | "step2Title"
+  | "step3Title"
+  | "addFirstMedicine"
+  | "forFamilyAndHelpers"
+  | "addMedicineTile"
+  | "addMedicineTileDesc"
+  | "bpTile"
+  | "bpTileDesc"
+  | "questionsTile"
+  | "questionsTileDesc"
+  | "weeklySummaryTile"
+  | "weeklySummaryTileDesc"
+  | "shareViaWhatsApp"
+  | "nextDose"
+  | "takenOf"
   // Weekly summary
   | "weeklySummary"
   | "summaryForFamily"
@@ -263,6 +288,31 @@ const en: Dictionary = {
   missedThisWeek: "Missed {n} dose(s) this week",
   doses: "doses",
   readingsCount: "{n} reading(s)",
+  whoIsThisFor: "Who is this for?",
+  namePlaceholder: "Name, e.g. Mum",
+  yourName: "Your name",
+  settings: "Settings",
+  changeNameLanguage: "Change name and language",
+  todaysMedicinesNamed: "{name}'s medicines today",
+  todaysMedicinesNeutral: "Today's medicines",
+  homeValueStatement:
+    "Snap a medicine label once. Get a simple daily schedule, spoken explanations and gentle reminders.",
+  step1Title: "Photograph the label",
+  step2Title: "Check what we read",
+  step3Title: 'Tap "Done" each day — we remind and explain',
+  addFirstMedicine: "Add the first medicine",
+  forFamilyAndHelpers: "For family and helpers",
+  addMedicineTile: "Add medicine",
+  addMedicineTileDesc: "Scan a new medicine label",
+  bpTile: "Blood pressure",
+  bpTileDesc: "Log blood pressure readings",
+  questionsTile: "Questions for the doctor",
+  questionsTileDesc: "Notes to bring to the next visit",
+  weeklySummaryTile: "Weekly summary",
+  weeklySummaryTileDesc: "See how the week went",
+  shareViaWhatsApp: "Share via WhatsApp",
+  nextDose: "Next: {slot}",
+  takenOf: "{taken} of {total} taken",
 };
 
 const zh: Dictionary = {
@@ -381,6 +431,31 @@ const zh: Dictionary = {
   missedThisWeek: "本周错过了 {n} 次",
   doses: "剂",
   readingsCount: "{n} 条记录",
+  whoIsThisFor: "这是给谁的？",
+  namePlaceholder: "名字，例如妈妈",
+  yourName: "您的名字",
+  settings: "设置",
+  changeNameLanguage: "更改名字和语言",
+  todaysMedicinesNamed: "{name} 今天的药物",
+  todaysMedicinesNeutral: "今日药物",
+  homeValueStatement:
+    "拍一次药袋标签。即可获得简单的每日时间表、语音说明和温和的提醒。",
+  step1Title: "拍摄标签照片",
+  step2Title: "核对我们读取的内容",
+  step3Title: "每天点击“完成”——我们会提醒并解释",
+  addFirstMedicine: "添加第一种药物",
+  forFamilyAndHelpers: "给家人和助手",
+  addMedicineTile: "添加药物",
+  addMedicineTileDesc: "扫描新的药袋标签",
+  bpTile: "血压",
+  bpTileDesc: "记录血压读数",
+  questionsTile: "给医生的问题",
+  questionsTileDesc: "下次就诊要带去的记录",
+  weeklySummaryTile: "每周摘要",
+  weeklySummaryTileDesc: "查看本周情况",
+  shareViaWhatsApp: "通过 WhatsApp 分享",
+  nextDose: "下次：{slot}",
+  takenOf: "已服用 {taken} / {total}",
 };
 
 const ms: Dictionary = {
@@ -505,6 +580,31 @@ const ms: Dictionary = {
   missedThisWeek: "Terlepas {n} kali minggu ini",
   doses: "dosis",
   readingsCount: "{n} bacaan",
+  whoIsThisFor: "Ini untuk siapa?",
+  namePlaceholder: "Nama, contohnya Mak",
+  yourName: "Nama anda",
+  settings: "Tetapan",
+  changeNameLanguage: "Tukar nama dan bahasa",
+  todaysMedicinesNamed: "Ubat {name} hari ini",
+  todaysMedicinesNeutral: "Ubat hari ini",
+  homeValueStatement:
+    "Ambil gambar label ubat sekali. Dapatkan jadual harian yang mudah, penjelasan bersuara dan peringatan lembut.",
+  step1Title: "Ambil gambar label",
+  step2Title: "Semak apa yang kami baca",
+  step3Title: 'Ketik "Selesai" setiap hari — kami ingatkan dan terangkan',
+  addFirstMedicine: "Tambah ubat pertama",
+  forFamilyAndHelpers: "Untuk keluarga dan pembantu",
+  addMedicineTile: "Tambah ubat",
+  addMedicineTileDesc: "Imbas label ubat baharu",
+  bpTile: "Tekanan darah",
+  bpTileDesc: "Rekod bacaan tekanan darah",
+  questionsTile: "Soalan untuk doktor",
+  questionsTileDesc: "Nota untuk dibawa pada lawatan seterusnya",
+  weeklySummaryTile: "Ringkasan mingguan",
+  weeklySummaryTileDesc: "Lihat perkembangan minggu ini",
+  shareViaWhatsApp: "Kongsi melalui WhatsApp",
+  nextDose: "Seterusnya: {slot}",
+  takenOf: "{taken} daripada {total} diambil",
 };
 
 const id: Dictionary = {
@@ -629,6 +729,31 @@ const id: Dictionary = {
   missedThisWeek: "Melewatkan {n} dosis minggu ini",
   doses: "dosis",
   readingsCount: "{n} catatan",
+  whoIsThisFor: "Ini untuk siapa?",
+  namePlaceholder: "Nama, misalnya Ibu",
+  yourName: "Nama Anda",
+  settings: "Pengaturan",
+  changeNameLanguage: "Ubah nama dan bahasa",
+  todaysMedicinesNamed: "Obat {name} hari ini",
+  todaysMedicinesNeutral: "Obat hari ini",
+  homeValueStatement:
+    "Foto label obat sekali. Dapatkan jadwal harian sederhana, penjelasan suara, dan pengingat lembut.",
+  step1Title: "Fotograferi label",
+  step2Title: "Periksa apa yang kami baca",
+  step3Title: 'Ketuk "Selesai" setiap hari — kami ingatkan dan jelaskan',
+  addFirstMedicine: "Tambah obat pertama",
+  forFamilyAndHelpers: "Untuk keluarga dan pembantu",
+  addMedicineTile: "Tambah obat",
+  addMedicineTileDesc: "Pindai label obat baru",
+  bpTile: "Tekanan darah",
+  bpTileDesc: "Catat tekanan darah",
+  questionsTile: "Pertanyaan untuk dokter",
+  questionsTileDesc: "Catatan untuk dibawa saat berikutnya",
+  weeklySummaryTile: "Ringkasan mingguan",
+  weeklySummaryTileDesc: "Lihat perkembangan minggu ini",
+  shareViaWhatsApp: "Bagikan via WhatsApp",
+  nextDose: "Berikutnya: {slot}",
+  takenOf: "{taken} dari {total} sudah diambil",
 };
 
 export const dictionaries: Record<Language, Dictionary> = { en, zh, ms, id };

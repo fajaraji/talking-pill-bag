@@ -63,6 +63,7 @@ export default function SummaryPage() {
   const [doseLog, setDoseLog] = useState<ReturnType<typeof getDoseLog>>([]);
   const [today, setToday] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [profileName, setProfileName] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
@@ -73,6 +74,15 @@ export default function SummaryPage() {
     setMedicines(getMedicines());
     setDoseLog(getDoseLog());
     setToday(getToday());
+    try {
+      const raw = localStorage.getItem("tpb-profile");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { name?: string };
+        setProfileName(parsed.name ?? "");
+      }
+    } catch {
+      // ignore
+    }
     setIsLoading(false);
   }, []);
 
@@ -110,6 +120,72 @@ export default function SummaryPage() {
       .filter(({ days }) => days !== null && days <= 7);
   }, [medicines, doseLog, today]);
 
+  function buildShareText(): string {
+    const lines: string[] = [];
+    lines.push(`${t(lang, "appTitle")} — ${t(lang, "weeklySummary")}`);
+    if (profileName) {
+      lines.push(`${t(lang, "summaryForFamily")} — ${profileName}`);
+    }
+    if (fromDate && today) {
+      lines.push(`${fromDate} – ${today}`);
+    }
+    lines.push("");
+
+    if (medicines.length > 0) {
+      lines.push(`${t(lang, "dosesTakenVsScheduled")}:`);
+      for (const med of medicines) {
+        const scheduled = getScheduledDosesInRange(med, fromDate, today);
+        const taken = getTakenDosesInRange(med, doseLog, fromDate, today);
+        const missed = countMissedDosesInLastNDays(med, doseLog, today, 7);
+        let line = `- ${med.drug_name}: ${taken}/${scheduled} ${t(lang, "doses")}`;
+        if (missed > 0) {
+          line += ` (${t(lang, "missedThisWeek").replace("{n}", String(missed))})`;
+        }
+        lines.push(line);
+      }
+    }
+
+    if (reasons.length > 0) {
+      lines.push("");
+      lines.push(`${t(lang, "reasonsRecorded")}:`);
+      for (const r of reasons) {
+        const med = medicines.find((m) => m.id === r.medicineId);
+        const reasonLabel = t(lang, r.reason as Parameters<typeof t>[1]) ?? r.reason;
+        lines.push(`- ${med ? med.drug_name : r.medicineId}: ${reasonLabel}`);
+      }
+    }
+
+    if (bpStats) {
+      lines.push("");
+      lines.push(`${t(lang, "bpAverage")}: ${bpStats.avgSys}/${bpStats.avgDia}`);
+      lines.push(`${t(lang, "readingsCount").replace("{n}", String(bpStats.count))}`);
+    }
+
+    if (refills.length > 0) {
+      lines.push("");
+      lines.push(`${t(lang, "refillsDue")}:`);
+      for (const { med, days } of refills) {
+        lines.push(`- ${t(lang, "refillQuestion").replace("{drug}", med.drug_name).replace("{n}", String(days))}`);
+      }
+    }
+
+    return lines.join("\n");
+  }
+
+  async function handleShare() {
+    const text = buildShareText();
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {
+        // Fall through to WhatsApp
+      }
+    }
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
       {/* Header */}
@@ -136,6 +212,19 @@ export default function SummaryPage() {
           </p>
         )}
       </header>
+
+      {/* Share button */}
+      {medicines.length > 0 && (
+        <div className="flex w-full max-w-sm flex-col gap-4 self-center">
+          <button
+            onClick={handleShare}
+            className="w-full rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
+            style={{ minHeight: 56 }}
+          >
+            {t(lang, "shareViaWhatsApp")}
+          </button>
+        </div>
+      )}
 
       {/* Medicines adherence */}
       <div className="flex w-full max-w-sm flex-col gap-4 self-center">

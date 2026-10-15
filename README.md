@@ -23,6 +23,8 @@ Built for the **Tencent Cloud AI CAN DO IT Hackathon Singapore 2026** — Health
 - **Questions for my doctor or pharmacist** — A printable list of missed doses with reasons, refill reminders, high-BP readings, and any questions the user asked that the app redirected.
 - **Weekly Summary** — For family members: doses taken vs scheduled, reasons recorded, average blood pressure, and refills due.
 - **Family phones and senior mode** — Caregivers can generate a QR code and 6-digit code so a senior's phone joins the same household. Seniors see a simplified Today screen with large Done buttons; caregivers see the full feature set.
+- **PWA install** — Add to Home Screen on Android or iPhone for a standalone, fullscreen experience.
+- **Share + Copy text** — Share summaries and questions via the phone's native share sheet (WhatsApp, WeChat, Telegram, email) or copy as plain text.
 
 ## Demo mode
 

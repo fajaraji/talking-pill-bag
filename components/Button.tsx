@@ -11,7 +11,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-primary text-white hover:bg-primary-hover",
   secondary: "border border-line bg-white text-ink hover:bg-page",
   success:
-    "border border-success-border bg-success-bg text-success-text hover:brightness-95",
+    "bg-[#15803D] text-white hover:bg-[#166534]",
   danger:
     "border border-danger-border bg-danger-bg text-danger-text hover:brightness-95",
   attention:

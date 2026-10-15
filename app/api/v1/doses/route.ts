@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       VALUES (${auth.householdId}, ${medicineId}, ${date}, ${slot}, ${new Date().toISOString()})
       ON CONFLICT (medicine_id, date, slot)
       DO UPDATE SET taken_at = EXCLUDED.taken_at
-      RETURNING *
+      RETURNING id, medicine_id, to_char(date, 'YYYY-MM-DD') AS date, slot, taken_at
     `;
 
     return NextResponse.json({ dose: rows[0] });

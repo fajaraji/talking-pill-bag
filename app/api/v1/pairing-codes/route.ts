@@ -10,7 +10,15 @@ import {
 
 const createPairingSchema = z.object({
   role: z.enum(["caregiver", "senior"]),
+  label: z.string().max(40).optional(),
 });
+
+function getOrigin(request: NextRequest): string {
+  const url = new URL(request.url);
+  const proto = request.headers.get("x-forwarded-proto") ?? url.protocol.slice(0, -1);
+  const host = request.headers.get("x-forwarded-host") ?? url.host;
+  return `${proto}://${host}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { role } = parsed.data;
+    const { role, label } = parsed.data;
     const shortCode = generateShortCode();
     const longCode = generateLongCode();
     const shortHash = hashToken(shortCode);
@@ -39,17 +47,16 @@ export async function POST(request: NextRequest) {
     const longExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await sql`
-      INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device)
-      VALUES (${shortHash}, ${auth.householdId}, ${role}, ${shortExpiresAt.toISOString()}, ${auth.deviceId})
+      INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device, label)
+      VALUES (${shortHash}, ${auth.householdId}, ${role}, ${shortExpiresAt.toISOString()}, ${auth.deviceId}, ${label ?? null})
     `;
     await sql`
-      INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device)
-      VALUES (${longHash}, ${auth.householdId}, ${role}, ${longExpiresAt.toISOString()}, ${auth.deviceId})
+      INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device, label)
+      VALUES (${longHash}, ${auth.householdId}, ${role}, ${longExpiresAt.toISOString()}, ${auth.deviceId}, ${label ?? null})
     `;
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const joinUrl = `${baseUrl}/join?c=${longCode}`;
+    const origin = getOrigin(request);
+    const joinUrl = `${origin}/join?c=${longCode}`;
 
     return NextResponse.json({
       shortCode,

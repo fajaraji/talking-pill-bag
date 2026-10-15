@@ -13,10 +13,20 @@ import { useStore } from "@/lib/store";
 function JoinPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { joinHousehold } = useStore();
+  const { joinHousehold, isHydrated } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [error, setError] = useState("");
+
+  // Show neutral loading shell until hydrated to avoid hydration mismatch
+  if (!isHydrated) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 py-12">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+        <p className="text-lg text-slate-500">Loading…</p>
+      </main>
+    );
+  }
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;

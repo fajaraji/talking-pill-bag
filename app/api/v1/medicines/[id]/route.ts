@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         unclear_fields = ${merged.unclear_fields as string[]},
         updated_at = ${merged.updated_at as string}
       WHERE id = ${id} AND household_id = ${auth.householdId} AND deleted_at IS NULL
-      RETURNING *
+      RETURNING id, drug_name, strength, dose_per_time, times_per_day, time_slots, food, special_instructions, quantity_dispensed, to_char(dispensed_date, 'YYYY-MM-DD') AS dispensed_date, to_char(added_on, 'YYYY-MM-DD') AS added_on, thumbnail, unclear_fields, updated_at
     `;
 
     return NextResponse.json({ medicine: rows[0] });

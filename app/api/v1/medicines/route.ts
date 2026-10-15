@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         ${data.timeSlots}, ${data.food}, ${data.specialInstructions}, ${data.quantityDispensed ?? null},
         ${data.dispensedDate ?? null}, ${addedOn}, ${data.thumbnail ?? null}, ${data.unclearFields}, ${new Date().toISOString()}
       )
-      RETURNING *
+      RETURNING id, drug_name, strength, dose_per_time, times_per_day, time_slots, food, special_instructions, quantity_dispensed, to_char(dispensed_date, 'YYYY-MM-DD') AS dispensed_date, to_char(added_on, 'YYYY-MM-DD') AS added_on, thumbnail, unclear_fields, updated_at
     `;
 
     return NextResponse.json({ medicine: rows[0] });

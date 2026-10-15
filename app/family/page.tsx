@@ -13,13 +13,25 @@ import QRCode from "qrcode";
 
 export default function FamilyPage() {
   const router = useRouter();
-  const { state, actions } = useStore();
+  const { state, actions, isHydrated } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [qrUrl, setQrUrl] = useState("");
   const [shortCode, setShortCode] = useState("");
   const [expiryText, setExpiryText] = useState("");
   const [showCode, setShowCode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+
+  // Show neutral loading shell until hydrated to avoid hydration mismatch
+  if (!isHydrated) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 py-12">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+        <p className="text-lg text-slate-500">Loading…</p>
+      </main>
+    );
+  }
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
@@ -32,9 +44,15 @@ export default function FamilyPage() {
   async function generateCode(role: "caregiver" | "senior") {
     setLoading(true);
     try {
-      const result = await actions.createPairingCode(role);
+      const displayName = state.household?.displayName ?? "";
+      const label =
+        role === "senior"
+          ? `${displayName || t(lang, "namePlaceholder")}'s phone`
+          : "Family member";
+      const result = await actions.createPairingCode(role, label);
       setShortCode(result.shortCode);
-      const dataUrl = await QRCode.toDataURL(result.joinUrl, { width: 280, margin: 2 });
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const dataUrl = await QRCode.toDataURL(`${origin}/join?c=${result.shortCode}`, { width: 280, margin: 2 });
       setQrUrl(dataUrl);
 
       const expiry = new Date(result.shortExpiresAt);
@@ -147,10 +165,45 @@ export default function FamilyPage() {
                 key={device.id}
                 className="flex items-center justify-between rounded-xl border-2 border-slate-200 bg-white p-4"
               >
-                <div className="flex flex-col gap-1">
-                  <p className="text-lg font-semibold text-slate-900">
-                    {device.label || t(lang, "unnamedDevice")}
-                  </p>
+                <div className="flex flex-col gap-1 min-w-0">
+                  {editingId === device.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editLabel}
+                        onChange={(e) => setEditLabel(e.target.value)}
+                        maxLength={40}
+                        className="w-full rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-lg text-slate-900"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (editLabel.trim()) {
+                            await actions.updateDeviceLabel(device.id, editLabel.trim());
+                          }
+                          setEditingId(null);
+                        }}
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-base font-semibold text-white hover:bg-blue-700"
+                      >
+                        {t(lang, "save")}
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        {t(lang, "cancel")}
+                      </button>
+                    </div>
+                  ) : (
+                    <p
+                      className="text-lg font-semibold text-slate-900 cursor-pointer hover:text-blue-700"
+                      onClick={() => {
+                        setEditingId(device.id);
+                        setEditLabel(device.label || t(lang, "unnamedDevice"));
+                      }}
+                    >
+                      {device.label || t(lang, "unnamedDevice")}
+                    </p>
+                  )}
                   <p className="text-base text-slate-600">
                     {t(lang, "roleLabel")}: {t(lang, device.role as "caregiver" | "senior")}
                   </p>

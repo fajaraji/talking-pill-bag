@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         ${data.medicineId ?? null}, ${data.drugName ?? null},
         ${data.text}, ${data.askedOn}
       )
-      RETURNING *
+      RETURNING id, kind, medicine_id, drug_name, text, to_char(asked_on, 'YYYY-MM-DD') AS asked_on, done
     `;
 
     return NextResponse.json({ question: rows[0] });

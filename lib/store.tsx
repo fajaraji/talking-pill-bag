@@ -37,6 +37,7 @@ import {
   deleteQuestionApi,
   updateHouseholdApi,
   unlinkDeviceApi,
+  updateDeviceLabelApi,
   createPairingCodeApi,
   createDemo,
   joinWithCode,
@@ -67,6 +68,7 @@ export interface AppState {
   role: "caregiver" | "senior" | null;
   loading: boolean;
   syncError: string | null;
+  isHydrated: boolean;
 }
 
 interface StoreContextValue {
@@ -74,6 +76,7 @@ interface StoreContextValue {
   refresh: () => Promise<void>;
   dismissError: () => void;
   isAuthenticated: boolean;
+  isHydrated: boolean;
   // Onboarding
   setupHousehold: (displayName: string, language: string) => Promise<void>;
   joinHousehold: (code: string) => Promise<void>;
@@ -97,7 +100,8 @@ interface StoreContextValue {
     toggleDoneQuestion: (id: string) => Promise<void>;
     updateHousehold: (data: { displayName?: string; language?: string }) => Promise<void>;
     unlinkDevice: (id: string) => Promise<void>;
-    createPairingCode: (role: "caregiver" | "senior") => Promise<{ shortCode: string; joinUrl: string; shortExpiresAt: string; longExpiresAt: string }>;
+    createPairingCode: (role: "caregiver" | "senior", label?: string) => Promise<{ shortCode: string; joinUrl: string; shortExpiresAt: string; longExpiresAt: string }>;
+    updateDeviceLabel: (id: string, label: string) => Promise<void>;
   };
 }
 
@@ -203,6 +207,7 @@ function normalizeState(raw: RawState, role: string | null): AppState {
     role: role as "caregiver" | "senior" | null,
     loading: false,
     syncError: null,
+    isHydrated: true,
   };
 }
 
@@ -220,6 +225,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     role: null,
     loading: true,
     syncError: null,
+    isHydrated: false,
   });
 
   const lastFailedAction = useRef<(() => Promise<void>) | null>(null);
@@ -229,15 +235,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = !!token;
 
   const load = useCallback(async () => {
-    if (!getDeviceToken()) return;
+    if (!getDeviceToken()) {
+      setState((s) => ({ ...s, isHydrated: true, loading: false }));
+      return;
+    }
     try {
       setState((s) => ({ ...s, loading: true }));
       const raw = await fetchState();
       const normalized = normalizeState(raw, getDeviceToken()?.role ?? null);
-      setState((s) => ({ ...s, ...normalized, loading: false, syncError: null }));
+      setState((s) => ({ ...s, ...normalized, loading: false, syncError: null, isHydrated: true }));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load data";
-      setState((s) => ({ ...s, loading: false, syncError: message }));
+      setState((s) => ({ ...s, loading: false, syncError: message, isHydrated: true }));
     }
   }, []);
 
@@ -581,10 +590,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const createPairingCodeAction = useCallback(
-    async (role: "caregiver" | "senior") => {
-      return createPairingCodeApi(role);
+    async (role: "caregiver" | "senior", label?: string) => {
+      return createPairingCodeApi(role, label);
     },
     []
+  );
+
+  const updateDeviceLabelAction = useCallback(
+    async (id: string, label: string) => {
+      await withOptimistic(
+        (prev) => ({
+          ...prev,
+          devices: prev.devices.map((d) => (d.id === id ? { ...d, label } : d)),
+        }),
+        () => updateDeviceLabelApi(id, label),
+        (prev) => prev
+      );
+      await load();
+    },
+    [withOptimistic, load]
   );
 
   const retry = useCallback(async () => {
@@ -604,6 +628,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     refresh: load,
     dismissError,
     isAuthenticated,
+    isHydrated: state.isHydrated,
     setupHousehold,
     joinHousehold,
     loadDemo,
@@ -626,6 +651,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateHousehold: updateHouseholdAction,
       unlinkDevice: unlinkDeviceAction,
       createPairingCode: createPairingCodeAction,
+      updateDeviceLabel: updateDeviceLabelAction,
     },
   };
 

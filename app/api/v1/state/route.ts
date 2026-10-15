@@ -29,28 +29,30 @@ export async function GET(request: NextRequest) {
       `,
       sql`
         SELECT id, drug_name, strength, dose_per_time, times_per_day, time_slots, food,
-               special_instructions, quantity_dispensed, dispensed_date, added_on, thumbnail,
-               unclear_fields, updated_at
+               special_instructions, quantity_dispensed,
+               to_char(dispensed_date, 'YYYY-MM-DD') AS dispensed_date,
+               to_char(added_on, 'YYYY-MM-DD') AS added_on,
+               thumbnail, unclear_fields, updated_at
         FROM medicines
         WHERE household_id = ${householdId} AND deleted_at IS NULL
       `,
       sql`
-        SELECT id, medicine_id, date, slot, taken_at
+        SELECT id, medicine_id, to_char(date, 'YYYY-MM-DD') AS date, slot, taken_at
         FROM dose_logs
         WHERE household_id = ${householdId} AND date >= ${cutoffDate}
       `,
       sql`
-        SELECT id, medicine_id, reason, missed_count, recorded_on
+        SELECT id, medicine_id, reason, missed_count, to_char(recorded_on, 'YYYY-MM-DD') AS recorded_on
         FROM missed_reasons
         WHERE household_id = ${householdId} AND recorded_on >= ${cutoffDate}
       `,
       sql`
-        SELECT id, date, time, systolic, diastolic, pulse, created_at
+        SELECT id, to_char(date, 'YYYY-MM-DD') AS date, time, systolic, diastolic, pulse, created_at
         FROM bp_readings
         WHERE household_id = ${householdId} AND date >= ${cutoffDate}
       `,
       sql`
-        SELECT id, kind, medicine_id, drug_name, text, asked_on, done
+        SELECT id, kind, medicine_id, drug_name, text, to_char(asked_on, 'YYYY-MM-DD') AS asked_on, done
         FROM questions
         WHERE household_id = ${householdId}
       `,

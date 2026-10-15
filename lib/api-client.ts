@@ -385,17 +385,24 @@ export async function unlinkDeviceApi(id: string): Promise<void> {
   }
 }
 
+export async function updateDeviceLabelApi(id: string, label: string): Promise<void> {
+  const { status, data } = await apiReq("PUT", `/api/v1/devices/${id}`, { label });
+  if (status !== 200) {
+    throw new Error((data as { error?: string })?.error || "Failed to update device label");
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Pairing codes
 // ---------------------------------------------------------------------------
 
-export async function createPairingCodeApi(role: "caregiver" | "senior"): Promise<{
+export async function createPairingCodeApi(role: "caregiver" | "senior", label?: string): Promise<{
   shortCode: string;
   joinUrl: string;
   shortExpiresAt: string;
   longExpiresAt: string;
 }> {
-  const { status, data } = await apiReq("POST", "/api/v1/pairing-codes", { role });
+  const { status, data } = await apiReq("POST", "/api/v1/pairing-codes", { role, label });
   if (status !== 200) {
     throw new Error((data as { error?: string })?.error || "Failed to create pairing code");
   }

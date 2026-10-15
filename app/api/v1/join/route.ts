@@ -42,13 +42,14 @@ export async function POST(request: NextRequest) {
       WHERE code_hash = ${codeHash}
         AND used_at IS NULL
         AND expires_at > now()
-      RETURNING household_id, role
+      RETURNING household_id, role, label
     `;
 
     const row = rows[0] as
       | {
           household_id: string;
           role: string;
+          label: string | null;
         }
       | undefined;
 
@@ -62,8 +63,8 @@ export async function POST(request: NextRequest) {
     const token = generateToken();
     const tokenHash = hashToken(token);
     await sql`
-      INSERT INTO devices (household_id, role, token_hash)
-      VALUES (${row.household_id}, ${row.role}, ${tokenHash})
+      INSERT INTO devices (household_id, role, token_hash, label)
+      VALUES (${row.household_id}, ${row.role}, ${tokenHash}, ${row.label ?? null})
     `;
 
     const householdRows = await sql`

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const rows = await sql`
       INSERT INTO missed_reasons (household_id, medicine_id, reason, missed_count, recorded_on)
       VALUES (${auth.householdId}, ${medicineId}, ${reason}, ${missedCount}, ${recordedOn})
-      RETURNING *
+      RETURNING id, medicine_id, reason, missed_count, to_char(recorded_on, 'YYYY-MM-DD') AS recorded_on
     `;
 
     return NextResponse.json({ missedReason: rows[0] });

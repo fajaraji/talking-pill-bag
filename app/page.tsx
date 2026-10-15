@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   type Language,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { getToday } from "@/lib/clock";
+import { LoadingShell } from "./loading-shell";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 type Slot = (typeof SLOT_ORDER)[number];
@@ -123,7 +124,7 @@ function FamilyIcon({ className }: { className?: string }) {
 // ---------------------------------------------------------------------------
 export default function HomePage() {
   const router = useRouter();
-  const { state, isAuthenticated, setupHousehold, joinHousehold } = useStore();
+  const { state, isAuthenticated, isHydrated, setupHousehold, joinHousehold } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [onboardingStep, setOnboardingStep] = useState<"choice" | "caregiver" | "join">("choice");
   const [nameInput, setNameInput] = useState("");
@@ -134,19 +135,22 @@ export default function HomePage() {
   const today = getToday();
 
   // Load persisted language
-  useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("tpb-lang") as Language | null;
-      if (stored && languages.some((l) => l.code === stored)) {
-        setLang(stored);
-      }
+  useEffect(() => {
+    const stored = localStorage.getItem("tpb-lang") as Language | null;
+    if (stored && languages.some((l) => l.code === stored)) {
+      setLang(stored);
     }
-  });
+  }, []);
+
+  // Show neutral loading shell until hydrated to avoid hydration mismatch
+  if (!isHydrated) {
+    return <LoadingShell />;
+  }
 
   // Senior redirect
   if (isAuthenticated && state.role === "senior") {
     router.replace("/today");
-    return null;
+    return <LoadingShell />;
   }
 
   // ---------------------------------------------------------------------------

@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         ${auth.householdId}, ${data.date}, ${data.time},
         ${data.systolic}, ${data.diastolic}, ${data.pulse ?? null}
       )
-      RETURNING *
+      RETURNING id, to_char(date, 'YYYY-MM-DD') AS date, time, systolic, diastolic, pulse, created_at
     `;
 
     return NextResponse.json({ bpReading: rows[0] });

@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { sql } from "@/lib/db";
 import { generateToken, hashToken } from "@/lib/auth";
 import { generateDemoData } from "@/lib/demo-data";
 
+const demoSchema = z.object({
+  today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    let body: unknown = {};
+    try {
+      body = await request.json();
+    } catch {
+      // Empty or invalid body: fall back to the Asia/Singapore date.
+    }
+    const parsed = demoSchema.safeParse(body);
+    const today =
+      parsed.success && parsed.data.today
+        ? parsed.data.today
+        : new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
     const demo = generateDemoData(today);
 
     // Clean up old demo households (> 7 days)

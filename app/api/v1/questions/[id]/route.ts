@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       UPDATE questions
       SET done = ${parsed.data.done}
       WHERE id = ${id} AND household_id = ${auth.householdId}
-      RETURNING *
+      RETURNING id, kind, medicine_id, drug_name, text, to_char(asked_on, 'YYYY-MM-DD') AS asked_on, done
     `;
 
     if (!rows[0]) {

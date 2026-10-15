@@ -7,11 +7,13 @@ async function req(
   method: string,
   path: string,
   body?: unknown,
-  token?: string
+  token?: string,
+  extraHeaders?: Record<string, string>
 ): Promise<{ status: number; data: unknown }> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "x-test-run": "1",
+    ...extraHeaders,
   };
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
@@ -70,6 +72,23 @@ async function run() {
   const joinUrl = (pairRes.data as { joinUrl?: string })?.joinUrl;
   assert(typeof shortCode === "string" && shortCode.length === 6, "Returns 6-digit short code");
   assert(typeof joinUrl === "string" && joinUrl.includes("?c="), "Returns join URL");
+
+  // Verify joinUrl does not contain localhost when forwarded host is set
+  console.log("2b. joinUrl respects forwarded host");
+  const pairForwardedRes = await req(
+    "POST",
+    "/api/v1/pairing-codes",
+    { role: "senior" },
+    caregiverToken,
+    {
+      "x-forwarded-host": "talking-pill-bag.vercel.app",
+      "x-forwarded-proto": "https",
+    }
+  );
+  assert(pairForwardedRes.status === 200, "Create pairing code with forwarded host returns 200");
+  const forwardedJoinUrl = (pairForwardedRes.data as { joinUrl?: string })?.joinUrl;
+  assert(typeof forwardedJoinUrl === "string" && !forwardedJoinUrl.includes("localhost"), "joinUrl does not contain localhost when forwarded host is set");
+  assert(typeof forwardedJoinUrl === "string" && forwardedJoinUrl.startsWith("https://talking-pill-bag.vercel.app/"), "joinUrl uses forwarded origin");
 
   // Verify expiry times
   const shortExpiresAt = (pairRes.data as { shortExpiresAt?: string })?.shortExpiresAt;
@@ -172,6 +191,11 @@ async function run() {
   const srDoses = (seniorState.data as { doseLogs?: unknown[] })?.doseLogs ?? [];
   assert(cgDoses.length === 1, "Caregiver sees 1 dose");
   assert(srDoses.length === 1, "Senior sees 1 dose");
+
+  const cgDoseDate = (cgDoses[0] as { date?: string })?.date;
+  const srDoseDate = (srDoses[0] as { date?: string })?.date;
+  assert(cgDoseDate === today, `Caregiver dose date is exactly "${today}"`);
+  assert(srDoseDate === today, `Senior dose date is exactly "${today}"`);
 
   // 8. Second household cannot read first household's data
   console.log("8. Cross-household isolation");

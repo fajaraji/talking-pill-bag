@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS pairing_codes (
   role text NOT NULL CHECK (role IN ('caregiver','senior')),
   expires_at timestamptz NOT NULL,
   used_at timestamptz,
-  created_by_device uuid NOT NULL REFERENCES devices(id) ON DELETE CASCADE
+  created_by_device uuid NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+  label text
 );
 
 CREATE INDEX IF NOT EXISTS idx_pairing_codes_household_id ON pairing_codes(household_id);

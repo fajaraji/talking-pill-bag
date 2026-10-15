@@ -202,6 +202,14 @@ export function ChevronRightIcon({ className = "h-6 w-6" }: IconProps) {
   );
 }
 
+export function LineIcon({ className = "h-6 w-6" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
+      <path d="M4 12h16" />
+    </svg>
+  );
+}
+
 export function SettingsIcon({ className = "h-6 w-6" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

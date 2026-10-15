@@ -12,6 +12,10 @@ import { getToday, getNow } from "@/lib/clock";
 import { resizeImage } from "@/lib/image";
 import { useStore } from "@/lib/store";
 import { LoadingShell } from "@/app/loading-shell";
+import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { AlertIcon, CameraIcon, LineIcon, UploadIcon } from "@/components/icons";
 
 type View = "main" | "add" | "confirm";
 
@@ -56,9 +60,9 @@ function BPChart({
 
   if (values.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-xl border-2 border-slate-200 bg-white">
-        <p className="text-lg text-slate-500">{t(lang, "noReadingsYet")}</p>
-      </div>
+      <Card className="flex h-48 items-center justify-center">
+        <p className="text-lg text-muted">{t(lang, "noReadingsYet")}</p>
+      </Card>
     );
   }
 
@@ -88,80 +92,86 @@ function BPChart({
   });
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="w-full"
-      style={{ maxWidth: 380 }}
-      role="img"
-      aria-label={t(lang, "trend14Days")}
-    >
-      <rect x={left} y={top} width={plotW} height={plotH} fill="#f8fafc" rx={4} />
-      {yTicks.map((val, i) => {
-        const y = toY(val);
-        return (
-          <g key={i}>
-            <line x1={left} y1={y} x2={left + plotW} y2={y} stroke="#e2e8f0" strokeWidth={1} />
-            <text x={left - 6} y={y + 4} textAnchor="end" fontSize={12} fill="#64748b">
-              {Math.round(val)}
-            </text>
-          </g>
-        );
-      })}
+    <div className="flex flex-col gap-2">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full"
+        style={{ maxWidth: 380 }}
+        role="img"
+        aria-label={t(lang, "trend14Days")}
+      >
+        <rect x={left} y={top} width={plotW} height={plotH} fill="#F8FAF9" rx={4} />
+        {yTicks.map((val, i) => {
+          const y = toY(val);
+          return (
+            <g key={i}>
+              <line x1={left} y1={y} x2={left + plotW} y2={y} stroke="#E2E8F0" strokeWidth={1} />
+              <text x={left - 6} y={y + 4} textAnchor="end" fontSize={12} fill="#475569">
+                {Math.round(val)}
+              </text>
+            </g>
+          );
+        })}
 
-      {target && (
-        <>
-          <line x1={left} y1={toY(target.systolic)} x2={left + plotW} y2={toY(target.systolic)} stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 4" />
-          <text x={left + 4} y={toY(target.systolic) - 4} fontSize={10} fill="#64748b">
-            {target.systolic}
-          </text>
-        </>
-      )}
-
-      {systolicPath && <path d={systolicPath} fill="none" stroke="#ef4444" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />}
-      {diastolicPath && <path d={diastolicPath} fill="none" stroke="#3b82f6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />}
-
-      {data.map((d, i) => {
-        const x = toX(i);
-        return (
-          <g key={d.date}>
-            {d.systolic !== null && <circle cx={x} cy={toY(d.systolic)} r={4} fill="#ef4444" stroke="white" strokeWidth={1.5} />}
-            {d.diastolic !== null && <circle cx={x} cy={toY(d.diastolic)} r={4} fill="#3b82f6" stroke="white" strokeWidth={1.5} />}
-          </g>
-        );
-      })}
-
-      {(() => {
-        const indices: number[] = [];
-        const n = data.length;
-        if (n <= 5) {
-          for (let i = 0; i < n; i++) indices.push(i);
-        } else {
-          const step = (n - 1) / 4;
-          for (let i = 0; i < 5; i++) {
-            const idx = Math.round(i * step);
-            if (!indices.includes(idx)) indices.push(idx);
-          }
-        }
-        return indices.map((i) => (
-          <text key={`x-${data[i].date}`} x={toX(i)} y={top + plotH + 18} textAnchor="middle" fontSize={11} fill="#64748b">
-            {formatDateShort(lang, data[i].date)}
-          </text>
-        ));
-      })()}
-
-      <g transform={`translate(${left}, ${top + plotH + 28})`}>
-        <circle cx={6} cy={-3} r={4} fill="#ef4444" />
-        <text x={14} y={2} fontSize={11} fill="#475569">{t(lang, "systolic")}</text>
-        <circle cx={80} cy={-3} r={4} fill="#3b82f6" />
-        <text x={88} y={2} fontSize={11} fill="#475569">{t(lang, "diastolic")}</text>
         {target && (
           <>
-            <line x1={160} y1={-3} x2={176} y2={-3} stroke="#94a3b8" strokeWidth={2} strokeDasharray="4 3" />
-            <text x={182} y={2} fontSize={11} fill="#475569">{t(lang, "targetFromDoctor")}</text>
+            <line x1={left} y1={toY(target.systolic)} x2={left + plotW} y2={toY(target.systolic)} stroke="#475569" strokeWidth={2} strokeDasharray="6 4" />
+            <text x={left + 4} y={toY(target.systolic) - 4} fontSize={10} fill="#475569">
+              {target.systolic}
+            </text>
           </>
         )}
-      </g>
-    </svg>
+
+        {systolicPath && <path d={systolicPath} fill="none" stroke="#B91C1C" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />}
+        {diastolicPath && <path d={diastolicPath} fill="none" stroke="#0F766E" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />}
+
+        {data.map((d, i) => {
+          const x = toX(i);
+          return (
+            <g key={d.date}>
+              {d.systolic !== null && <circle cx={x} cy={toY(d.systolic)} r={4} fill="#B91C1C" stroke="white" strokeWidth={1.5} />}
+              {d.diastolic !== null && <circle cx={x} cy={toY(d.diastolic)} r={4} fill="#0F766E" stroke="white" strokeWidth={1.5} />}
+            </g>
+          );
+        })}
+
+        {(() => {
+          const indices: number[] = [];
+          const n = data.length;
+          if (n <= 5) {
+            for (let i = 0; i < n; i++) indices.push(i);
+          } else {
+            const step = (n - 1) / 4;
+            for (let i = 0; i < 5; i++) {
+              const idx = Math.round(i * step);
+              if (!indices.includes(idx)) indices.push(idx);
+            }
+          }
+          return indices.map((i) => (
+            <text key={`x-${data[i].date}`} x={toX(i)} y={top + plotH + 18} textAnchor="middle" fontSize={11} fill="#475569">
+              {formatDateShort(lang, data[i].date)}
+            </text>
+          ));
+        })()}
+      </svg>
+
+      <div className="flex flex-wrap items-center gap-4">
+        <span className="inline-flex items-center gap-1.5 text-sm text-muted">
+          <LineIcon className="h-4 w-4 text-danger-text" />
+          {t(lang, "systolic")}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-sm text-muted">
+          <LineIcon className="h-4 w-4 text-primary" />
+          {t(lang, "diastolic")}
+        </span>
+        {target && (
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted">
+            <span className="inline-block h-0 w-4 border-t-2 border-dashed border-muted" />
+            {t(lang, "targetFromDoctor")}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -427,17 +437,13 @@ function BPPageInner() {
 
   if (view === "add") {
     return (
-      <main className="flex min-h-screen flex-col items-center gap-6 bg-slate-50 px-4 py-6">
-        <header className="flex w-full max-w-sm items-center justify-between self-center">
-          <button
-            onClick={() => { resetForm(); setView("main"); }}
-            className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-          >
-            ← {t(lang, "back")}
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">{t(lang, "addBPReading")}</h1>
-          <div className="w-16" />
-        </header>
+      <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
+        <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+          <AppHeader
+            title={t(lang, "addBPReading")}
+            back={{ label: t(lang, "back"), onClick: () => { resetForm(); setView("main"); } }}
+          />
+        </div>
 
         <div className="flex w-full max-w-sm flex-col gap-4 self-center">
           <input
@@ -448,27 +454,17 @@ function BPPageInner() {
             onChange={handleFileSelect}
             className="hidden"
           />
-          <button
-            onClick={openCamera}
-            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-            style={{ minHeight: 56 }}
-          >
+          <Button variant="primary" className="w-full" onClick={openCamera}>
+            <CameraIcon className="h-5 w-5" />
             {t(lang, "takePhoto")}
-          </button>
-          <button
-            onClick={openGallery}
-            className="flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
-            style={{ minHeight: 56 }}
-          >
+          </Button>
+          <Button variant="secondary" className="w-full" onClick={openGallery}>
+            <UploadIcon className="h-5 w-5" />
             {t(lang, "uploadPhoto")}
-          </button>
-          <button
-            onClick={handleManualEntry}
-            className="flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
-            style={{ minHeight: 56 }}
-          >
+          </Button>
+          <Button variant="secondary" className="w-full" onClick={handleManualEntry}>
             {t(lang, "enterManually")}
-          </button>
+          </Button>
         </div>
       </main>
     );
@@ -476,92 +472,87 @@ function BPPageInner() {
 
   if (view === "confirm") {
     return (
-      <main className="flex min-h-screen flex-col items-center gap-6 bg-slate-50 px-4 py-6">
-        <header className="flex w-full max-w-sm items-center justify-between self-center">
-          <button
-            onClick={() => { resetForm(); setView("main"); }}
-            className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-          >
-            ← {t(lang, "back")}
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">{t(lang, "confirm")}</h1>
-          <div className="w-16" />
-        </header>
+      <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
+        <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+          <AppHeader
+            title={t(lang, "confirm")}
+            back={{ label: t(lang, "back"), onClick: () => { resetForm(); setView("main"); } }}
+          />
+        </div>
 
         {analyzing && (
-          <div className="flex flex-col items-center gap-3 py-8">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-            <p className="text-lg text-slate-600">{t(lang, "analyzing")}</p>
+          <div className="flex w-full max-w-sm flex-col items-center gap-3 self-center py-8">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-primary" />
+            <p className="text-lg text-muted">{t(lang, "analyzing")}</p>
           </div>
         )}
 
         {bpError && !analyzing && (
-          <div className="w-full max-w-sm rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-center self-center">
-            <p className="text-lg font-semibold text-amber-800">{t(lang, "bpCouldNotRead")}</p>
-          </div>
+          <Card className="w-full max-w-sm self-center text-center">
+            <p className="flex items-start justify-center gap-2 text-lg font-semibold text-attention-text">
+              <AlertIcon className="h-6 w-6 shrink-0" />
+              {t(lang, "bpCouldNotRead")}
+            </p>
+          </Card>
         )}
 
         {!analyzing && (
           <div className="flex w-full max-w-sm flex-col gap-6 self-center">
             {photo && (
-              <div className="overflow-hidden rounded-xl border-2 border-slate-200">
+              <div className="overflow-hidden rounded-xl border border-line">
                 <img src={photo} alt="BP monitor" className="w-full object-contain" />
               </div>
             )}
 
-            <p className="text-lg text-slate-700">{t(lang, "bpConfirmPrompt")}</p>
+            <p className="text-lg text-ink">{t(lang, "bpConfirmPrompt")}</p>
 
-            <div className="flex flex-col gap-4">
+            <Card className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
-                <label className="text-base font-semibold text-slate-700">{t(lang, "systolic")}</label>
+                <label className="text-base font-semibold text-ink">{t(lang, "systolic")}</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   value={systolic}
                   onChange={(e) => setSystolic(e.target.value)}
-                  className="rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-2xl font-bold text-slate-900"
+                  className="rounded-xl border border-line bg-white px-4 py-3 text-2xl font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   placeholder="120"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-base font-semibold text-slate-700">{t(lang, "diastolic")}</label>
+                <label className="text-base font-semibold text-ink">{t(lang, "diastolic")}</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   value={diastolic}
                   onChange={(e) => setDiastolic(e.target.value)}
-                  className="rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-2xl font-bold text-slate-900"
+                  className="rounded-xl border border-line bg-white px-4 py-3 text-2xl font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   placeholder="80"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-base font-semibold text-slate-700">{t(lang, "pulse")}</label>
+                <label className="text-base font-semibold text-ink">{t(lang, "pulse")}</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   value={pulse}
                   onChange={(e) => setPulse(e.target.value)}
-                  className="rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-2xl font-bold text-slate-900"
+                  className="rounded-xl border border-line bg-white px-4 py-3 text-2xl font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   placeholder="72"
                 />
               </div>
-            </div>
+            </Card>
 
             <div className="flex flex-col gap-3 pt-2">
-              <button
-                onClick={handleSave}
-                className="w-full rounded-xl bg-green-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
-                style={{ minHeight: 56 }}
-              >
+              <Button variant="success" className="w-full" onClick={handleSave}>
                 {t(lang, "save")}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full"
                 onClick={() => { resetForm(); setView("main"); }}
-                className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
-                style={{ minHeight: 56 }}
               >
                 {t(lang, "cancel")}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -570,60 +561,44 @@ function BPPageInner() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
-      <header className="flex w-full max-w-sm flex-col gap-2 self-center">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.push("/")}
-            className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-          >
-            ← {t(lang, "back")}
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">{t(lang, "bpTitle")}</h1>
-          <div className="w-16" />
-        </div>
-      </header>
+    <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
+      <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+        <AppHeader
+          title={t(lang, "bpTitle")}
+          back={{ label: t(lang, "back"), onClick: () => router.push("/") }}
+        />
+      </div>
 
       <div className="flex w-full max-w-sm flex-col gap-4 self-center">
-        <button
-          onClick={() => setView("add")}
-          className="w-full rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-          style={{ minHeight: 56 }}
-        >
+        <Button variant="primary" className="w-full" onClick={() => setView("add")}>
           {t(lang, "addBPReading")}
-        </button>
+        </Button>
       </div>
 
       {/* Target section (caregiver only) */}
       {!isSenior && (
-        <div className="flex w-full max-w-sm flex-col gap-3 self-center rounded-xl border-2 border-slate-200 bg-white p-4">
+        <Card className="w-full max-w-sm self-center">
           {target ? (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-500">{t(lang, "targetFromDoctor")}</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-semibold text-muted">{t(lang, "targetFromDoctor")}</p>
+                <p className="text-2xl font-bold text-ink">
                   {target.systolic}/{target.diastolic}
                 </p>
               </div>
-              <button
-                onClick={handleClearTarget}
-                className="rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
-              >
+              <Button variant="secondary" onClick={handleClearTarget}>
                 {t(lang, "clearTarget")}
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               {!showTargetForm ? (
-                <button
-                  onClick={() => setShowTargetForm(true)}
-                  className="w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-                >
+                <Button variant="secondary" className="w-full" onClick={() => setShowTargetForm(true)}>
                   {t(lang, "setTarget")}
-                </button>
+                </Button>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <p className="text-sm font-semibold text-slate-500">{t(lang, "targetFromDoctor")}</p>
+                  <p className="text-sm font-semibold text-muted">{t(lang, "targetFromDoctor")}</p>
                   <div className="flex gap-3">
                     <input
                       type="number"
@@ -631,7 +606,7 @@ function BPPageInner() {
                       value={targetSys}
                       onChange={(e) => setTargetSys(e.target.value)}
                       placeholder={t(lang, "systolic")}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-lg text-slate-900"
+                      className="w-full rounded-xl border border-line bg-white px-3 py-2 text-lg text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                     <input
                       type="number"
@@ -639,46 +614,43 @@ function BPPageInner() {
                       value={targetDia}
                       onChange={(e) => setTargetDia(e.target.value)}
                       placeholder={t(lang, "diastolic")}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-lg text-slate-900"
+                      className="w-full rounded-xl border border-line bg-white px-3 py-2 text-lg text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
                   <div className="flex gap-3">
-                    <button
-                      onClick={handleSetTarget}
-                      className="rounded-lg bg-green-600 px-4 py-2 text-base font-semibold text-white hover:bg-green-700"
-                    >
+                    <Button variant="success" onClick={handleSetTarget}>
                       {t(lang, "save")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="secondary"
                       onClick={() => { setShowTargetForm(false); setTargetSys(""); setTargetDia(""); }}
-                      className="rounded-lg border-2 border-slate-300 bg-white px-4 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
                     >
                       {t(lang, "cancel")}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Chart */}
       {!isLoading && (
-        <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-xl border-2 border-slate-200 bg-white p-4">
-          <h2 className="text-lg font-bold text-slate-900">{t(lang, "trend14Days")}</h2>
+        <Card className="w-full max-w-sm self-center">
+          <h2 className="text-lg font-bold text-ink">{t(lang, "trend14Days")}</h2>
           <BPChart data={chartData} target={target} lang={lang} />
-        </div>
+        </Card>
       )}
 
       {/* Summary sentence */}
       {summary && (
         <div className="flex w-full max-w-sm flex-col gap-1 self-center">
-          <p className="text-lg text-slate-800">
+          <p className="text-lg text-ink">
             {t(lang, "averageThisWeek").replace("{avg}", summary.avgText)}
           </p>
           {target && summary.daysWithReadings > 0 && (
-            <p className="text-lg text-slate-800">
+            <p className="text-lg text-ink">
               {t(lang, "higherThanTarget")
                 .replace("{count}", String(summary.aboveTargetDays))
                 .replace("{total}", String(summary.daysWithReadings))}{" "}
@@ -690,47 +662,48 @@ function BPPageInner() {
 
       {/* Very high notice */}
       {isVeryHigh && latestReading && (
-        <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-xl border-2 border-red-200 bg-red-50 p-4">
-          <p className="text-lg font-bold text-red-800">{t(lang, "veryHighReading")}</p>
-          <p className="text-lg text-red-800">{t(lang, "contactDoctorToday")}</p>
-          <p className="text-lg font-semibold text-red-800">{t(lang, "callEmergency")}</p>
-        </div>
+        <Card className="w-full max-w-sm self-center border-danger-border bg-danger-bg">
+          <p className="flex items-start gap-2 text-lg font-bold text-danger-text">
+            <AlertIcon className="mt-0.5 h-6 w-6 shrink-0" />
+            {t(lang, "veryHighReading")}
+          </p>
+          <p className="text-lg text-danger-text">{t(lang, "contactDoctorToday")}</p>
+          <p className="text-lg font-semibold text-danger-text">{t(lang, "callEmergency")}</p>
+        </Card>
       )}
 
       {/* Recent readings list */}
       <div className="flex w-full max-w-sm flex-col gap-3 self-center">
-        <h2 className="text-lg font-bold text-slate-900">{t(lang, "readings")}</h2>
+        <h2 className="text-lg font-bold text-ink">{t(lang, "readings")}</h2>
         {readings.length === 0 ? (
-          <p className="py-6 text-center text-lg text-slate-500">{t(lang, "noReadingsYet")}</p>
+          <p className="py-6 text-center text-lg text-muted">{t(lang, "noReadingsYet")}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {[...readings].reverse().map((r) => (
-              <div
+              <Card
                 key={r.id}
-                className={`flex items-center justify-between rounded-xl border-2 p-4 ${
-                  r.systolic >= 180 || r.diastolic >= 120
-                    ? "border-red-200 bg-red-50"
-                    : "border-slate-200 bg-white"
-                }`}
+                className={r.systolic >= 180 || r.diastolic >= 120 ? "border-danger-border bg-danger-bg" : ""}
               >
-                <div className="flex flex-col gap-1">
-                  <p className="text-2xl font-bold text-slate-900">
-                    {r.systolic}/{r.diastolic}
-                  </p>
-                  <p className="text-base text-slate-600">
-                    {formatDateShort(lang, r.date)} {r.time}
-                    {r.pulse !== null && ` · ${r.pulse} ${t(lang, "pulse")}`}
-                  </p>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <p className="text-2xl font-bold text-ink">
+                      {r.systolic}/{r.diastolic}
+                    </p>
+                    <p className="text-base text-muted">
+                      {formatDateShort(lang, r.date)} {r.time}
+                      {r.pulse !== null && ` · ${r.pulse} ${t(lang, "pulse")}`}
+                    </p>
+                  </div>
+                  {!isSenior && (
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      className="min-h-12 shrink-0 rounded-lg px-3 py-2 text-base font-semibold text-danger-text hover:bg-danger-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      {t(lang, "delete")}
+                    </button>
+                  )}
                 </div>
-                {!isSenior && (
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    className="rounded-lg px-3 py-2 text-base font-semibold text-red-600 hover:bg-red-100"
-                  >
-                    {t(lang, "delete")}
-                  </button>
-                )}
-              </div>
+              </Card>
             ))}
           </div>
         )}

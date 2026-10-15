@@ -164,7 +164,40 @@ type StringKey =
   | "refillsDue"
   | "missedThisWeek"
   | "doses"
-  | "readingsCount";
+  | "readingsCount"
+  // Onboarding / family sharing
+  | "setupTitle"
+  | "caregiverChoice"
+  | "seniorChoice"
+  | "joinWithCode"
+  | "codePlaceholder"
+  | "invalidCode"
+  | "familyPhones"
+  | "familyPhonesDesc"
+  | "addPhone"
+  | "addFamilyMember"
+  | "qrInstructions"
+  | "codeExpiresIn"
+  | "shortCodeDuration"
+  | "linkedPhones"
+  | "noDevices"
+  | "unnamedDevice"
+  | "roleLabel"
+  | "caregiver"
+  | "senior"
+  | "lastActive"
+  | "unlink"
+  | "unlinkConfirm"
+  | "installPrompt"
+  | "installHintChrome"
+  | "installHintIOS"
+  | "joinSuccess"
+  | "redirecting"
+  | "joinFailed"
+  | "share"
+  | "copied"
+  | "copyText"
+  | "seniorHelpLine";
 
 type Dictionary = Record<StringKey, string>;
 
@@ -313,6 +346,38 @@ const en: Dictionary = {
   shareViaWhatsApp: "Share via WhatsApp",
   nextDose: "Next: {slot}",
   takenOf: "{taken} of {total} taken",
+  setupTitle: "Set up Talking Pill Bag",
+  caregiverChoice: "I look after someone's medicines",
+  seniorChoice: "I have a code from my family",
+  joinWithCode: "Join with a code",
+  codePlaceholder: "6-digit code",
+  invalidCode: "Invalid or expired code.",
+  familyPhones: "Family phones",
+  familyPhonesDesc: "Add or manage family member devices",
+  addPhone: "Add {name}'s phone",
+  addFamilyMember: "Add another family member",
+  qrInstructions: "Open the camera on {name}'s phone and scan this code. You only need to do this once.",
+  codeExpiresIn: "This code works for {n} more minutes.",
+  shortCodeDuration: "This 6-digit code works for 15 minutes.",
+  linkedPhones: "Linked phones",
+  noDevices: "No devices linked yet.",
+  unnamedDevice: "Unnamed device",
+  roleLabel: "Role",
+  caregiver: "Caregiver",
+  senior: "Senior",
+  lastActive: "Last active",
+  unlink: "Unlink",
+  unlinkConfirm: "Are you sure you want to unlink this device?",
+  installPrompt: "After joining, add Talking Pill Bag to the home screen.",
+  installHintChrome: "Chrome menu > Add to Home screen (Android)",
+  installHintIOS: "Share > Add to Home Screen (iPhone)",
+  joinSuccess: "Welcome! You are now connected.",
+  redirecting: "Taking you to your medicines…",
+  joinFailed: "Could not join",
+  share: "Share",
+  copied: "Copied",
+  copyText: "Copy text",
+  seniorHelpLine: "Ask your family for help.",
 };
 
 const zh: Dictionary = {
@@ -456,6 +521,38 @@ const zh: Dictionary = {
   shareViaWhatsApp: "通过 WhatsApp 分享",
   nextDose: "下次：{slot}",
   takenOf: "已服用 {taken} / {total}",
+  setupTitle: "设置会说话的药袋",
+  caregiverChoice: "我负责某人的药物",
+  seniorChoice: "我有家人给的代码",
+  joinWithCode: "用代码加入",
+  codePlaceholder: "6位数字代码",
+  invalidCode: "代码无效或已过期。",
+  familyPhones: "家人手机",
+  familyPhonesDesc: "添加或管理家人设备",
+  addPhone: "添加{name}的手机",
+  addFamilyMember: "添加另一位家庭成员",
+  qrInstructions: "在{name}的手机上打开相机扫描此码。只需操作一次。",
+  codeExpiresIn: "此代码还剩{n}分钟有效。",
+  shortCodeDuration: "此6位数字代码15分钟内有效。",
+  linkedPhones: "已连接的手机",
+  noDevices: "尚未连接任何设备。",
+  unnamedDevice: "未命名设备",
+  roleLabel: "角色",
+  caregiver: "照顾者",
+  senior: "长者",
+  lastActive: "最后活跃",
+  unlink: "解除连接",
+  unlinkConfirm: "确定要解除连接此设备吗？",
+  installPrompt: "加入后，请将“会说话的药袋”添加到主屏幕。",
+  installHintChrome: "Chrome菜单 > 添加到主屏幕（Android）",
+  installHintIOS: "分享 > 添加到主屏幕（iPhone）",
+  joinSuccess: "欢迎！您已连接成功。",
+  redirecting: "正在带您前往药物页面…",
+  joinFailed: "无法加入",
+  share: "分享",
+  copied: "已复制",
+  copyText: "复制文字",
+  seniorHelpLine: "请向家人求助。",
 };
 
 const ms: Dictionary = {
@@ -605,6 +702,38 @@ const ms: Dictionary = {
   shareViaWhatsApp: "Kongsi melalui WhatsApp",
   nextDose: "Seterusnya: {slot}",
   takenOf: "{taken} daripada {total} diambil",
+  setupTitle: "Sediakan Beg Ubat Boleh Bercakap",
+  caregiverChoice: "Saya menjaga ubat seseorang",
+  seniorChoice: "Saya ada kod daripada keluarga saya",
+  joinWithCode: "Sertai dengan kod",
+  codePlaceholder: "Kod 6 digit",
+  invalidCode: "Kod tidak sah atau telah tamat tempoh.",
+  familyPhones: "Telefon keluarga",
+  familyPhonesDesc: "Tambah atau urus peranti ahli keluarga",
+  addPhone: "Tambah telefon {name}",
+  addFamilyMember: "Tambah ahli keluarga lain",
+  qrInstructions: "Buka kamera pada telefon {name} dan imbas kod ini. Anda hanya perlu lakukan sekali.",
+  codeExpiresIn: "Kod ini sah untuk {n} minit lagi.",
+  shortCodeDuration: "Kod 6 digit ini sah untuk 15 minit.",
+  linkedPhones: "Telefon yang dipautkan",
+  noDevices: "Tiada peranti dipautkan lagi.",
+  unnamedDevice: "Peranti tanpa nama",
+  roleLabel: "Peranan",
+  caregiver: "Penjaga",
+  senior: "Warga emas",
+  lastActive: "Aktif terakhir",
+  unlink: "Nyahpaut",
+  unlinkConfirm: "Adakah anda pasti mahu menyahpaut peranti ini?",
+  installPrompt: "Selepas menyertai, tambah Beg Ubat Boleh Bercakap ke skrin utama.",
+  installHintChrome: "Menu Chrome > Tambah ke skrin utama (Android)",
+  installHintIOS: "Kongsi > Tambah ke Skrin Utama (iPhone)",
+  joinSuccess: "Selamat datang! Anda kini telah disambungkan.",
+  redirecting: "Membawa anda ke ubat anda…",
+  joinFailed: "Tidak dapat menyertai",
+  share: "Kongsi",
+  copied: "Disalin",
+  copyText: "Salin teks",
+  seniorHelpLine: "Minta bantuan keluarga anda.",
 };
 
 const id: Dictionary = {
@@ -754,6 +883,38 @@ const id: Dictionary = {
   shareViaWhatsApp: "Bagikan via WhatsApp",
   nextDose: "Berikutnya: {slot}",
   takenOf: "{taken} dari {total} sudah diambil",
+  setupTitle: "Siapkan Kantong Obat yang Bisa Ngomong",
+  caregiverChoice: "Saya merawat obat seseorang",
+  seniorChoice: "Saya punya kode dari keluarga saya",
+  joinWithCode: "Gabung dengan kode",
+  codePlaceholder: "Kode 6 digit",
+  invalidCode: "Kode tidak valid atau sudah kedaluwarsa.",
+  familyPhones: "Telepon keluarga",
+  familyPhonesDesc: "Tambah atau kelola perangkat anggota keluarga",
+  addPhone: "Tambah telepon {name}",
+  addFamilyMember: "Tambah anggota keluarga lain",
+  qrInstructions: "Buka kamera di telepon {name} dan pindai kode ini. Anda hanya perlu melakukannya sekali.",
+  codeExpiresIn: "Kode ini berlaku selama {n} menit lagi.",
+  shortCodeDuration: "Kode 6 digit ini berlaku selama 15 menit.",
+  linkedPhones: "Telepon yang terhubung",
+  noDevices: "Belum ada perangkat yang terhubung.",
+  unnamedDevice: "Perangkat tanpa nama",
+  roleLabel: "Peran",
+  caregiver: "Perawat",
+  senior: "Lansia",
+  lastActive: "Aktif terakhir",
+  unlink: "Putuskan",
+  unlinkConfirm: "Yakin ingin memutuskan perangkat ini?",
+  installPrompt: "Setelah bergabung, tambahkan Kantong Obat yang Bisa Ngomong ke layar beranda.",
+  installHintChrome: "Menu Chrome > Tambahkan ke Layar Beranda (Android)",
+  installHintIOS: "Bagikan > Tambahkan ke Layar Beranda (iPhone)",
+  joinSuccess: "Selamat datang! Anda kini telah terhubung.",
+  redirecting: "Mengarahkan Anda ke obat Anda…",
+  joinFailed: "Tidak dapat bergabung",
+  share: "Bagikan",
+  copied: "Disalin",
+  copyText: "Salin teks",
+  seniorHelpLine: "Minta bantuan keluarga Anda.",
 };
 
 export const dictionaries: Record<Language, Dictionary> = { en, zh, ms, id };

@@ -22,6 +22,7 @@ Built for the **Tencent Cloud AI CAN DO IT Hackathon Singapore 2026** — Health
 - **Blood Pressure** — Photograph a BP monitor screen or enter values manually. View a 14-day trend graph and a plain-language sentence (no diagnosis).
 - **Questions for my doctor or pharmacist** — A printable list of missed doses with reasons, refill reminders, high-BP readings, and any questions the user asked that the app redirected.
 - **Weekly Summary** — For family members: doses taken vs scheduled, reasons recorded, average blood pressure, and refills due.
+- **Family phones and senior mode** — Caregivers can generate a QR code and 6-digit code so a senior's phone joins the same household. Seniors see a simplified Today screen with large Done buttons; caregivers see the full feature set.
 
 ## Demo mode
 
@@ -29,7 +30,7 @@ Judges: open https://talking-pill-bag.vercel.app/?demo=1 to load a demo profile 
 
 A hidden demo-mode bar on the Today screen lets you simulate the passage of time:
 
-- Open any page with `?demo=1` to load the demo profile and show the demo controls.
+- Open any page with `?demo=1` to create a fresh demo household on the server and show the demo controls.
 - **+1 day** advances the simulated date by one day (stored in `localStorage`), so reminders, missed-dose prompts, refill warnings, and the weekly summary can be demonstrated quickly.
 - **Reset** returns the simulated date to today.
 
@@ -156,7 +157,7 @@ All tables include `household_id` with `ON DELETE CASCADE`.
 |---|---|
 | `households` | One row per family. Stores display name, language, BP target, demo flag. |
 | `devices` | One row per phone. Stores role (`caregiver` or `senior`) and a SHA-256 hash of the bearer token. |
-| `pairing_codes` | Short (6-digit) and long join codes. Hashed, 24-hour expiry, single use. |
+| `pairing_codes` | Short (6-digit, 15-minute expiry) and long (URL, 24-hour expiry) join codes. Hashed, single use. |
 | `medicines` | Medication schedule. Soft-deleted via `deleted_at`. Thumbnail only — no full label photo. |
 | `dose_logs` | Record of each dose taken. Unique on `(medicine_id, date, slot)`. |
 | `missed_reasons` | Why a medicine was missed, recorded after 2+ misses in 7 days. |

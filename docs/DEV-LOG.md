@@ -28,6 +28,8 @@ All application code was written by **CodeBuddy**. Between sessions, a separate 
 | T6 | `/api/read-bp`, BP confirmation screen, 14-day SVG trend graph | Chart labels overlapping at 375px | T7 session |
 | T7 | Refill reminders, questions-for-doctor page, weekly summary | Navigation buttons above the dose list | T8 session |
 | T8 | Ask-a-question column, deterministic question router (`lib/question-router.ts`) with trap tests | Missed-dose quote not shown for questions in a language different from the UI; `npm test` skipping the adherence test | This session (T9 fixes) |
+| T9 | Database schema (`db/schema.sql`), `/api/v1` server API (households, medicines, doses, BP, questions), `scripts/test-api.ts` | Race condition in join; short code expiry too long; test households not flagged demo | T10 session |
+| T10 | Family sharing UI: client data layer (`lib/store.tsx`), onboarding, caregiver/senior roles, QR codes, PWA manifest, sharing updates | — | — |
 
 ## Session artifacts
 

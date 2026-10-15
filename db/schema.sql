@@ -21,6 +21,10 @@ CREATE TABLE IF NOT EXISTS devices (
   last_seen_at timestamptz
 );
 
+-- Idempotent migrations for tables created before a column existed
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS label text;
+ALTER TABLE pairing_codes ADD COLUMN IF NOT EXISTS label text;
+
 CREATE INDEX IF NOT EXISTS idx_devices_household_id ON devices(household_id);
 
 CREATE TABLE IF NOT EXISTS pairing_codes (

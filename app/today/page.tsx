@@ -21,6 +21,20 @@ import { getDaysLeft } from "@/lib/supply";
 import { routeQuestion } from "@/lib/question-router";
 import { useStore } from "@/lib/store";
 import { LoadingShell } from "@/app/loading-shell";
+import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import {
+  AlertIcon,
+  BedIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  CloudSunIcon,
+  MoonIcon,
+  SpeakerIcon,
+  StopIcon,
+  SunIcon,
+} from "@/components/icons";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 
@@ -36,6 +50,19 @@ function slotLabel(lang: Language, slot: Slot): string {
       return t(lang, "evening");
     case "bedtime":
       return t(lang, "bedtime");
+  }
+}
+
+function SlotIcon({ slot, className }: { slot: Slot; className?: string }) {
+  switch (slot) {
+    case "morning":
+      return <SunIcon className={className} />;
+    case "afternoon":
+      return <CloudSunIcon className={className} />;
+    case "evening":
+      return <MoonIcon className={className} />;
+    case "bedtime":
+      return <BedIcon className={className} />;
   }
 }
 
@@ -86,8 +113,13 @@ function formatTime(iso: string): string {
 // ---------------------------------------------------------------------------
 // Food icon
 // ---------------------------------------------------------------------------
-function FoodIcon({ food }: { food: "after_food" | "before_food" | "with_food" | "any" }) {
-  const className = "h-6 w-6 shrink-0";
+function FoodIcon({
+  food,
+  className = "h-6 w-6 shrink-0",
+}: {
+  food: "after_food" | "before_food" | "with_food" | "any";
+  className?: string;
+}) {
   switch (food) {
     case "before_food":
       return (
@@ -157,41 +189,43 @@ function DoseCard({
   isSenior: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border-2 border-slate-200 bg-white p-4">
+    <Card className="flex flex-col gap-3">
       <div className="flex items-start gap-4">
         {medicine.photo && (
           <img
             src={medicine.photo}
             alt={medicine.drug_name}
-            className="h-16 w-16 shrink-0 rounded-lg object-cover"
+            className="h-14 w-14 shrink-0 rounded-xl border border-line object-cover"
           />
         )}
-        <div className="flex flex-col gap-1">
-          <p className="text-[22px] font-bold leading-tight text-slate-900">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[22px] font-bold leading-tight text-ink">
             {medicine.drug_name} {medicine.strength}
           </p>
-          <p className="text-lg text-slate-600">{medicine.dose_per_time}</p>
-          <div className="flex items-center gap-2 text-base text-slate-700">
-            <FoodIcon food={medicine.food} />
-            <span>{foodLabel(lang, medicine.food)}</span>
-          </div>
+          <p className="text-lg text-muted">{medicine.dose_per_time}</p>
+          <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-line px-3 py-1 text-sm font-semibold text-ink">
+            <FoodIcon food={medicine.food} className="h-4 w-4 shrink-0" />
+            {foodLabel(lang, medicine.food)}
+          </span>
           {medicine.special_instructions.length > 0 && (
-            <p className="text-base text-amber-700">
-              {medicine.special_instructions.join("; ")}
+            <p className="flex items-start gap-1.5 text-base font-medium text-attention-text">
+              <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{medicine.special_instructions.join("; ")}</span>
             </p>
           )}
         </div>
       </div>
 
       {taken && takenAt ? (
-        <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3">
-          <span className="text-lg font-semibold text-green-700">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-success-bg px-4 py-3">
+          <span className="flex items-center gap-2 text-lg font-semibold text-success-text">
+            <CheckIcon className="h-6 w-6 shrink-0" />
             {t(lang, "takenAt")} {formatTime(takenAt)}
           </span>
           {undoAvailable && (
             <button
               onClick={onUndo}
-              className="rounded-lg bg-white px-4 py-2 text-base font-semibold text-green-700 shadow-sm hover:bg-green-100"
+              className="min-h-12 rounded-lg border border-success-border bg-white px-4 py-2 text-base font-semibold text-success-text hover:bg-page focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={t(lang, "undo")}
             >
               {t(lang, "undo")}
@@ -199,23 +233,25 @@ function DoseCard({
           )}
         </div>
       ) : (
-        <button
+        <Button
+          variant="success"
+          className="w-full min-h-16 text-[20px] font-bold"
           onClick={onTake}
-          className="w-full rounded-xl bg-blue-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-          style={{ minHeight: 64 }}
           aria-label={`${t(lang, "done")} — ${medicine.drug_name}`}
         >
           {t(lang, "done")}
-        </button>
+        </Button>
       )}
-      <button
+      <Button
+        variant="secondary"
+        className="w-full"
         onClick={onListen}
-        className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-lg font-semibold text-slate-700 hover:bg-slate-50"
         aria-label={`${t(lang, "listen")} — ${medicine.drug_name}`}
       >
+        <SpeakerIcon className="h-5 w-5" />
         {t(lang, "listen")}
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }
 
@@ -542,35 +578,24 @@ function TodayPageInner() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
+    <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
       {/* Header */}
-      <header className="flex w-full max-w-sm flex-col gap-2 self-center">
-        <div className="flex items-center justify-between">
-          {!isSenior && (
-            <button
-              onClick={() => router.push("/")}
-              className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-              aria-label={t(lang, "back")}
-            >
-              ← {t(lang, "back")}
-            </button>
-          )}
-          <h1 className="text-xl font-bold text-slate-900">
-            {t(lang, "todayTitle")}
-          </h1>
-          {isSenior ? <div className="w-16" /> : <div className="w-16" />}
-        </div>
-        {today && (
-          <p className="text-center text-lg text-slate-700">
-            {formatDate(lang, today)}
-          </p>
-        )}
+      <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+        <AppHeader
+          title={t(lang, "todayTitle")}
+          subtitle={today ? formatDate(lang, today) : undefined}
+          back={
+            !isSenior
+              ? { label: t(lang, "back"), onClick: () => router.push("/") }
+              : undefined
+          }
+        />
         {totalDoses > 0 && (
-          <p className="text-center text-base font-medium text-slate-600">
+          <p className="text-base font-medium text-muted">
             {takenDoses} / {totalDoses} {t(lang, "dosesTaken")}
           </p>
         )}
-      </header>
+      </div>
 
       {/* Refill reminders */}
       {today && state.medicines.length > 0 && (
@@ -581,9 +606,10 @@ function TodayPageInner() {
             .map(({ med, days }) => (
               <div
                 key={`refill-${med.id}`}
-                className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+                className="flex items-start gap-3 rounded-2xl border border-attention-border bg-attention-bg p-4"
               >
-                <p className="text-lg font-semibold text-amber-900">
+                <AlertIcon className="h-6 w-6 shrink-0 text-attention-text" />
+                <p className="text-lg font-semibold text-attention-text">
                   {t(lang, "refillReminder")
                     .replace("{drug}", med.drug_name)
                     .replace("{n}", String(days))}
@@ -601,13 +627,14 @@ function TodayPageInner() {
             .map((medicine) => (
               <div
                 key={`ack-${medicine.id}`}
-                className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4"
+                className="rounded-2xl border border-success-border bg-success-bg p-4"
               >
-                <p className="text-lg text-blue-900">
+                <p className="flex items-center gap-2 text-lg font-semibold text-success-text">
+                  <CheckIcon className="h-6 w-6 shrink-0" />
                   {t(lang, "acknowledgement")}
                 </p>
                 {justReasoned[medicine.id + "-sideEffects"] && (
-                  <p className="mt-2 text-lg font-semibold text-blue-900">
+                  <p className="mt-2 text-lg font-semibold text-success-text">
                     {t(lang, "sideEffectsAck")}
                   </p>
                 )}
@@ -622,9 +649,10 @@ function TodayPageInner() {
           {adherencePrompts.map(({ medicine, missedCount }) => (
             <div
               key={medicine.id}
-              className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+              className="rounded-2xl border border-attention-border bg-attention-bg p-4"
             >
-              <p className="mb-3 text-lg font-semibold text-amber-900">
+              <p className="mb-3 flex items-start gap-2 text-lg font-semibold text-attention-text">
+                <AlertIcon className="mt-0.5 h-6 w-6 shrink-0" />
                 {t(lang, "missedPrompt")
                   .replace("{drug}", medicine.drug_name)
                   .replace("{n}", String(missedCount))}
@@ -642,8 +670,7 @@ function TodayPageInner() {
                     onClick={() =>
                       handleReason(medicine.id, btn.key, missedCount)
                     }
-                    className="rounded-xl bg-white px-4 py-3 text-lg font-semibold text-amber-800 shadow-sm hover:bg-amber-100"
-                    style={{ minHeight: 48 }}
+                    className="min-h-12 rounded-xl border border-attention-border bg-white px-4 py-3 text-lg font-semibold text-attention-text hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     {btn.label}
                   </button>
@@ -661,7 +688,8 @@ function TodayPageInner() {
           if (meds.length === 0) return null;
           return (
             <section key={slot}>
-              <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-slate-500">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-ink">
+                <SlotIcon slot={slot} className="h-6 w-6 shrink-0 text-primary" />
                 {slotLabel(lang, slot)}
               </h2>
               <div className="flex flex-col gap-4">
@@ -692,28 +720,29 @@ function TodayPageInner() {
         {/* Time not set section */}
         {noSlotMedicines.length > 0 && (
           <section>
-            <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-amber-600">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-attention-text">
+              <AlertIcon className="h-6 w-6 shrink-0" />
               {t(lang, "timeNotSet")}
             </h2>
             <div className="flex flex-col gap-4">
               {noSlotMedicines.map((med) => (
                 <div
                   key={med.id}
-                  className="flex flex-col gap-3 rounded-xl border-2 border-amber-200 bg-amber-50 p-4"
+                  className="flex flex-col gap-3 rounded-2xl border border-attention-border bg-attention-bg p-4"
                 >
                   <div className="flex items-start gap-4">
                     {med.photo && (
                       <img
                         src={med.photo}
                         alt={med.drug_name}
-                        className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                        className="h-14 w-14 shrink-0 rounded-xl border border-attention-border object-cover"
                       />
                     )}
                     <div className="flex flex-col gap-1">
-                      <p className="text-[22px] font-bold leading-tight text-slate-900">
+                      <p className="text-[22px] font-bold leading-tight text-ink">
                         {med.drug_name} {med.strength}
                       </p>
-                      <p className="text-lg text-slate-600">
+                      <p className="text-lg text-muted">
                         {med.dose_per_time}
                       </p>
                     </div>
@@ -721,19 +750,21 @@ function TodayPageInner() {
                   {!isSenior && (
                     <button
                       onClick={() => router.push(`/add?edit=${med.id}`)}
-                      className="w-full rounded-xl border-2 border-amber-300 bg-white px-5 py-3 text-lg font-semibold text-amber-700 hover:bg-amber-100"
+                      className="min-h-12 w-full rounded-xl border border-attention-border bg-white px-5 py-3 text-lg font-semibold text-attention-text hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       aria-label={`${t(lang, "editTime")} — ${med.drug_name}`}
                     >
                       {t(lang, "editTime")}
                     </button>
                   )}
-                  <button
+                  <Button
+                    variant="secondary"
+                    className="w-full"
                     onClick={() => openExplanationPanel(med)}
-                    className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-lg font-semibold text-slate-700 hover:bg-slate-50"
                     aria-label={`${t(lang, "listen")} — ${med.drug_name}`}
                   >
+                    <SpeakerIcon className="h-5 w-5" />
                     {t(lang, "listen")}
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -741,7 +772,7 @@ function TodayPageInner() {
         )}
 
         {!isLoading && state.medicines.length === 0 && (
-          <p className="py-12 text-center text-lg text-slate-500">
+          <p className="py-12 text-center text-lg text-muted">
             {t(lang, "noMedicines")}
           </p>
         )}
@@ -750,7 +781,7 @@ function TodayPageInner() {
       {/* Senior help line */}
       {isSenior && (
         <div className="flex w-full max-w-sm flex-col gap-2 self-center">
-          <p className="text-center text-base text-slate-500">
+          <p className="text-center text-base text-muted">
             {t(lang, "seniorHelpLine")}
           </p>
         </div>
@@ -759,208 +790,223 @@ function TodayPageInner() {
       {/* Navigation links (hidden for senior) */}
       {!isSenior && (
         <div className="flex w-full max-w-sm flex-col gap-2 self-center">
-          <button
+          <Button
+            variant="secondary"
+            className="w-full"
             onClick={() => router.push("/bp")}
-            className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
           >
-            {t(lang, "bpLink")} →
-          </button>
-          <button
+            {t(lang, "bpLink")}
+            <ChevronRightIcon className="h-5 w-5 text-muted" />
+          </Button>
+          <Button
+            variant="secondary"
+            className="w-full"
             onClick={() => router.push("/questions")}
-            className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
           >
-            {t(lang, "questionsTitle")} →
-          </button>
-          <button
+            {t(lang, "questionsTitle")}
+            <ChevronRightIcon className="h-5 w-5 text-muted" />
+          </Button>
+          <Button
+            variant="secondary"
+            className="w-full"
             onClick={() => router.push("/summary")}
-            className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
           >
-            {t(lang, "weeklySummary")} →
-          </button>
+            {t(lang, "weeklySummary")}
+            <ChevronRightIcon className="h-5 w-5 text-muted" />
+          </Button>
         </div>
       )}
 
       {/* Demo controls */}
       {demoActive && (
-        <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 p-4">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-2xl border border-dashed border-line bg-page p-4">
+          <p className="text-sm font-semibold uppercase tracking-wide text-muted">
             {t(lang, "demoMode")}
           </p>
           {today && today !== realToday && (
-            <p className="text-base text-slate-700">
+            <p className="text-base text-ink">
               {t(lang, "simulatedDate")}: {formatDate(lang, today)}
             </p>
           )}
           <div className="flex gap-3">
-            <button
+            <Button
+              variant="primary"
+              className="flex-1"
               onClick={() => {
                 advanceDemoDays(1);
                 window.location.reload();
               }}
-              className="rounded-lg bg-slate-800 px-4 py-2 text-base font-semibold text-white hover:bg-slate-900"
             >
               {t(lang, "advanceDay")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex-1"
               onClick={() => {
                 resetDemoClock();
                 window.location.reload();
               }}
-              className="rounded-lg border-2 border-slate-400 bg-white px-4 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
             >
               {t(lang, "resetClock")}
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
-      {/* Explanation panel */}
+      {/* Explanation panel — bottom sheet with sticky listen row */}
       {panelOpen && panelData && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
-          <div className="w-full max-w-sm rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
+          <div className="flex max-h-[92vh] w-full max-w-sm flex-col rounded-t-2xl bg-white shadow-xl">
+            <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+              <h2 className="text-xl font-bold text-ink">
                 {panelData.medicine.drug_name} {panelData.medicine.strength}
               </h2>
               <button
                 onClick={closePanel}
-                className="rounded-lg px-3 py-1 text-lg text-slate-600 hover:bg-slate-100"
+                className="min-h-12 min-w-12 rounded-xl px-3 text-base font-semibold text-muted hover:bg-page focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 aria-label={t(lang, "close")}
               >
                 {t(lang, "close")}
               </button>
             </div>
 
-            {panelData.fetching ? (
-              <div className="flex flex-col items-center gap-3 py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-                <p className="text-lg text-slate-600">{t(lang, "loading")}</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <div className="max-h-80 overflow-y-auto rounded-xl bg-slate-50 p-4">
-                  <p className="whitespace-pre-wrap text-xl leading-relaxed text-slate-900">
-                    {panelData.explanation?.text}
-                  </p>
-                  {panelData.explanation?.sourceUrl && (
-                    <a
-                      href={panelData.explanation.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-block text-base font-semibold text-blue-700 underline"
-                    >
-                      {t(lang, "source")}: {panelData.explanation.sourceTitle || "HealthHub"}
-                    </a>
-                  )}
-                  {!panelData.explanation?.sourceUrl && panelData.explanation?.known && (
-                    <p className="mt-3 text-base text-slate-600">
-                      {t(lang, "source")}: HealthHub
-                    </p>
-                  )}
-                  {panelData.explanation?.fallback && (
-                    <p className="mt-2 text-sm text-amber-700">
-                      {t(lang, "genericError")}
-                    </p>
-                  )}
+            <div className="overflow-y-auto px-5 py-4">
+              {panelData.fetching ? (
+                <div className="flex flex-col items-center gap-3 py-8">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-line border-t-primary" />
+                  <p className="text-lg text-muted">{t(lang, "loading")}</p>
                 </div>
-
-                <div className="flex flex-col gap-3">
-                  {isSpeaking ? (
-                    <button
-                      onClick={stopSpeech}
-                      className="w-full rounded-xl bg-red-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-red-700 active:bg-red-800"
-                    >
-                      {t(lang, "stop")}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (panelData.explanation) {
-                          startSpeech(panelData.explanation.text);
-                        }
-                      }}
-                      className="w-full rounded-xl bg-blue-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-                    >
-                      {t(lang, "listen")}
-                    </button>
-                  )}
-                </div>
-
-                {/* Voice availability note */}
-                {typeof window !== "undefined" &&
-                  window.speechSynthesis &&
-                  panelData.explanation &&
-                  !voicesLoading &&
-                  (() => {
-                    const langPrefix =
-                      lang === "zh" ? "zh" : lang === "ms" ? "ms" : lang === "id" ? "id" : "en";
-                    const hasVoice = voices.some((v) =>
-                      v.lang.toLowerCase().startsWith(langPrefix)
-                    );
-                    if (!hasVoice) {
-                      return (
-                        <p className="text-center text-sm text-slate-500">
-                          {t(lang, "voiceNotAvailable")}
-                        </p>
-                      );
-                    }
-                    return null;
-                  })()}
-
-                {/* Ask a question */}
-                <div className="mt-2 flex flex-col gap-3 rounded-xl border-2 border-slate-200 bg-slate-50 p-4">
-                  <label className="text-base font-semibold text-slate-700">
-                    {t(lang, "askQuestion")}
-                  </label>
-                  <input
-                    type="text"
-                    value={questionInput}
-                    onChange={(e) => setQuestionInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSendQuestion();
-                    }}
-                    placeholder={t(lang, "askQuestionPlaceholder")}
-                    className="w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-lg text-slate-900"
-                  />
-                  <button
-                    onClick={handleSendQuestion}
-                    disabled={!questionInput.trim()}
-                    className="w-full rounded-xl bg-green-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-green-700 active:bg-green-800 disabled:bg-slate-300"
-                    style={{ minHeight: 56 }}
-                  >
-                    {t(lang, "send")}
-                  </button>
-
-                  {questionResult && (
-                    <div className="flex flex-col gap-3 rounded-xl bg-white p-4">
-                      <p className="text-lg font-semibold text-blue-900">
-                        {questionResult.reply}
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <div className="rounded-xl bg-page p-4">
+                    <p className="whitespace-pre-wrap text-xl leading-relaxed text-ink">
+                      {panelData.explanation?.text}
+                    </p>
+                    {panelData.explanation?.sourceUrl && (
+                      <a
+                        href={panelData.explanation.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-block text-base font-semibold text-primary underline"
+                      >
+                        {t(lang, "source")}: {panelData.explanation.sourceTitle || "HealthHub"}
+                      </a>
+                    )}
+                    {!panelData.explanation?.sourceUrl && panelData.explanation?.known && (
+                      <p className="mt-3 text-base text-muted">
+                        {t(lang, "source")}: HealthHub
                       </p>
-                      {questionResult.ifMissedQuote && (
-                        <div className="flex flex-col gap-2 rounded-xl bg-slate-50 p-3">
-                          <p className="text-base font-semibold text-slate-700">
-                            {t(lang, "whatHealthHubSaysAboutMissedDose")}
+                    )}
+                    {panelData.explanation?.fallback && (
+                      <p className="mt-2 text-sm text-attention-text">
+                        {t(lang, "genericError")}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Voice availability note */}
+                  {typeof window !== "undefined" &&
+                    window.speechSynthesis &&
+                    panelData.explanation &&
+                    !voicesLoading &&
+                    (() => {
+                      const langPrefix =
+                        lang === "zh" ? "zh" : lang === "ms" ? "ms" : lang === "id" ? "id" : "en";
+                      const hasVoice = voices.some((v) =>
+                        v.lang.toLowerCase().startsWith(langPrefix)
+                      );
+                      if (!hasVoice) {
+                        return (
+                          <p className="text-center text-sm text-muted">
+                            {t(lang, "voiceNotAvailable")}
                           </p>
-                          <p className="text-base leading-relaxed text-slate-900">
-                            {questionResult.ifMissedQuote}
-                          </p>
-                          {questionResult.sourceUrl && (
-                            <a
-                              href={questionResult.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-block text-base font-semibold text-blue-700 underline"
-                            >
-                              {t(lang, "source")}: {questionResult.sourceTitle || "HealthHub"}
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        );
+                      }
+                      return null;
+                    })()}
+
+                  {/* Ask a question */}
+                  <div className="flex flex-col gap-3 rounded-xl border border-line p-4">
+                    <label className="text-base font-semibold text-ink">
+                      {t(lang, "askQuestion")}
+                    </label>
+                    <input
+                      type="text"
+                      value={questionInput}
+                      onChange={(e) => setQuestionInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSendQuestion();
+                      }}
+                      placeholder={t(lang, "askQuestionPlaceholder")}
+                      className="w-full rounded-xl border border-line bg-white px-4 py-3 text-lg text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <Button
+                      variant="primary"
+                      className="w-full"
+                      onClick={handleSendQuestion}
+                      disabled={!questionInput.trim()}
+                    >
+                      {t(lang, "send")}
+                    </Button>
+
+                    {questionResult && (
+                      <div className="flex flex-col gap-3 rounded-xl bg-page p-4">
+                        <p className="text-lg font-semibold text-ink">
+                          {questionResult.reply}
+                        </p>
+                        {questionResult.ifMissedQuote && (
+                          <div className="flex flex-col gap-2 rounded-xl border border-line bg-white p-3">
+                            <p className="text-base font-semibold text-muted">
+                              {t(lang, "whatHealthHubSaysAboutMissedDose")}
+                            </p>
+                            <p className="text-base leading-relaxed text-ink">
+                              {questionResult.ifMissedQuote}
+                            </p>
+                            {questionResult.sourceUrl && (
+                              <a
+                                href={questionResult.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block text-base font-semibold text-primary underline"
+                              >
+                                {t(lang, "source")}: {questionResult.sourceTitle || "HealthHub"}
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Sticky listen/stop row */}
+            <div className="sticky bottom-0 flex border-t border-line bg-white px-5 py-4">
+              {isSpeaking ? (
+                <Button
+                  variant="danger"
+                  className="w-full text-[20px] font-bold"
+                  onClick={stopSpeech}
+                >
+                  <StopIcon className="h-5 w-5" />
+                  {t(lang, "stop")}
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  className="w-full text-[20px] font-bold"
+                  onClick={() => {
+                    if (panelData.explanation) {
+                      startSpeech(panelData.explanation.text);
+                    }
+                  }}
+                >
+                  <SpeakerIcon className="h-5 w-5" />
+                  {t(lang, "listen")}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}

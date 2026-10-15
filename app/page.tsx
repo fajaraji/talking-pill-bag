@@ -11,6 +11,19 @@ import {
 import { useStore } from "@/lib/store";
 import { getToday } from "@/lib/clock";
 import { LoadingShell } from "./loading-shell";
+import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import {
+  CameraIcon,
+  ChartBarIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  ClipboardQuestionIcon,
+  HeartPulseIcon,
+  PillIcon,
+  UsersIcon,
+} from "@/components/icons";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 type Slot = (typeof SLOT_ORDER)[number];
@@ -62,61 +75,6 @@ function nextPendingSlot(
     if (!allTaken) return slot;
   }
   return null;
-}
-
-// ---------------------------------------------------------------------------
-// Icons
-// ---------------------------------------------------------------------------
-function AddMedicineIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M12 8v8M8 12h8" />
-    </svg>
-  );
-}
-
-function BPIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" />
-    </svg>
-  );
-}
-
-function QuestionsIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-    </svg>
-  );
-}
-
-function SummaryIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M8 12h8M8 16h5M8 8h2" />
-    </svg>
-  );
-}
-
-function ChevronRightIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-      <path d="M9 5l7 7-7 7" />
-    </svg>
-  );
-}
-
-function FamilyIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-    </svg>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -183,148 +141,154 @@ function HomePageInner() {
   // ---------------------------------------------------------------------------
   if (!isAuthenticated) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-6 py-12">
-        <header className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">{t(lang, "appTitle")}</h1>
-          <p className="mt-2 text-lg text-slate-600">{t(lang, "tagline")}</p>
-        </header>
+      <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-page px-4 py-12">
+        <div className="flex w-full max-w-sm flex-col gap-8">
+          {onboardingStep === "choice" && (
+            <>
+              <header className="flex flex-col items-center gap-3 text-center">
+                <PillIcon className="h-12 w-12 text-primary" />
+                <h1 className="text-2xl font-bold text-ink">{t(lang, "appTitle")}</h1>
+                <p className="text-lg text-muted">{t(lang, "tagline")}</p>
+              </header>
 
-        {onboardingStep === "choice" && (
-          <>
-            <p className="text-center text-lg font-semibold text-slate-800">
-              {t(lang, "setupTitle")}
-            </p>
-            <div className="flex w-full max-w-sm flex-col gap-4">
-              <button
-                onClick={() => setOnboardingStep("caregiver")}
-                className="w-full rounded-xl bg-blue-600 px-5 py-5 text-left text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-                style={{ minHeight: 72 }}
-              >
-                {t(lang, "caregiverChoice")}
-              </button>
-              <button
-                onClick={() => setOnboardingStep("join")}
-                className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-5 text-left text-lg font-semibold text-slate-700 hover:bg-slate-50"
-                style={{ minHeight: 72 }}
-              >
-                {t(lang, "seniorChoice")}
-              </button>
-            </div>
-
-            <section className="w-full max-w-sm">
-              <h3 className="mb-3 text-lg font-semibold text-slate-700">{t(lang, "chooseLanguage")}</h3>
-              <div className="flex flex-col gap-3">
-                {languages.map((l) => {
-                  const selected = lang === l.code;
-                  return (
-                    <button
-                      key={l.code}
-                      onClick={() => {
-                        setLang(l.code);
-                        localStorage.setItem("tpb-lang", l.code);
-                        document.documentElement.lang = l.code;
-                      }}
-                      className={`flex items-center justify-between rounded-xl border-2 px-5 py-4 text-left text-lg transition-colors ${
-                        selected
-                          ? "border-blue-600 bg-blue-50 text-blue-900"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
-                      }`}
-                      aria-pressed={selected}
-                      style={{ minHeight: 48 }}
-                    >
-                      <span className="font-medium">{l.nativeLabel}</span>
-                      <span className="text-sm text-slate-500">{l.label}</span>
-                    </button>
-                  );
-                })}
+              <p className="text-center text-lg font-semibold text-ink">
+                {t(lang, "setupTitle")}
+              </p>
+              <div className="flex w-full flex-col gap-4">
+                <Button
+                  variant="primary"
+                  className="w-full min-h-16"
+                  onClick={() => setOnboardingStep("caregiver")}
+                >
+                  {t(lang, "caregiverChoice")}
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="w-full min-h-16"
+                  onClick={() => setOnboardingStep("join")}
+                >
+                  {t(lang, "seniorChoice")}
+                </Button>
               </div>
-            </section>
-          </>
-        )}
 
-        {onboardingStep === "caregiver" && (
-          <div className="flex w-full max-w-sm flex-col gap-4">
-            <h2 className="text-xl font-semibold text-slate-800">{t(lang, "whoIsThisFor")}</h2>
-            <input
-              type="text"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              placeholder={t(lang, "namePlaceholder")}
-              className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg text-slate-900 placeholder:text-slate-400"
-            />
-            <button
-              onClick={async () => {
-                if (!nameInput.trim()) return;
-                setLoading(true);
-                setError("");
-                try {
-                  await setupHousehold(nameInput.trim(), lang);
-                  localStorage.setItem("tpb-lang", lang);
-                  window.location.reload();
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : t(lang, "genericError"));
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading || !nameInput.trim()}
-              className="w-full rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300"
-              style={{ minHeight: 56 }}
-            >
-              {loading ? t(lang, "loading") : t(lang, "save")}
-            </button>
-            {error && <p className="text-base text-red-600">{error}</p>}
-            <button
-              onClick={() => setOnboardingStep("choice")}
-              className="rounded-lg px-3 py-2 text-base text-slate-500 hover:text-slate-700"
-            >
-              {t(lang, "back")}
-            </button>
-          </div>
-        )}
+              <section aria-label={t(lang, "chooseLanguage")}>
+                <h2 className="mb-3 text-lg font-semibold text-ink">
+                  {t(lang, "chooseLanguage")}
+                </h2>
+                <Card className="flex flex-col gap-2">
+                  {languages.map((l) => {
+                    const selected = lang === l.code;
+                    return (
+                      <button
+                        key={l.code}
+                        onClick={() => {
+                          setLang(l.code);
+                          localStorage.setItem("tpb-lang", l.code);
+                          document.documentElement.lang = l.code;
+                        }}
+                        className={`flex min-h-12 items-center justify-between rounded-xl border px-4 py-3 text-left text-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                          selected
+                            ? "border-primary bg-primary/5 text-ink"
+                            : "border-line bg-white text-ink hover:border-muted"
+                        }`}
+                        aria-pressed={selected}
+                      >
+                        <span className="font-medium">{l.nativeLabel}</span>
+                        {selected ? (
+                          <CheckIcon className="h-5 w-5 text-primary" />
+                        ) : (
+                          <span className="text-sm text-muted">{l.label}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </Card>
+              </section>
+            </>
+          )}
 
-        {onboardingStep === "join" && (
-          <div className="flex w-full max-w-sm flex-col gap-4">
-            <h2 className="text-xl font-semibold text-slate-800">{t(lang, "joinWithCode")}</h2>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={codeInput}
-              onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, ""))}
-              placeholder={t(lang, "codePlaceholder")}
-              className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-center text-2xl font-bold text-slate-900 placeholder:text-slate-400 tracking-widest"
-            />
-            <button
-              onClick={async () => {
-                if (codeInput.length !== 6) return;
-                setLoading(true);
-                setError("");
-                try {
-                  await joinHousehold(codeInput);
-                  localStorage.setItem("tpb-lang", lang);
-                  window.location.reload();
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : t(lang, "invalidCode"));
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading || codeInput.length !== 6}
-              className="w-full rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-300"
-              style={{ minHeight: 56 }}
-            >
-              {loading ? t(lang, "loading") : t(lang, "save")}
-            </button>
-            {error && <p className="text-base text-red-600">{error}</p>}
-            <button
-              onClick={() => setOnboardingStep("choice")}
-              className="rounded-lg px-3 py-2 text-base text-slate-500 hover:text-slate-700"
-            >
-              {t(lang, "back")}
-            </button>
-          </div>
-        )}
+          {onboardingStep === "caregiver" && (
+            <div className="flex w-full flex-col gap-6">
+              <AppHeader
+                title={t(lang, "whoIsThisFor")}
+                back={{ label: t(lang, "back"), onClick: () => setOnboardingStep("choice") }}
+              />
+              <Card className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder={t(lang, "namePlaceholder")}
+                  className="w-full rounded-xl border border-line bg-white px-5 py-4 text-lg text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  disabled={loading || !nameInput.trim()}
+                  onClick={async () => {
+                    if (!nameInput.trim()) return;
+                    setLoading(true);
+                    setError("");
+                    try {
+                      await setupHousehold(nameInput.trim(), lang);
+                      localStorage.setItem("tpb-lang", lang);
+                      window.location.reload();
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : t(lang, "genericError"));
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                >
+                  {loading ? t(lang, "loading") : t(lang, "save")}
+                </Button>
+                {error && <p className="text-base text-danger-text">{error}</p>}
+              </Card>
+            </div>
+          )}
+
+          {onboardingStep === "join" && (
+            <div className="flex w-full flex-col gap-6">
+              <AppHeader
+                title={t(lang, "joinWithCode")}
+                back={{ label: t(lang, "back"), onClick: () => setOnboardingStep("choice") }}
+              />
+              <Card className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={codeInput}
+                  onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, ""))}
+                  placeholder={t(lang, "codePlaceholder")}
+                  className="w-full rounded-xl border border-line bg-white px-5 py-4 text-center text-2xl font-bold tracking-widest text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  disabled={loading || codeInput.length !== 6}
+                  onClick={async () => {
+                    if (codeInput.length !== 6) return;
+                    setLoading(true);
+                    setError("");
+                    try {
+                      await joinHousehold(codeInput);
+                      localStorage.setItem("tpb-lang", lang);
+                      window.location.reload();
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : t(lang, "invalidCode"));
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                >
+                  {loading ? t(lang, "loading") : t(lang, "save")}
+                </Button>
+                {error && <p className="text-base text-danger-text">{error}</p>}
+              </Card>
+            </div>
+          )}
+        </div>
       </main>
     );
   }
@@ -337,39 +301,69 @@ function HomePageInner() {
     ? t(lang, "todaysMedicinesNamed").replace("{name}", displayName)
     : t(lang, "todaysMedicinesNeutral");
 
+  const tiles = [
+    {
+      href: "/add",
+      icon: CameraIcon,
+      label: t(lang, "addMedicineTile"),
+      desc: t(lang, "addMedicineTileDesc"),
+    },
+    {
+      href: "/bp",
+      icon: HeartPulseIcon,
+      label: t(lang, "bpTile"),
+      desc: t(lang, "bpTileDesc"),
+    },
+    {
+      href: "/questions",
+      icon: ClipboardQuestionIcon,
+      label: t(lang, "questionsTile"),
+      desc: t(lang, "questionsTileDesc"),
+    },
+    {
+      href: "/summary",
+      icon: ChartBarIcon,
+      label: t(lang, "weeklySummaryTile"),
+      desc: t(lang, "weeklySummaryTileDesc"),
+    },
+    {
+      href: "/family",
+      icon: UsersIcon,
+      label: t(lang, "familyPhones"),
+      desc: t(lang, "familyPhonesDesc"),
+    },
+  ];
+
   return (
-    <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
+    <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
       <div className="flex w-full max-w-sm flex-col gap-6 self-center">
         {/* App header */}
-        <header className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900">{t(lang, "appTitle")}</h1>
-        </header>
+        <AppHeader title={t(lang, "appTitle")} />
 
         {state.medicines.length === 0 ? (
           <>
-            <p className="text-center text-lg leading-relaxed text-slate-700">
+            <p className="text-center text-lg leading-relaxed text-muted">
               {t(lang, "homeValueStatement")}
             </p>
-            <button
+            <Button
+              variant="primary"
+              className="w-full min-h-16 text-[20px] font-bold"
               onClick={() => router.push("/add")}
-              className="w-full rounded-xl bg-blue-600 px-5 py-4 text-xl font-bold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-              style={{ minHeight: 64 }}
             >
               {t(lang, "addFirstMedicine")}
-            </button>
+            </Button>
           </>
         ) : (
           <>
             {/* Primary card */}
             <button
               onClick={() => router.push("/today")}
-              className="flex w-full flex-col gap-3 rounded-2xl bg-blue-600 p-6 text-left text-white shadow-md hover:bg-blue-700 active:bg-blue-800"
-              style={{ minHeight: 120 }}
+              className="flex w-full flex-col gap-3 rounded-2xl bg-primary p-5 text-left text-white shadow-sm hover:bg-primary-hover active:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={todayTitle}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <h2 className="text-2xl font-bold">{todayTitle}</h2>
-                <ChevronRightIcon className="h-6 w-6" />
+                <ChevronRightIcon className="h-6 w-6 shrink-0" />
               </div>
               <p className="text-lg opacity-90">
                 {t(lang, "takenOf")
@@ -385,84 +379,26 @@ function HomePageInner() {
 
             {/* Family and helpers section */}
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-slate-700">
+              <h2 className="mb-3 text-lg font-semibold text-ink">
                 {t(lang, "forFamilyAndHelpers")}
               </h2>
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => router.push("/add")}
-                  className="flex flex-col gap-2 rounded-xl border-2 border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
-                  style={{ minHeight: 96 }}
-                  aria-label={t(lang, "addMedicineTile")}
-                >
-                  <AddMedicineIcon className="h-8 w-8 text-blue-600" />
-                  <span className="text-base font-semibold text-slate-900">
-                    {t(lang, "addMedicineTile")}
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    {t(lang, "addMedicineTileDesc")}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => router.push("/bp")}
-                  className="flex flex-col gap-2 rounded-xl border-2 border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
-                  style={{ minHeight: 96 }}
-                  aria-label={t(lang, "bpTile")}
-                >
-                  <BPIcon className="h-8 w-8 text-red-500" />
-                  <span className="text-base font-semibold text-slate-900">
-                    {t(lang, "bpTile")}
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    {t(lang, "bpTileDesc")}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => router.push("/questions")}
-                  className="flex flex-col gap-2 rounded-xl border-2 border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
-                  style={{ minHeight: 96 }}
-                  aria-label={t(lang, "questionsTile")}
-                >
-                  <QuestionsIcon className="h-8 w-8 text-green-600" />
-                  <span className="text-base font-semibold text-slate-900">
-                    {t(lang, "questionsTile")}
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    {t(lang, "questionsTileDesc")}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => router.push("/summary")}
-                  className="flex flex-col gap-2 rounded-xl border-2 border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
-                  style={{ minHeight: 96 }}
-                  aria-label={t(lang, "weeklySummaryTile")}
-                >
-                  <SummaryIcon className="h-8 w-8 text-amber-500" />
-                  <span className="text-base font-semibold text-slate-900">
-                    {t(lang, "weeklySummaryTile")}
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    {t(lang, "weeklySummaryTileDesc")}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => router.push("/family")}
-                  className="flex flex-col gap-2 rounded-xl border-2 border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
-                  style={{ minHeight: 96 }}
-                  aria-label={t(lang, "familyPhones")}
-                >
-                  <FamilyIcon className="h-8 w-8 text-teal-600" />
-                  <span className="text-base font-semibold text-slate-900">
-                    {t(lang, "familyPhones")}
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    {t(lang, "familyPhonesDesc")}
-                  </span>
-                </button>
+                {tiles.map((tile) => (
+                  <button
+                    key={tile.href}
+                    onClick={() => router.push(tile.href)}
+                    className="rounded-2xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    aria-label={tile.label}
+                  >
+                    <Card className="flex h-full min-h-24 flex-col gap-2">
+                      <tile.icon className="h-8 w-8 text-primary" />
+                      <span className="text-base font-semibold text-ink">
+                        {tile.label}
+                      </span>
+                      <span className="text-sm text-muted">{tile.desc}</span>
+                    </Card>
+                  </button>
+                ))}
               </div>
             </section>
 
@@ -478,10 +414,10 @@ function HomePageInner() {
                       localStorage.setItem("tpb-lang", l.code);
                       document.documentElement.lang = l.code;
                     }}
-                    className={`rounded-lg px-3 py-2 text-base ${
+                    className={`rounded-lg px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                       selected
-                        ? "font-semibold text-blue-700"
-                        : "text-slate-500 hover:text-slate-700"
+                        ? "font-semibold text-primary"
+                        : "text-muted hover:text-ink"
                     }`}
                     aria-pressed={selected}
                   >

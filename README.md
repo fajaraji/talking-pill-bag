@@ -47,6 +47,7 @@ flowchart TB
         RL["/api/read-label"]
         RB["/api/read-bp"]
         EX["/api/explain"]
+        V1["/api/v1/*<br/>(households, medicines,<br/>doses, BP, questions)"]
     end
 
     subgraph External["External Services"]
@@ -56,6 +57,7 @@ flowchart TB
     end
 
     subgraph Data["Data"]
+        DB["Neon Postgres<br/>(@neondatabase/serverless)"]
         DI["data/drug-info.json<br/>(HealthHub summaries)"]
     end
 
@@ -64,13 +66,16 @@ flowchart TB
     UI -->|"POST image"| RL
     UI -->|"POST image"| RB
     UI -->|"POST name + lang"| EX
+    UI -->|"JSON API"| V1
     RL -->|"POST image"| VM
     RB -->|"POST image"| VM
     EX -->|"POST text"| TM
     EX -->|"reads"| DI
+    V1 -->|"reads/writes"| DB
     RL -.->|"returns JSON"| UI
     RB -.->|"returns JSON"| UI
     EX -.->|"returns explanation"| UI
+    V1 -.->|"returns JSON"| UI
     VM -.->|"returns text"| RL
     VM -.->|"returns text"| RB
     TM -.->|"returns text"| EX
@@ -83,19 +88,20 @@ flowchart TB
 
 **Trust boundaries:**
 
-- The **phone browser** (UI, `localStorage`, Web Speech) runs entirely on the user's device. No data leaves the browser except via the explicit API calls.
-- The **Next.js server routes** (`/api/read-label`, `/api/read-bp`, `/api/explain`) are the only components that hold the LLM API key. The key stays on the server and never reaches the client.
+- The **phone browser** (UI, `localStorage`, Web Speech) runs entirely on the user's device. Data is synced to the server via the `/api/v1/*` routes.
+- The **Next.js server routes** (`/api/read-label`, `/api/read-bp`, `/api/explain`, `/api/v1/*`) are the only components that hold the LLM API key and database credentials. The key stays on the server and never reaches the client.
 - The **external LLM provider** receives only photos (vision model) or HealthHub text snippets (text model). A label photo can show the patient's name; the app does not extract or store it, but the photo itself is sent to the provider. A production version would crop or blur the name area on the device before upload.
 - **`data/drug-info.json`** is a static file of HealthHub medication summaries. It is read by the server and returned to the client as part of explanations.
 - **Questions are answered by a deterministic router** (`lib/question-router.ts`) with **no LLM call**. Every question is redirected to a doctor or pharmacist.
 
 ## Key design trade-offs
 
-- **localStorage instead of a database** — Sufficient for a 4-day hackathon prototype. All data stays on the device, but it is lost if the browser cache is cleared.
+- **Neon Postgres with HTTP driver** — Replaces the earlier `localStorage`-only approach. Family members can now share data across devices. The `@neondatabase/serverless` driver works on Vercel Edge/Node without connection pooling.
+- **No ORM** — Raw SQL via tagged templates keeps the dependency tree small and queries explicit.
 - **Human confirmation of every AI label read** — The preparer must tap "Confirm" (or edit fields) before the medicine enters the schedule. This prevents silent misreadings.
 - **Explanations limited to HealthHub summaries** — The LLM may only translate and simplify text from `data/drug-info.json`. It cannot add facts not present in the JSON.
 - **Deterministic question router instead of a chatbot** — Every free-text question is redirected to a doctor or pharmacist. No generative model answers medical questions.
-- **Pre-generated cached translations** — Because the text model (`tencent/hy3`) takes 8–13 s per call, explanations are generated once when a medicine is confirmed and stored in `localStorage`. Subsequent "Listen" taps are instant.
+- **Pre-generated cached translations** — Because the text model (`tencent/hy3`) takes 8–13 s per call, explanations are generated once when a medicine is confirmed and stored on the server. Subsequent "Listen" taps are instant.
 
 ## Safety boundaries
 
@@ -106,21 +112,28 @@ flowchart TB
 ## Testing
 
 ```bash
-npm test        # runs scripts/test-adherence.ts and scripts/test-question-router.ts
+npm test          # pure-function tests (adherence + question router)
+npm run test:api  # end-to-end API tests against a running server
 npm run typecheck
 npm run build
 ```
+
+The API test (`scripts/test-api.ts`) exercises the full family-sharing flow: create household, create pairing code, join as senior, verify role-based permissions, verify cross-household isolation, and test code reuse.
 
 ## Configuration
 
 Copy `.env.example` to `.env.local` and fill in your own values:
 
 ```
+DATABASE_URL=postgresql://user:pass@host.neon.tech/dbname?sslmode=require
 LLM_BASE_URL=https://your-endpoint.example.com/v1
 LLM_API_KEY=your-key-here
 LLM_VISION_MODEL=google/gemini-2.5-flash
 LLM_TEXT_MODEL=tencent/hy3
 ```
+
+- `DATABASE_URL` — Neon Postgres connection string (HTTP driver, works on Vercel).
+- `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_VISION_MODEL`, `LLM_TEXT_MODEL` — OpenAI-compatible endpoint for label reading, BP reading, and explanations.
 
 **Never commit `.env.local`** — it is git-ignored and contains secrets.
 
@@ -128,11 +141,35 @@ LLM_TEXT_MODEL=tencent/hy3
 
 ```bash
 npm install
-cp .env.example .env.local   # then fill in your own LLM API key
+cp .env.example .env.local   # then fill in DATABASE_URL and LLM API key
+npm run db:migrate           # create tables in Neon Postgres
 npm run dev
 ```
 
 Open http://localhost:3000. Demo labels: open `labels/labels.html` in a browser and photograph them with a phone.
+
+## Data model
+
+All tables include `household_id` with `ON DELETE CASCADE`.
+
+| Table | Purpose |
+|---|---|
+| `households` | One row per family. Stores display name, language, BP target, demo flag. |
+| `devices` | One row per phone. Stores role (`caregiver` or `senior`) and a SHA-256 hash of the bearer token. |
+| `pairing_codes` | Short (6-digit) and long join codes. Hashed, 24-hour expiry, single use. |
+| `medicines` | Medication schedule. Soft-deleted via `deleted_at`. Thumbnail only — no full label photo. |
+| `dose_logs` | Record of each dose taken. Unique on `(medicine_id, date, slot)`. |
+| `missed_reasons` | Why a medicine was missed, recorded after 2+ misses in 7 days. |
+| `bp_readings` | Systolic, diastolic, pulse, date and time. |
+| `questions` | Redirected and custom questions for the doctor/pharmacist, with a `done` flag. |
+
+## Privacy notes
+
+- **Nicknames only** — `display_name` stores only a nickname (e.g. "Mdm Tan"), never a full name from a label photo.
+- **Thumbnails only** — The `medicines.thumbnail` column stores only a small generated icon. The full label photo is never persisted server-side.
+- **Hashed tokens** — Device tokens are 32 random bytes (base64url). Only SHA-256 hashes are stored in `devices.token_hash`.
+- **Single-use pairing codes** — Pairing codes expire after 24 hours and can only be used once. Both short (6-digit) and long (URL) forms are stored as hashes.
+- **Household isolation** — Every API query is scoped to the authenticated device's household. There is no endpoint to list or access another household's data.
 
 ## Data sources
 

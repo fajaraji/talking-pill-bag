@@ -70,13 +70,62 @@ but the source remains `data/drug-info.json`.
     about 40 tokens) and `max_tokens` at least 1000. Response time 8–13 seconds, so **store explanation results per
     medicine + language in localStorage** (create once when medicine is confirmed, not when the listen button is pressed).
     If `content` is empty or errors → use English text from `data/drug-info.json`.
-- **Storage:** `localStorage` in the browser (sufficient for demo; mention as a limitation in diagrams).
+- **Storage:** Neon Postgres via `@neondatabase/serverless` HTTP driver. All household data (medicines, doses, BP readings, questions) is stored server-side so family members can share it across devices. The `localStorage` layer is retained for UI state and will be migrated to server sync in session 2.
 - **Voice:** `window.speechSynthesis` (free, no API).
 - **Demo time:** hidden button "Demo mode: advance time +1 day" so reminders,
   trends, and refills can be demonstrated in a 5–8 minute video.
 - Deploy: Vercel (or Tencent EdgeOne Pages) for demo link (bonus points).
 
-## 7. Label reading data schema (required output from `/api/read-label`)
+## 7. Family sharing and storage
+
+### 7.1 Household model
+
+- A **household** is the top-level unit. Every family member (device) belongs to exactly one household.
+- Creating a household also creates the first **caregiver** device and returns its bearer token.
+- A caregiver can generate a **pairing code** for another caregiver or a senior. The code is valid for 24 hours and single-use.
+- Joining via the 6-digit code or the long URL code creates a new device with the requested role.
+
+### 7.2 Auth
+
+- **Device tokens:** 32 random bytes, base64url. The client stores the token in `localStorage` and sends it as `Authorization: Bearer <token>`.
+- **Token storage:** Only SHA-256 hashes are stored in `devices.token_hash`.
+- **Pairing codes:** Both short (6-digit numeric) and long (URL parameter) forms are SHA-256 hashed before storage in `pairing_codes.code_hash`.
+- **Rate limiting:** Join attempts are rate-limited per IP in memory (10 per 10 minutes).
+- **Role checks:** Caregiver-only routes return `403` when called by a senior device.
+
+### 7.3 API v1 routes
+
+All routes are under `/api/v1/`, return JSON, validate input with zod, and scope every query to the caller's household.
+
+| Method | Route | Who | Description |
+|---|---|---|---|
+| POST | `/households` | anyone | Create household + caregiver device |
+| POST | `/pairing-codes` | caregiver | Create senior/caregiver join code |
+| POST | `/join` | anyone | Use short or long code, receive token |
+| GET | `/state` | any device | Full household snapshot (last 30 days for logs) |
+| POST | `/medicines` | caregiver | Add medicine |
+| PUT | `/medicines/[id]` | caregiver | Update medicine |
+| DELETE | `/medicines/[id]` | caregiver | Soft delete medicine |
+| POST | `/doses` | any device | Mark dose taken (upsert) |
+| DELETE | `/doses` | any device | Unmark dose |
+| POST | `/missed-reasons` | any device | Record why a dose was missed |
+| POST | `/bp-readings` | any device | Add BP reading |
+| DELETE | `/bp-readings/[id]` | caregiver | Delete BP reading |
+| PUT | `/bp-target` | caregiver | Set household BP target |
+| POST | `/questions` | any device | Add question |
+| PUT | `/questions/[id]` | any device | Mark question done |
+| DELETE | `/questions/[id]` | any device | Delete question |
+| PUT | `/household` | caregiver | Update household name/language |
+| DELETE | `/devices/[id]` | caregiver | Unlink a device (cannot unlink self) |
+| POST | `/demo` | anyone | Create a fresh demo household with seeded data |
+
+### 7.4 Demo data
+
+- `POST /api/v1/demo` creates a **new** household with `is_demo = true` and seeds it using `generateDemoData()`.
+- The call also deletes demo households older than 7 days (cheap cleanup).
+- The returned token is a caregiver token, so the full feature set can be demonstrated immediately.
+
+## 8. Label reading data schema (required output from `/api/read-label`)
 
 ```json
 {
@@ -99,7 +148,7 @@ Rule: if `readable=false` or `confidence < 0.7` or `drug_name` empty →
 show "ask pharmacist" message, do not create schedule. Unreadable fields go into `unclear_fields`
 and are marked red on the confirmation screen.
 
-## 8. Definition of done (for demo)
+## 9. Definition of done (for demo)
 
 - All 6 labels in `labels/` are tested: 4 read correctly, 1 blurred rejected, 1 unknown medicine → "ask pharmacist".
 - The entire flow can be run on a phone (375px width) without assistance.

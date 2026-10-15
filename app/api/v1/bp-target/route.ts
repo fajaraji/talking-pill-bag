@@ -4,8 +4,8 @@ import { sql } from "@/lib/db";
 import { requireDevice } from "@/lib/auth";
 
 const bpTargetSchema = z.object({
-  systolic: z.number().int().min(60).max(260),
-  diastolic: z.number().int().min(30).max(160),
+  systolic: z.number().int().min(60).max(260).nullable(),
+  diastolic: z.number().int().min(30).max(160).nullable(),
 });
 
 export async function PUT(request: NextRequest) {

@@ -8,23 +8,10 @@ import {
   defaultLanguage,
   t,
 } from "@/lib/i18n";
-import {
-  getMedicines,
-  getDoseLog,
-  getMissedReasons,
-  getBPReadings,
-  getBPTarget,
-  getCustomQuestions,
-  saveCustomQuestion,
-  deleteCustomQuestion,
-  getRedirectedQuestions,
-  getDoneQuestionIds,
-  toggleDoneQuestion,
-  type Medicine,
-} from "@/lib/storage";
 import { getToday } from "@/lib/clock";
 import { getDaysLeft } from "@/lib/supply";
 import { countMissedDosesInLastNDays } from "@/lib/adherence";
+import { useStore } from "@/lib/store";
 
 type QuestionItem = {
   id: string;
@@ -46,21 +33,14 @@ function formatDateShort(lang: Language, dateStr: string): string {
   }
 }
 
-function isDone(id: string): boolean {
-  return getDoneQuestionIds().includes(id);
-}
-
 export default function QuestionsPage() {
   const router = useRouter();
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [doseLog, setDoseLog] = useState<ReturnType<typeof getDoseLog>>([]);
   const [today, setToday] = useState("");
   const [customInput, setCustomInput] = useState("");
-  const [customQuestions, setCustomQuestions] = useState<ReturnType<typeof getCustomQuestions>>([]);
-  const [doneIds, setDoneIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileName, setProfileName] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
@@ -68,20 +48,7 @@ export default function QuestionsPage() {
       setLang(stored);
       document.documentElement.lang = stored;
     }
-    setMedicines(getMedicines());
-    setDoseLog(getDoseLog());
-    setCustomQuestions(getCustomQuestions());
-    setDoneIds(getDoneQuestionIds());
     setToday(getToday());
-    try {
-      const raw = localStorage.getItem("tpb-profile");
-      if (raw) {
-        const parsed = JSON.parse(raw) as { name?: string };
-        setProfileName(parsed.name ?? "");
-      }
-    } catch {
-      // ignore
-    }
     setIsLoading(false);
   }, []);
 
@@ -89,14 +56,13 @@ export default function QuestionsPage() {
     if (!today) return [];
     const items: QuestionItem[] = [];
 
-    // 1. Missed doses in last 7 days with reasons
-    const reasons = getMissedReasons();
+    const reasons = state.missedReasons;
     const cutoff7 = new Date(today + "T00:00:00");
     cutoff7.setDate(cutoff7.getDate() - 7);
     const cutoff7Str = `${cutoff7.getFullYear()}-${String(cutoff7.getMonth() + 1).padStart(2, "0")}-${String(cutoff7.getDate()).padStart(2, "0")}`;
 
-    for (const med of medicines) {
-      const missedCount = countMissedDosesInLastNDays(med, doseLog, today, 7);
+    for (const med of state.medicines) {
+      const missedCount = countMissedDosesInLastNDays(med, state.doseLogs, today, 7);
       if (missedCount > 0) {
         const recentReasons = reasons.filter(
           (r) => r.medicineId === med.id && r.recordedOn >= cutoff7Str
@@ -115,9 +81,8 @@ export default function QuestionsPage() {
       }
     }
 
-    // 2. Refills due within 7 days
-    for (const med of medicines) {
-      const days = getDaysLeft(med, doseLog, today);
+    for (const med of state.medicines) {
+      const days = getDaysLeft(med, state.doseLogs, today);
       if (days !== null && days <= 7) {
         items.push({
           id: `refill-${med.id}`,
@@ -129,17 +94,14 @@ export default function QuestionsPage() {
       }
     }
 
-    // 3. BP readings above target or >= 180/120 in last 14 days
-    const readings = getBPReadings();
-    const target = getBPTarget();
     const cutoff14 = new Date(today + "T00:00:00");
     cutoff14.setDate(cutoff14.getDate() - 14);
     const cutoff14Str = `${cutoff14.getFullYear()}-${String(cutoff14.getMonth() + 1).padStart(2, "0")}-${String(cutoff14.getDate()).padStart(2, "0")}`;
 
-    for (const r of readings) {
+    for (const r of state.bpReadings) {
       if (r.date < cutoff14Str) continue;
       const isVeryHigh = r.systolic >= 180 || r.diastolic >= 120;
-      const aboveTarget = target && (r.systolic > target.systolic || r.diastolic > target.diastolic);
+      const aboveTarget = state.household?.bpTarget && (r.systolic > state.household.bpTarget.systolic || r.diastolic > state.household.bpTarget.diastolic);
       if (isVeryHigh || aboveTarget) {
         const dateShort = formatDateShort(lang, r.date);
         if (isVeryHigh) {
@@ -164,9 +126,7 @@ export default function QuestionsPage() {
       }
     }
 
-    // 4. Redirected questions
-    const redirected = getRedirectedQuestions();
-    for (const q of redirected) {
+    for (const q of state.redirectedQuestions) {
       items.push({
         id: `redirected-${q.askedOn}-${q.question}`,
         text: t(lang, "redirectedQuestion").replace("{question}", q.question),
@@ -175,38 +135,30 @@ export default function QuestionsPage() {
     }
 
     return items;
-  }, [medicines, doseLog, today, lang]);
+  }, [state.medicines, state.doseLogs, state.missedReasons, state.bpReadings, state.redirectedQuestions, state.household, today, lang]);
 
   const allQuestions = useMemo<QuestionItem[]>(() => {
-    const custom: QuestionItem[] = customQuestions.map((q) => ({
+    const custom: QuestionItem[] = state.customQuestions.map((q) => ({
       id: `custom-${q.id}`,
       text: q.text,
       auto: false,
     }));
     return [...autoQuestions, ...custom];
-  }, [autoQuestions, customQuestions]);
+  }, [autoQuestions, state.customQuestions]);
 
-  function handleToggle(id: string) {
-    toggleDoneQuestion(id);
-    setDoneIds(getDoneQuestionIds());
+  async function handleToggle(id: string) {
+    await actions.toggleDoneQuestion(id);
   }
 
-  function handleAddCustom() {
+  async function handleAddCustom() {
     const text = customInput.trim();
     if (!text) return;
-    const entry = {
-      id: crypto.randomUUID(),
-      text,
-      addedOn: today || getToday(),
-    };
-    saveCustomQuestion(entry);
-    setCustomQuestions(getCustomQuestions());
+    await actions.addCustomQuestion(text);
     setCustomInput("");
   }
 
-  function handleDeleteCustom(id: string) {
-    deleteCustomQuestion(id);
-    setCustomQuestions(getCustomQuestions());
+  async function handleDeleteCustom(id: string) {
+    await actions.deleteCustomQuestion(id);
   }
 
   function handlePrint() {
@@ -216,17 +168,17 @@ export default function QuestionsPage() {
   function buildShareText(): string {
     const lines: string[] = [];
     lines.push(`${t(lang, "appTitle")} — ${t(lang, "questionsForDoctor")}`);
-    if (profileName) {
-      lines.push(`${profileName}`);
+    if (state.household?.displayName) {
+      lines.push(state.household.displayName);
     }
     if (today) {
       lines.push(today);
     }
     lines.push("");
 
-    if (medicines.length > 0) {
+    if (state.medicines.length > 0) {
       lines.push(`${t(lang, "currentMedicines")}:`);
-      for (const med of medicines) {
+      for (const med of state.medicines) {
         lines.push(`- ${med.drug_name} ${med.strength} — ${med.dose_per_time} (${med.time_slots.join(", ")})`);
       }
       lines.push("");
@@ -251,11 +203,24 @@ export default function QuestionsPage() {
         await navigator.share({ text });
         return;
       } catch {
-        // Fall through to WhatsApp
+        // Fall through
       }
     }
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleCopy() {
+    const text = buildShareText();
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // ignore
+      }
+    }
   }
 
   return (
@@ -295,13 +260,22 @@ export default function QuestionsPage() {
           {t(lang, "printSavePDF")}
         </button>
         {allQuestions.length > 0 && (
-          <button
-            onClick={handleShare}
-            className="w-full rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
-            style={{ minHeight: 56 }}
-          >
-            {t(lang, "shareViaWhatsApp")}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleShare}
+              className="flex-1 rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
+              style={{ minHeight: 56 }}
+            >
+              {t(lang, "share")}
+            </button>
+            <button
+              onClick={handleCopy}
+              className="rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
+              style={{ minHeight: 56 }}
+            >
+              {copied ? t(lang, "copied") : t(lang, "copyText")}
+            </button>
+          </div>
         )}
       </div>
 
@@ -310,11 +284,11 @@ export default function QuestionsPage() {
         <h2 className="text-lg font-bold text-slate-900">
           {t(lang, "currentMedicines")}
         </h2>
-        {medicines.length === 0 ? (
+        {state.medicines.length === 0 ? (
           <p className="text-base text-slate-600">{t(lang, "noMedicines")}</p>
         ) : (
           <ul className="flex flex-col gap-1">
-            {medicines.map((med) => (
+            {state.medicines.map((med) => (
               <li key={med.id} className="text-base text-slate-800">
                 <span className="font-semibold">{med.drug_name}</span>{" "}
                 {med.strength} — {med.dose_per_time} ({med.time_slots.join(", ")})
@@ -338,7 +312,7 @@ export default function QuestionsPage() {
 
         <ul className="flex flex-col gap-3">
           {allQuestions.map((q) => {
-            const done = doneIds.includes(q.id);
+            const done = state.doneQuestionIds.includes(q.id);
             return (
               <li
                 key={q.id}

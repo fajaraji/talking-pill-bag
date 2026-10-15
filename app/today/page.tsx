@@ -9,23 +9,17 @@ import {
   t,
 } from "@/lib/i18n";
 import {
-  getMedicines,
-  getDoseLog,
-  markDoseTaken,
-  removeDoseLogEntry,
   getExplanationCache,
   setExplanationCache,
   type CachedExplanation,
 } from "@/lib/storage";
 import { getToday, getNow, isDemoMode, advanceDemoDays, resetDemoClock } from "@/lib/clock";
-import type { Medicine } from "@/lib/storage";
 import { getDrugId } from "@/lib/drug-info";
 import { useVoices } from "@/lib/use-voices";
 import { getAdherencePrompts } from "@/lib/adherence";
-import { getMissedReasons, saveMissedReason, type MissedReasonEntry } from "@/lib/storage";
 import { getDaysLeft } from "@/lib/supply";
 import { routeQuestion } from "@/lib/question-router";
-import { saveRedirectedQuestion } from "@/lib/storage";
+import { useStore } from "@/lib/store";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 
@@ -44,7 +38,7 @@ function slotLabel(lang: Language, slot: Slot): string {
   }
 }
 
-function foodLabel(lang: Language, food: Medicine["food"]): string {
+function foodLabel(lang: Language, food: "after_food" | "before_food" | "with_food" | "any"): string {
   switch (food) {
     case "before_food":
       return t(lang, "foodBefore");
@@ -89,9 +83,9 @@ function formatTime(iso: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Food icon (inline SVG, no emojis)
+// Food icon
 // ---------------------------------------------------------------------------
-function FoodIcon({ food }: { food: Medicine["food"] }) {
+function FoodIcon({ food }: { food: "after_food" | "before_food" | "with_food" | "any" }) {
   const className = "h-6 w-6 shrink-0";
   switch (food) {
     case "before_food":
@@ -140,8 +134,17 @@ function DoseCard({
   onUndo,
   undoAvailable,
   onListen,
+  isSenior,
 }: {
-  medicine: Medicine;
+  medicine: {
+    id: string;
+    drug_name: string;
+    strength: string;
+    dose_per_time: string;
+    food: "after_food" | "before_food" | "with_food" | "any";
+    special_instructions: string[];
+    photo: string;
+  };
   slot: Slot;
   lang: Language;
   taken: boolean;
@@ -150,6 +153,7 @@ function DoseCard({
   onUndo: () => void;
   undoAvailable: boolean;
   onListen: () => void;
+  isSenior: boolean;
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border-2 border-slate-200 bg-white p-4">
@@ -219,14 +223,13 @@ function DoseCard({
 // ---------------------------------------------------------------------------
 export default function TodayPage() {
   const router = useRouter();
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [doseLog, setDoseLog] = useState<ReturnType<typeof getDoseLog>>([]);
   const [undoMap, setUndoMap] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelData, setPanelData] = useState<{
-    medicine: Medicine;
+    medicine: { id: string; drug_name: string; strength: string };
     explanation: CachedExplanation | null;
     fetching: boolean;
   } | null>(null);
@@ -245,15 +248,14 @@ export default function TodayPage() {
     sourceTitle?: string;
   } | null>(null);
 
-  // Load language, medicines, demo state, and today (client-only to avoid hydration mismatch)
+  const isSenior = state.role === "senior";
+
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
     if (stored && languages.some((l) => l.code === stored)) {
       setLang(stored);
       document.documentElement.lang = stored;
     }
-    setMedicines(getMedicines());
-    setDoseLog(getDoseLog());
     setDemoActive(isDemoMode());
     setToday(getToday());
     const real = new Date();
@@ -264,11 +266,11 @@ export default function TodayPage() {
     setIsLoading(false);
   }, []);
 
-  // Prefetch missing explanations for all medicines in the current language
+  // Prefetch missing explanations
   useEffect(() => {
     if (isLoading) return;
     const cache = getExplanationCache();
-    for (const med of medicines) {
+    for (const med of state.medicines) {
       const drugId = getDrugId(med.drug_name);
       if (!drugId) continue;
       const key = `${drugId}:${lang}`;
@@ -299,12 +301,11 @@ export default function TodayPage() {
           });
         })
         .catch(() => {
-          // Silently ignore background prefetch errors
+          // Silently ignore
         });
     }
-  }, [isLoading, medicines, lang]);
+  }, [isLoading, state.medicines, lang]);
 
-  // Cleanup speech synthesis on unmount
   useEffect(() => {
     return () => {
       if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -315,29 +316,27 @@ export default function TodayPage() {
 
   const isTaken = useCallback(
     (medicineId: string, slot: Slot) => {
-      return doseLog.some(
+      return state.doseLogs.some(
         (e) => e.medicineId === medicineId && e.date === today && e.slot === slot
       );
     },
-    [doseLog, today]
+    [state.doseLogs, today]
   );
 
   const getTakenTime = useCallback(
     (medicineId: string, slot: Slot): string | null => {
-      const entry = doseLog.find(
+      const entry = state.doseLogs.find(
         (e) => e.medicineId === medicineId && e.date === today && e.slot === slot
       );
       return entry?.takenAt ?? null;
     },
-    [doseLog, today]
+    [state.doseLogs, today]
   );
 
   function handleTake(medicineId: string, slot: Slot) {
-    const entry = markDoseTaken(medicineId, today, slot);
-    setDoseLog(getDoseLog());
+    actions.markDose(medicineId, today, slot);
     const key = `${medicineId}-${slot}`;
     setUndoMap((prev) => ({ ...prev, [key]: Date.now() + 10000 }));
-    // Clear undo after 10 seconds
     setTimeout(() => {
       setUndoMap((prev) => {
         const next = { ...prev };
@@ -345,12 +344,10 @@ export default function TodayPage() {
         return next;
       });
     }, 10000);
-    return entry;
   }
 
   function handleUndo(medicineId: string, slot: Slot) {
-    removeDoseLogEntry(medicineId, today, slot);
-    setDoseLog(getDoseLog());
+    actions.unmarkDose(medicineId, today, slot);
     const key = `${medicineId}-${slot}`;
     setUndoMap((prev) => {
       const next = { ...prev };
@@ -367,7 +364,7 @@ export default function TodayPage() {
   // ---------------------------------------------------------------------------
   // Explanation panel + speech synthesis
   // ---------------------------------------------------------------------------
-  async function openExplanationPanel(medicine: Medicine) {
+  async function openExplanationPanel(medicine: { id: string; drug_name: string; strength: string }) {
     setPanelOpen(true);
     setPanelData({ medicine, explanation: null, fetching: true });
 
@@ -404,12 +401,11 @@ export default function TodayPage() {
             setExplanationCache(cacheKey, explanation);
           }
         } catch {
-          // Ignore fetch errors — panel will show loading/fallback state
+          // Ignore
         }
       }
     }
 
-    // If no explanation found (unknown drug or fetch failure), build pharmacist sentence
     if (!explanation) {
       explanation = {
         text: t(lang, "pharmacistMessage"),
@@ -420,8 +416,6 @@ export default function TodayPage() {
     }
 
     setPanelData({ medicine, explanation, fetching: false });
-
-    // Auto-play speech
     startSpeech(explanation.text);
   }
 
@@ -457,15 +451,17 @@ export default function TodayPage() {
 
   function handleSendQuestion() {
     if (!panelData || !questionInput.trim() || !today) return;
+    const med = state.medicines.find((m) => m.id === panelData.medicine.id);
+    if (!med) return;
     const result = routeQuestion({
       question: questionInput.trim(),
-      medicineId: panelData.medicine.id,
-      drugName: panelData.medicine.drug_name,
+      medicineId: med.id,
+      drugName: med.drug_name,
       language: lang,
       today,
       cachedExplanation: panelData.explanation,
     });
-    saveRedirectedQuestion(result.saveToQuestions);
+    actions.saveRedirectedQuestion(result.saveToQuestions);
     setQuestionResult({
       reply: result.reply,
       ifMissedQuote: result.ifMissedQuote,
@@ -479,17 +475,16 @@ export default function TodayPage() {
   // Adherence prompts
   // ---------------------------------------------------------------------------
   const adherencePrompts = today
-    ? getAdherencePrompts(medicines, doseLog, getMissedReasons(), today)
+    ? getAdherencePrompts(state.medicines, state.doseLogs, state.missedReasons, today)
     : [];
 
   function handleReason(medicineId: string, reason: string, missedCount: number) {
-    const entry: MissedReasonEntry = {
+    actions.recordMissedReason({
       medicineId,
       reason,
       missedCount,
       recordedOn: today,
-    };
-    saveMissedReason(entry);
+    });
     setJustReasoned((prev) => ({
       ...prev,
       [medicineId]: true,
@@ -500,15 +495,15 @@ export default function TodayPage() {
   // ---------------------------------------------------------------------------
   // Group medicines by slot
   // ---------------------------------------------------------------------------
-  const slotMedicines: Record<Slot, Medicine[]> = {
+  const slotMedicines: Record<Slot, typeof state.medicines> = {
     morning: [],
     afternoon: [],
     evening: [],
     bedtime: [],
   };
-  const noSlotMedicines: Medicine[] = [];
+  const noSlotMedicines: typeof state.medicines = [];
 
-  for (const med of medicines) {
+  for (const med of state.medicines) {
     if (med.time_slots.length === 0) {
       noSlotMedicines.push(med);
     } else {
@@ -520,10 +515,9 @@ export default function TodayPage() {
     }
   }
 
-  // Count doses
   let totalDoses = 0;
   let takenDoses = 0;
-  for (const med of medicines) {
+  for (const med of state.medicines) {
     if (med.time_slots.length === 0) continue;
     for (const slot of med.time_slots) {
       if (SLOT_ORDER.includes(slot as Slot)) {
@@ -540,17 +534,19 @@ export default function TodayPage() {
       {/* Header */}
       <header className="flex w-full max-w-sm flex-col gap-2 self-center">
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.push("/")}
-            className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-            aria-label={t(lang, "back")}
-          >
-            ← {t(lang, "back")}
-          </button>
+          {!isSenior && (
+            <button
+              onClick={() => router.push("/")}
+              className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
+              aria-label={t(lang, "back")}
+            >
+              ← {t(lang, "back")}
+            </button>
+          )}
           <h1 className="text-xl font-bold text-slate-900">
             {t(lang, "todayTitle")}
           </h1>
-          <div className="w-16" />
+          {isSenior ? <div className="w-16" /> : <div className="w-16" />}
         </div>
         {today && (
           <p className="text-center text-lg text-slate-700">
@@ -565,10 +561,10 @@ export default function TodayPage() {
       </header>
 
       {/* Refill reminders */}
-      {today && medicines.length > 0 && (
+      {today && state.medicines.length > 0 && (
         <div className="flex w-full max-w-sm flex-col gap-3 self-center">
-          {medicines
-            .map((med) => ({ med, days: getDaysLeft(med, doseLog, today) }))
+          {state.medicines
+            .map((med) => ({ med, days: getDaysLeft(med, state.doseLogs, today) }))
             .filter(({ days }) => days !== null && days <= 7)
             .map(({ med, days }) => (
               <div
@@ -585,10 +581,10 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* Adherence acknowledgements (shown after reason is saved) */}
+      {/* Adherence acknowledgements */}
       {Object.keys(justReasoned).length > 0 && (
         <div className="flex w-full max-w-sm flex-col gap-4 self-center">
-          {medicines
+          {state.medicines
             .filter((m) => justReasoned[m.id])
             .map((medicine) => (
               <div
@@ -672,6 +668,7 @@ export default function TodayPage() {
                       onUndo={() => handleUndo(med.id, slot)}
                       undoAvailable={undoAvailable(med.id, slot)}
                       onListen={() => openExplanationPanel(med)}
+                      isSenior={isSenior}
                     />
                   );
                 })}
@@ -709,13 +706,15 @@ export default function TodayPage() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => router.push(`/add?edit=${med.id}`)}
-                    className="w-full rounded-xl border-2 border-amber-300 bg-white px-5 py-3 text-lg font-semibold text-amber-700 hover:bg-amber-100"
-                    aria-label={`${t(lang, "editTime")} — ${med.drug_name}`}
-                  >
-                    {t(lang, "editTime")}
-                  </button>
+                  {!isSenior && (
+                    <button
+                      onClick={() => router.push(`/add?edit=${med.id}`)}
+                      className="w-full rounded-xl border-2 border-amber-300 bg-white px-5 py-3 text-lg font-semibold text-amber-700 hover:bg-amber-100"
+                      aria-label={`${t(lang, "editTime")} — ${med.drug_name}`}
+                    >
+                      {t(lang, "editTime")}
+                    </button>
+                  )}
                   <button
                     onClick={() => openExplanationPanel(med)}
                     className="w-full rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-lg font-semibold text-slate-700 hover:bg-slate-50"
@@ -729,34 +728,45 @@ export default function TodayPage() {
           </section>
         )}
 
-        {!isLoading && medicines.length === 0 && (
+        {!isLoading && state.medicines.length === 0 && (
           <p className="py-12 text-center text-lg text-slate-500">
             {t(lang, "noMedicines")}
           </p>
         )}
       </div>
 
-      {/* Navigation links (compact group at bottom) */}
-      <div className="flex w-full max-w-sm flex-col gap-2 self-center">
-        <button
-          onClick={() => router.push("/bp")}
-          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          {t(lang, "bpLink")} →
-        </button>
-        <button
-          onClick={() => router.push("/questions")}
-          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          {t(lang, "questionsTitle")} →
-        </button>
-        <button
-          onClick={() => router.push("/summary")}
-          className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          {t(lang, "weeklySummary")} →
-        </button>
-      </div>
+      {/* Senior help line */}
+      {isSenior && (
+        <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+          <p className="text-center text-base text-slate-500">
+            {t(lang, "seniorHelpLine")}
+          </p>
+        </div>
+      )}
+
+      {/* Navigation links (hidden for senior) */}
+      {!isSenior && (
+        <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+          <button
+            onClick={() => router.push("/bp")}
+            className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            {t(lang, "bpLink")} →
+          </button>
+          <button
+            onClick={() => router.push("/questions")}
+            className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            {t(lang, "questionsTitle")} →
+          </button>
+          <button
+            onClick={() => router.push("/summary")}
+            className="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            {t(lang, "weeklySummary")} →
+          </button>
+        </div>
+      )}
 
       {/* Demo controls */}
       {demoActive && (

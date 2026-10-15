@@ -8,19 +8,13 @@ import {
   defaultLanguage,
   t,
 } from "@/lib/i18n";
-import {
-  getMedicines,
-  getDoseLog,
-  getMissedReasons,
-  getBPReadings,
-  type Medicine,
-} from "@/lib/storage";
 import { getToday } from "@/lib/clock";
 import { getDaysLeft } from "@/lib/supply";
 import { countMissedDosesInLastNDays } from "@/lib/adherence";
+import { useStore } from "@/lib/store";
 
 function getScheduledDosesInRange(
-  medicine: Medicine,
+  medicine: { time_slots: string[]; addedOn?: string },
   fromDate: string,
   toDate: string
 ): number {
@@ -43,8 +37,8 @@ function getScheduledDosesInRange(
 }
 
 function getTakenDosesInRange(
-  medicine: Medicine,
-  doseLog: ReturnType<typeof getDoseLog>,
+  medicine: { id: string; time_slots: string[] },
+  doseLog: Array<{ medicineId: string; date: string; slot: string }>,
   fromDate: string,
   toDate: string
 ): number {
@@ -58,12 +52,11 @@ function getTakenDosesInRange(
 
 export default function SummaryPage() {
   const router = useRouter();
+  const { state } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [doseLog, setDoseLog] = useState<ReturnType<typeof getDoseLog>>([]);
   const [today, setToday] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [profileName, setProfileName] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
@@ -71,18 +64,7 @@ export default function SummaryPage() {
       setLang(stored);
       document.documentElement.lang = stored;
     }
-    setMedicines(getMedicines());
-    setDoseLog(getDoseLog());
     setToday(getToday());
-    try {
-      const raw = localStorage.getItem("tpb-profile");
-      if (raw) {
-        const parsed = JSON.parse(raw) as { name?: string };
-        setProfileName(parsed.name ?? "");
-      }
-    } catch {
-      // ignore
-    }
     setIsLoading(false);
   }, []);
 
@@ -95,7 +77,7 @@ export default function SummaryPage() {
 
   const bpStats = useMemo(() => {
     if (!today || !fromDate) return null;
-    const readings = getBPReadings().filter(
+    const readings = state.bpReadings.filter(
       (r) => r.date >= fromDate && r.date <= today
     );
     if (readings.length === 0) return null;
@@ -106,37 +88,37 @@ export default function SummaryPage() {
       readings.reduce((s, r) => s + r.diastolic, 0) / readings.length
     );
     return { avgSys, avgDia, count: readings.length };
-  }, [today, fromDate]);
+  }, [state.bpReadings, today, fromDate]);
 
   const reasons = useMemo(() => {
     if (!today || !fromDate) return [];
-    return getMissedReasons().filter((r) => r.recordedOn >= fromDate && r.recordedOn <= today);
-  }, [today, fromDate]);
+    return state.missedReasons.filter((r) => r.recordedOn >= fromDate && r.recordedOn <= today);
+  }, [state.missedReasons, today, fromDate]);
 
   const refills = useMemo(() => {
     if (!today) return [];
-    return medicines
-      .map((med) => ({ med, days: getDaysLeft(med, doseLog, today) }))
+    return state.medicines
+      .map((med) => ({ med, days: getDaysLeft(med, state.doseLogs, today) }))
       .filter(({ days }) => days !== null && days <= 7);
-  }, [medicines, doseLog, today]);
+  }, [state.medicines, state.doseLogs, today]);
 
   function buildShareText(): string {
     const lines: string[] = [];
     lines.push(`${t(lang, "appTitle")} — ${t(lang, "weeklySummary")}`);
-    if (profileName) {
-      lines.push(`${t(lang, "summaryForFamily")} — ${profileName}`);
+    if (state.household?.displayName) {
+      lines.push(`${t(lang, "summaryForFamily")} — ${state.household.displayName}`);
     }
     if (fromDate && today) {
       lines.push(`${fromDate} – ${today}`);
     }
     lines.push("");
 
-    if (medicines.length > 0) {
+    if (state.medicines.length > 0) {
       lines.push(`${t(lang, "dosesTakenVsScheduled")}:`);
-      for (const med of medicines) {
+      for (const med of state.medicines) {
         const scheduled = getScheduledDosesInRange(med, fromDate, today);
-        const taken = getTakenDosesInRange(med, doseLog, fromDate, today);
-        const missed = countMissedDosesInLastNDays(med, doseLog, today, 7);
+        const taken = getTakenDosesInRange(med, state.doseLogs, fromDate, today);
+        const missed = countMissedDosesInLastNDays(med, state.doseLogs, today, 7);
         let line = `- ${med.drug_name}: ${taken}/${scheduled} ${t(lang, "doses")}`;
         if (missed > 0) {
           line += ` (${t(lang, "missedThisWeek").replace("{n}", String(missed))})`;
@@ -149,7 +131,7 @@ export default function SummaryPage() {
       lines.push("");
       lines.push(`${t(lang, "reasonsRecorded")}:`);
       for (const r of reasons) {
-        const med = medicines.find((m) => m.id === r.medicineId);
+        const med = state.medicines.find((m) => m.id === r.medicineId);
         const reasonLabel = t(lang, r.reason as Parameters<typeof t>[1]) ?? r.reason;
         lines.push(`- ${med ? med.drug_name : r.medicineId}: ${reasonLabel}`);
       }
@@ -179,11 +161,24 @@ export default function SummaryPage() {
         await navigator.share({ text });
         return;
       } catch {
-        // Fall through to WhatsApp
+        // Fall through
       }
     }
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleCopy() {
+    const text = buildShareText();
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // ignore
+      }
+    }
   }
 
   return (
@@ -213,16 +208,25 @@ export default function SummaryPage() {
         )}
       </header>
 
-      {/* Share button */}
-      {medicines.length > 0 && (
-        <div className="flex w-full max-w-sm flex-col gap-4 self-center">
-          <button
-            onClick={handleShare}
-            className="w-full rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
-            style={{ minHeight: 56 }}
-          >
-            {t(lang, "shareViaWhatsApp")}
-          </button>
+      {/* Share buttons */}
+      {state.medicines.length > 0 && (
+        <div className="flex w-full max-w-sm flex-col gap-3 self-center">
+          <div className="flex gap-3">
+            <button
+              onClick={handleShare}
+              className="flex-1 rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
+              style={{ minHeight: 56 }}
+            >
+              {t(lang, "share")}
+            </button>
+            <button
+              onClick={handleCopy}
+              className="rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
+              style={{ minHeight: 56 }}
+            >
+              {copied ? t(lang, "copied") : t(lang, "copyText")}
+            </button>
+          </div>
         </div>
       )}
 
@@ -231,15 +235,15 @@ export default function SummaryPage() {
         <h2 className="text-lg font-bold text-slate-900">
           {t(lang, "dosesTakenVsScheduled")}
         </h2>
-        {medicines.length === 0 && !isLoading && (
+        {state.medicines.length === 0 && !isLoading && (
           <p className="py-4 text-center text-lg text-slate-500">
             {t(lang, "noMedicines")}
           </p>
         )}
-        {medicines.map((med) => {
+        {state.medicines.map((med) => {
           const scheduled = getScheduledDosesInRange(med, fromDate, today);
-          const taken = getTakenDosesInRange(med, doseLog, fromDate, today);
-          const missed = countMissedDosesInLastNDays(med, doseLog, today, 7);
+          const taken = getTakenDosesInRange(med, state.doseLogs, fromDate, today);
+          const missed = countMissedDosesInLastNDays(med, state.doseLogs, today, 7);
           const pct = scheduled > 0 ? Math.round((taken / scheduled) * 100) : 0;
           return (
             <div
@@ -254,12 +258,8 @@ export default function SummaryPage() {
                   {taken} / {scheduled} {t(lang, "doses")}
                 </span>
               </div>
-              {/* Simple bar */}
               <div className="h-4 w-full overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full rounded-full bg-blue-500"
-                  style={{ width: `${pct}%` }}
-                />
+                <div className="h-full rounded-full bg-blue-500" style={{ width: `${pct}%` }} />
               </div>
               {missed > 0 && (
                 <p className="text-base text-amber-700">
@@ -279,7 +279,7 @@ export default function SummaryPage() {
           </h2>
           <div className="flex flex-col gap-2">
             {reasons.map((r, idx) => {
-              const med = medicines.find((m) => m.id === r.medicineId);
+              const med = state.medicines.find((m) => m.id === r.medicineId);
               const reasonLabel = t(lang, r.reason as Parameters<typeof t>[1]) ?? r.reason;
               return (
                 <div

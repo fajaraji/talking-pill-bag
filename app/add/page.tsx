@@ -9,10 +9,11 @@ import {
   t,
 } from "@/lib/i18n";
 import type { LabelResult } from "@/app/api/read-label/route";
-import { saveMedicine, getMedicines, updateMedicine, setExplanationCache } from "@/lib/storage";
+import { setExplanationCache } from "@/lib/storage";
 import { getDrugId } from "@/lib/drug-info";
 import { getToday } from "@/lib/clock";
 import { resizeImage, createThumbnail } from "@/lib/image";
+import { useStore } from "@/lib/store";
 
 type Step = "capture" | "confirm" | "error";
 
@@ -34,6 +35,7 @@ function AddMedicinePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [step, setStep] = useState<Step>("capture");
   const [image, setImage] = useState<string | null>(null);
@@ -44,7 +46,6 @@ function AddMedicinePageInner() {
   const [isRejected, setIsRejected] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Load language and edit mode
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
     if (stored && languages.some((l) => l.code === stored)) {
@@ -53,8 +54,7 @@ function AddMedicinePageInner() {
 
     const editId = searchParams.get("edit");
     if (editId) {
-      const medicines = getMedicines();
-      const med = medicines.find((m) => m.id === editId);
+      const med = state.medicines.find((m) => m.id === editId);
       if (med) {
         setIsEditMode(true);
         setImage(med.photo);
@@ -78,25 +78,17 @@ function AddMedicinePageInner() {
         setStep("confirm");
       }
     }
-  }, [searchParams]);
+  }, [searchParams, state.medicines]);
 
-  // Handle file selection (camera or gallery)
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Reset input so the same file can be selected again
     e.target.value = "";
-
     try {
-      // Resize to max 1280px, JPEG quality 0.8
       const resized = await resizeImage(file, 1280, 0.8);
       setImage(resized.dataUrl);
-
-      // Create thumbnail for localStorage
       const thumb = await createThumbnail(resized.dataUrl);
       setThumbnail(thumb);
-
       sendToApi(resized.dataUrl);
     } catch {
       setIsRejected(false);
@@ -121,8 +113,6 @@ function AddMedicinePageInner() {
       };
 
       if (!res.ok) {
-        // 422 with rejected=true -> pharmacist message
-        // anything else -> generic error
         if (res.status === 422 && data.rejected) {
           setIsRejected(true);
         } else {
@@ -195,38 +185,34 @@ function AddMedicinePageInner() {
         fallback: data.fallback,
       });
     } catch {
-      // Silently ignore prefetch failures
+      // Silently ignore
     }
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (!editedResult || !thumbnail) return;
     if (isEditMode) {
       const editId = searchParams.get("edit");
       if (!editId) return;
-      const updatedEntry = {
+      await actions.updateMedicine({
         ...editedResult,
         id: editId,
         photo: thumbnail,
         addedOn: getToday(),
-      };
-      updateMedicine(updatedEntry);
-      prefetchExplanations(updatedEntry.drug_name, lang);
+      });
+      prefetchExplanations(editedResult.drug_name, lang);
       router.push("/today");
     } else {
-      const newEntry = {
+      await actions.addMedicine({
         ...editedResult,
-        id: crypto.randomUUID(),
-        photo: thumbnail,
+        thumbnail,
         addedOn: getToday(),
-      };
-      saveMedicine(newEntry);
-      prefetchExplanations(newEntry.drug_name, lang);
+      });
+      prefetchExplanations(editedResult.drug_name, lang);
       router.push("/today");
     }
   }
 
-  // Restore capture attribute so "Take photo" always opens camera
   const restoreCapture = useCallback(() => {
     if (fileInputRef.current) {
       fileInputRef.current.setAttribute("capture", "environment");
@@ -244,10 +230,6 @@ function AddMedicinePageInner() {
     restoreCapture();
     fileInputRef.current?.click();
   }
-
-  // -------------------------------------------------------------------------
-  // Render helpers
-  // -------------------------------------------------------------------------
 
   function renderTextField<K extends keyof LabelResult>(
     label: string,
@@ -291,9 +273,6 @@ function AddMedicinePageInner() {
     );
   }
 
-  // -------------------------------------------------------------------------
-  // Capture / Error step
-  // -------------------------------------------------------------------------
   if (step === "capture" || step === "error") {
     return (
       <main className="flex min-h-screen flex-col items-center gap-6 px-6 py-8">
@@ -310,18 +289,12 @@ function AddMedicinePageInner() {
           <div className="w-16" />
         </header>
 
-        {/* Photo preview if selected */}
         {image && (
           <div className="w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200">
-            <img
-              src={image}
-              alt="Medication label"
-              className="w-full object-contain"
-            />
+            <img src={image} alt="Medication label" className="w-full object-contain" />
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center gap-3 py-8">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
@@ -329,13 +302,10 @@ function AddMedicinePageInner() {
           </div>
         )}
 
-        {/* Error */}
         {step === "error" && !loading && (
           <div className="w-full max-w-sm rounded-xl border-2 border-red-200 bg-red-50 p-6 text-center">
             <p className="text-lg font-semibold text-red-700">
-              {isRejected
-                ? t(lang, "pharmacistMessage")
-                : t(lang, "genericError")}
+              {isRejected ? t(lang, "pharmacistMessage") : t(lang, "genericError")}
             </p>
             <button
               onClick={() => {
@@ -351,7 +321,6 @@ function AddMedicinePageInner() {
           </div>
         )}
 
-        {/* Capture buttons */}
         {!loading && step !== "error" && (
           <div className="flex w-full max-w-sm flex-col gap-4">
             <input
@@ -380,9 +349,6 @@ function AddMedicinePageInner() {
     );
   }
 
-  // -------------------------------------------------------------------------
-  // Confirm step
-  // -------------------------------------------------------------------------
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-6 py-8">
       <header className="flex w-full max-w-sm items-center justify-between">
@@ -399,42 +365,24 @@ function AddMedicinePageInner() {
       </header>
 
       <div className="flex w-full max-w-sm flex-col gap-6">
-        {/* Photo */}
         {image && (
           <div className="overflow-hidden rounded-xl border-2 border-slate-200">
-            <img
-              src={image}
-              alt="Medication label"
-              className="w-full object-contain"
-            />
+            <img src={image} alt="Medication label" className="w-full object-contain" />
           </div>
         )}
 
-        {/* Extracted fields */}
         {editedResult && (
           <div className="flex flex-col gap-4">
             {renderTextField(t(lang, "drugName"), "drug_name", editedResult.drug_name)}
             {renderTextField(t(lang, "strength"), "strength", editedResult.strength)}
             {renderTextField(t(lang, "dose"), "dose_per_time", editedResult.dose_per_time)}
-            {renderTextField(
-              t(lang, "timesPerDay"),
-              "times_per_day",
-              editedResult.times_per_day,
-              "number"
-            )}
+            {renderTextField(t(lang, "timesPerDay"), "times_per_day", editedResult.times_per_day, "number")}
 
-            {/* Time slots: four checkboxes */}
             <div className="flex flex-col gap-2">
-              <label
-                className={`text-base font-semibold ${
-                  isUnclear("time_slots") ? "text-red-600" : "text-slate-700"
-                }`}
-              >
+              <label className={`text-base font-semibold ${isUnclear("time_slots") ? "text-red-600" : "text-slate-700"}`}>
                 {t(lang, "timeSlots")}
                 {isUnclear("time_slots") && (
-                  <span className="ml-2 text-sm font-normal text-red-500">
-                    ({t(lang, "unclearFields")})
-                  </span>
+                  <span className="ml-2 text-sm font-normal text-red-500">({t(lang, "unclearFields")})</span>
                 )}
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -444,9 +392,7 @@ function AddMedicinePageInner() {
                     <label
                       key={opt.value}
                       className={`flex items-center gap-2 rounded-lg border-2 px-3 py-3 text-lg ${
-                        checked
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-slate-200 bg-white"
+                        checked ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-white"
                       }`}
                     >
                       <input
@@ -458,7 +404,6 @@ function AddMedicinePageInner() {
                           else slots.delete(opt.value);
                           const newSlots = Array.from(slots) as LabelResult["time_slots"];
                           const next = { ...editedResult, time_slots: newSlots };
-                          // Remove time_slots from unclear_fields once at least one slot is picked
                           if (newSlots.length > 0 && next.unclear_fields.includes("time_slots")) {
                             next.unclear_fields = next.unclear_fields.filter((f) => f !== "time_slots");
                           }
@@ -473,25 +418,16 @@ function AddMedicinePageInner() {
               </div>
             </div>
 
-            {/* Food: select dropdown */}
             <div className="flex flex-col gap-1">
-              <label
-                className={`text-base font-semibold ${
-                  isUnclear("food") ? "text-red-600" : "text-slate-700"
-                }`}
-              >
+              <label className={`text-base font-semibold ${isUnclear("food") ? "text-red-600" : "text-slate-700"}`}>
                 {t(lang, "food")}
                 {isUnclear("food") && (
-                  <span className="ml-2 text-sm font-normal text-red-500">
-                    ({t(lang, "unclearFields")})
-                  </span>
+                  <span className="ml-2 text-sm font-normal text-red-500">({t(lang, "unclearFields")})</span>
                 )}
               </label>
               <select
                 value={editedResult.food}
-                onChange={(e) =>
-                  updateField("food", e.target.value as LabelResult["food"])
-                }
+                onChange={(e) => updateField("food", e.target.value as LabelResult["food"])}
                 className={`rounded-lg border-2 px-4 py-3 text-lg ${
                   isUnclear("food")
                     ? "border-red-400 bg-red-50 text-red-900"
@@ -506,20 +442,11 @@ function AddMedicinePageInner() {
               </select>
             </div>
 
-            {/* Special instructions: textarea, one per line -> array */}
             <div className="flex flex-col gap-1">
-              <label
-                className={`text-base font-semibold ${
-                  isUnclear("special_instructions")
-                    ? "text-red-600"
-                    : "text-slate-700"
-                }`}
-              >
+              <label className={`text-base font-semibold ${isUnclear("special_instructions") ? "text-red-600" : "text-slate-700"}`}>
                 {t(lang, "specialInstructions")}
                 {isUnclear("special_instructions") && (
-                  <span className="ml-2 text-sm font-normal text-red-500">
-                    ({t(lang, "unclearFields")})
-                  </span>
+                  <span className="ml-2 text-sm font-normal text-red-500">({t(lang, "unclearFields")})</span>
                 )}
               </label>
               <textarea
@@ -542,21 +469,11 @@ function AddMedicinePageInner() {
               />
             </div>
 
-            {renderTextField(
-              t(lang, "quantityDispensed"),
-              "quantity_dispensed",
-              editedResult.quantity_dispensed,
-              "number"
-            )}
-            {renderTextField(
-              t(lang, "dispensedDate"),
-              "dispensed_date",
-              editedResult.dispensed_date
-            )}
+            {renderTextField(t(lang, "quantityDispensed"), "quantity_dispensed", editedResult.quantity_dispensed, "number")}
+            {renderTextField(t(lang, "dispensedDate"), "dispensed_date", editedResult.dispensed_date)}
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex flex-col gap-3 pt-4">
           <button
             onClick={handleConfirm}

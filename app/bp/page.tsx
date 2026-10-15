@@ -8,18 +8,9 @@ import {
   defaultLanguage,
   t,
 } from "@/lib/i18n";
-import {
-  getBPReadings,
-  saveBPReading,
-  deleteBPReading,
-  getBPTarget,
-  setBPTarget,
-  clearBPTarget,
-  type BPReading,
-  type BPTarget,
-} from "@/lib/storage";
 import { getToday, getNow } from "@/lib/clock";
 import { resizeImage } from "@/lib/image";
+import { useStore } from "@/lib/store";
 
 type View = "main" | "add" | "confirm";
 
@@ -37,12 +28,8 @@ function formatDateShort(lang: Language, dateStr: string): string {
   }
 }
 
-function formatTime(timeStr: string): string {
-  return timeStr;
-}
-
 // ---------------------------------------------------------------------------
-// SVG line chart (last 14 days)
+// SVG line chart
 // ---------------------------------------------------------------------------
 function BPChart({
   data,
@@ -50,7 +37,7 @@ function BPChart({
   lang,
 }: {
   data: Array<{ date: string; systolic: number | null; diastolic: number | null }>;
-  target: BPTarget | null;
+  target: { systolic: number; diastolic: number } | null;
   lang: Language;
 }) {
   const width = 340;
@@ -83,10 +70,8 @@ function BPChart({
   const toX = (i: number) => left + (i / (data.length - 1)) * plotW;
   const toY = (val: number) => top + plotH - ((val - yMin) / yRange) * plotH;
 
-  // Y-axis ticks (4 ticks)
   const yTicks = [0, 1, 2, 3].map((i) => yMin + (i * yRange) / 3);
 
-  // Build path strings for lines (skip nulls)
   let systolicPath = "";
   let diastolicPath = "";
   data.forEach((d, i) => {
@@ -109,96 +94,41 @@ function BPChart({
       role="img"
       aria-label={t(lang, "trend14Days")}
     >
-      {/* Background */}
       <rect x={left} y={top} width={plotW} height={plotH} fill="#f8fafc" rx={4} />
-
-      {/* Y-axis grid lines */}
       {yTicks.map((val, i) => {
         const y = toY(val);
         return (
           <g key={i}>
-            <line
-              x1={left}
-              y1={y}
-              x2={left + plotW}
-              y2={y}
-              stroke="#e2e8f0"
-              strokeWidth={1}
-            />
-            <text
-              x={left - 6}
-              y={y + 4}
-              textAnchor="end"
-              fontSize={12}
-              fill="#64748b"
-            >
+            <line x1={left} y1={y} x2={left + plotW} y2={y} stroke="#e2e8f0" strokeWidth={1} />
+            <text x={left - 6} y={y + 4} textAnchor="end" fontSize={12} fill="#64748b">
               {Math.round(val)}
             </text>
           </g>
         );
       })}
 
-      {/* Target line */}
       {target && (
         <>
-          <line
-            x1={left}
-            y1={toY(target.systolic)}
-            x2={left + plotW}
-            y2={toY(target.systolic)}
-            stroke="#94a3b8"
-            strokeWidth={2}
-            strokeDasharray="6 4"
-          />
-          <text
-            x={left + 4}
-            y={toY(target.systolic) - 4}
-            fontSize={10}
-            fill="#64748b"
-          >
+          <line x1={left} y1={toY(target.systolic)} x2={left + plotW} y2={toY(target.systolic)} stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 4" />
+          <text x={left + 4} y={toY(target.systolic) - 4} fontSize={10} fill="#64748b">
             {target.systolic}
           </text>
         </>
       )}
 
-      {/* Lines */}
-      {systolicPath && (
-        <path
-          d={systolicPath}
-          fill="none"
-          stroke="#ef4444"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
-      {diastolicPath && (
-        <path
-          d={diastolicPath}
-          fill="none"
-          stroke="#3b82f6"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
+      {systolicPath && <path d={systolicPath} fill="none" stroke="#ef4444" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />}
+      {diastolicPath && <path d={diastolicPath} fill="none" stroke="#3b82f6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />}
 
-      {/* Data points */}
       {data.map((d, i) => {
         const x = toX(i);
         return (
           <g key={d.date}>
-            {d.systolic !== null && (
-              <circle cx={x} cy={toY(d.systolic)} r={4} fill="#ef4444" stroke="white" strokeWidth={1.5} />
-            )}
-            {d.diastolic !== null && (
-              <circle cx={x} cy={toY(d.diastolic)} r={4} fill="#3b82f6" stroke="white" strokeWidth={1.5} />
-            )}
+            {d.systolic !== null && <circle cx={x} cy={toY(d.systolic)} r={4} fill="#ef4444" stroke="white" strokeWidth={1.5} />}
+            {d.diastolic !== null && <circle cx={x} cy={toY(d.diastolic)} r={4} fill="#3b82f6" stroke="white" strokeWidth={1.5} />}
           </g>
         );
       })}
 
-      {/* X-axis labels (at most 5 evenly spaced, always first and last) */}
       {(() => {
         const indices: number[] = [];
         const n = data.length;
@@ -212,35 +142,21 @@ function BPChart({
           }
         }
         return indices.map((i) => (
-          <text
-            key={`x-${data[i].date}`}
-            x={toX(i)}
-            y={top + plotH + 18}
-            textAnchor="middle"
-            fontSize={11}
-            fill="#64748b"
-          >
+          <text key={`x-${data[i].date}`} x={toX(i)} y={top + plotH + 18} textAnchor="middle" fontSize={11} fill="#64748b">
             {formatDateShort(lang, data[i].date)}
           </text>
         ));
       })()}
 
-      {/* Legend */}
       <g transform={`translate(${left}, ${top + plotH + 28})`}>
         <circle cx={6} cy={-3} r={4} fill="#ef4444" />
-        <text x={14} y={2} fontSize={11} fill="#475569">
-          {t(lang, "systolic")}
-        </text>
+        <text x={14} y={2} fontSize={11} fill="#475569">{t(lang, "systolic")}</text>
         <circle cx={80} cy={-3} r={4} fill="#3b82f6" />
-        <text x={88} y={2} fontSize={11} fill="#475569">
-          {t(lang, "diastolic")}
-        </text>
+        <text x={88} y={2} fontSize={11} fill="#475569">{t(lang, "diastolic")}</text>
         {target && (
           <>
             <line x1={160} y1={-3} x2={176} y2={-3} stroke="#94a3b8" strokeWidth={2} strokeDasharray="4 3" />
-            <text x={182} y={2} fontSize={11} fill="#475569">
-              {t(lang, "targetFromDoctor")}
-            </text>
+            <text x={182} y={2} fontSize={11} fill="#475569">{t(lang, "targetFromDoctor")}</text>
           </>
         )}
       </g>
@@ -253,14 +169,12 @@ function BPChart({
 // ---------------------------------------------------------------------------
 export default function BPPage() {
   const router = useRouter();
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [view, setView] = useState<View>("main");
-  const [readings, setReadings] = useState<BPReading[]>([]);
-  const [target, setTargetState] = useState<BPTarget | null>(null);
   const [today, setToday] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Add reading form state
   const [photo, setPhoto] = useState<string | null>(null);
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
@@ -269,23 +183,24 @@ export default function BPPage() {
   const [bpError, setBpError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Target edit state
   const [showTargetForm, setShowTargetForm] = useState(false);
   const [targetSys, setTargetSys] = useState("");
   const [targetDia, setTargetDia] = useState("");
 
-  // Load data on mount (client-only)
+  const isSenior = state.role === "senior";
+
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
     if (stored && languages.some((l) => l.code === stored)) {
       setLang(stored);
       document.documentElement.lang = stored;
     }
-    setReadings(getBPReadings());
-    setTargetState(getBPTarget());
     setToday(getToday());
     setIsLoading(false);
   }, []);
+
+  const readings = state.bpReadings;
+  const target = state.household?.bpTarget ?? null;
 
   const chartData = useMemo(() => {
     if (!today) return [];
@@ -330,12 +245,8 @@ export default function BPPage() {
     const weekReadings = readings.filter((r) => r.date >= cutoffStr);
     if (weekReadings.length === 0) return null;
 
-    const avgSys = Math.round(
-      weekReadings.reduce((sum, r) => sum + r.systolic, 0) / weekReadings.length
-    );
-    const avgDia = Math.round(
-      weekReadings.reduce((sum, r) => sum + r.diastolic, 0) / weekReadings.length
-    );
+    const avgSys = Math.round(weekReadings.reduce((sum, r) => sum + r.systolic, 0) / weekReadings.length);
+    const avgDia = Math.round(weekReadings.reduce((sum, r) => sum + r.diastolic, 0) / weekReadings.length);
 
     let aboveTargetDays = 0;
     let daysWithReadings = 0;
@@ -438,7 +349,7 @@ export default function BPPage() {
     setView("confirm");
   }
 
-  function handleSave() {
+  async function handleSave() {
     const sys = parseInt(systolic, 10);
     const dia = parseInt(diastolic, 10);
     const pul = pulse ? parseInt(pulse, 10) : null;
@@ -462,29 +373,24 @@ export default function BPPage() {
     const h = String(now.getHours()).padStart(2, "0");
     const min = String(now.getMinutes()).padStart(2, "0");
 
-    const reading: BPReading = {
-      id: crypto.randomUUID(),
+    await actions.addBPReading({
       date: today,
       time: `${h}:${min}`,
       systolic: sys,
       diastolic: dia,
       pulse: pul,
-    };
-
-    saveBPReading(reading);
-    setReadings(getBPReadings());
+    });
     resetForm();
     setView("main");
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (typeof window !== "undefined" && window.confirm(t(lang, "delete"))) {
-      deleteBPReading(id);
-      setReadings(getBPReadings());
+      await actions.deleteBPReading(id);
     }
   }
 
-  function handleSetTarget() {
+  async function handleSetTarget() {
     const sys = parseInt(targetSys, 10);
     const dia = parseInt(targetDia, 10);
     if (
@@ -496,22 +402,17 @@ export default function BPPage() {
       dia <= 160 &&
       sys > dia
     ) {
-      setBPTarget({ systolic: sys, diastolic: dia });
-      setTargetState({ systolic: sys, diastolic: dia });
+      await actions.setBPTarget({ systolic: sys, diastolic: dia });
       setShowTargetForm(false);
       setTargetSys("");
       setTargetDia("");
     }
   }
 
-  function handleClearTarget() {
-    clearBPTarget();
-    setTargetState(null);
+  async function handleClearTarget() {
+    await actions.clearBPTarget();
   }
 
-  // ---------------------------------------------------------------------------
-  // Add reading view
-  // ---------------------------------------------------------------------------
   if (view === "add") {
     return (
       <main className="flex min-h-screen flex-col items-center gap-6 bg-slate-50 px-4 py-6">
@@ -561,9 +462,6 @@ export default function BPPage() {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Confirm view
-  // ---------------------------------------------------------------------------
   if (view === "confirm") {
     return (
       <main className="flex min-h-screen flex-col items-center gap-6 bg-slate-50 px-4 py-6">
@@ -659,9 +557,6 @@ export default function BPPage() {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Main view
-  // ---------------------------------------------------------------------------
   return (
     <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
       <header className="flex w-full max-w-sm flex-col gap-2 self-center">
@@ -677,7 +572,6 @@ export default function BPPage() {
         </div>
       </header>
 
-      {/* Add reading button */}
       <div className="flex w-full max-w-sm flex-col gap-4 self-center">
         <button
           onClick={() => setView("add")}
@@ -688,72 +582,74 @@ export default function BPPage() {
         </button>
       </div>
 
-      {/* Target section */}
-      <div className="flex w-full max-w-sm flex-col gap-3 self-center rounded-xl border-2 border-slate-200 bg-white p-4">
-        {target ? (
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-500">{t(lang, "targetFromDoctor")}</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {target.systolic}/{target.diastolic}
-              </p>
-            </div>
-            <button
-              onClick={handleClearTarget}
-              className="rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              {t(lang, "clearTarget")}
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {!showTargetForm ? (
-              <button
-                onClick={() => setShowTargetForm(true)}
-                className="w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                {t(lang, "setTarget")}
-              </button>
-            ) : (
-              <div className="flex flex-col gap-3">
+      {/* Target section (caregiver only) */}
+      {!isSenior && (
+        <div className="flex w-full max-w-sm flex-col gap-3 self-center rounded-xl border-2 border-slate-200 bg-white p-4">
+          {target ? (
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm font-semibold text-slate-500">{t(lang, "targetFromDoctor")}</p>
-                <div className="flex gap-3">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={targetSys}
-                    onChange={(e) => setTargetSys(e.target.value)}
-                    placeholder={t(lang, "systolic")}
-                    className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-lg text-slate-900"
-                  />
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={targetDia}
-                    onChange={(e) => setTargetDia(e.target.value)}
-                    placeholder={t(lang, "diastolic")}
-                    className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-lg text-slate-900"
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleSetTarget}
-                    className="rounded-lg bg-green-600 px-4 py-2 text-base font-semibold text-white hover:bg-green-700"
-                  >
-                    {t(lang, "save")}
-                  </button>
-                  <button
-                    onClick={() => { setShowTargetForm(false); setTargetSys(""); setTargetDia(""); }}
-                    className="rounded-lg border-2 border-slate-300 bg-white px-4 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    {t(lang, "cancel")}
-                  </button>
-                </div>
+                <p className="text-2xl font-bold text-slate-900">
+                  {target.systolic}/{target.diastolic}
+                </p>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+              <button
+                onClick={handleClearTarget}
+                className="rounded-lg border-2 border-slate-300 bg-white px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                {t(lang, "clearTarget")}
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {!showTargetForm ? (
+                <button
+                  onClick={() => setShowTargetForm(true)}
+                  className="w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  {t(lang, "setTarget")}
+                </button>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm font-semibold text-slate-500">{t(lang, "targetFromDoctor")}</p>
+                  <div className="flex gap-3">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={targetSys}
+                      onChange={(e) => setTargetSys(e.target.value)}
+                      placeholder={t(lang, "systolic")}
+                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-lg text-slate-900"
+                    />
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={targetDia}
+                      onChange={(e) => setTargetDia(e.target.value)}
+                      placeholder={t(lang, "diastolic")}
+                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-lg text-slate-900"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleSetTarget}
+                      className="rounded-lg bg-green-600 px-4 py-2 text-base font-semibold text-white hover:bg-green-700"
+                    >
+                      {t(lang, "save")}
+                    </button>
+                    <button
+                      onClick={() => { setShowTargetForm(false); setTargetSys(""); setTargetDia(""); }}
+                      className="rounded-lg border-2 border-slate-300 bg-white px-4 py-2 text-base font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      {t(lang, "cancel")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Chart */}
       {!isLoading && (
@@ -814,12 +710,14 @@ export default function BPPage() {
                     {r.pulse !== null && ` · ${r.pulse} ${t(lang, "pulse")}`}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleDelete(r.id)}
-                  className="rounded-lg px-3 py-2 text-base font-semibold text-red-600 hover:bg-red-100"
-                >
-                  {t(lang, "delete")}
-                </button>
+                {!isSenior && (
+                  <button
+                    onClick={() => handleDelete(r.id)}
+                    className="rounded-lg px-3 py-2 text-base font-semibold text-red-600 hover:bg-red-100"
+                  >
+                    {t(lang, "delete")}
+                  </button>
+                )}
               </div>
             ))}
           </div>

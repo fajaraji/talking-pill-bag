@@ -181,7 +181,9 @@ type StringKey =
   | "shortCodeDuration"
   | "linkedPhones"
   | "noDevices"
-  | "unnamedDevice"
+  | "defaultDeviceLabelSenior"
+  | "defaultDeviceLabelCaregiver"
+  | "you"
   | "roleLabel"
   | "caregiver"
   | "senior"
@@ -361,7 +363,9 @@ const en: Dictionary = {
   shortCodeDuration: "This 6-digit code works for 15 minutes.",
   linkedPhones: "Linked phones",
   noDevices: "No devices linked yet.",
-  unnamedDevice: "Unnamed device",
+  defaultDeviceLabelSenior: "{name}'s phone",
+  defaultDeviceLabelCaregiver: "Family member",
+  you: "You",
   roleLabel: "Role",
   caregiver: "Caregiver",
   senior: "Senior",
@@ -536,7 +540,9 @@ const zh: Dictionary = {
   shortCodeDuration: "此6位数字代码15分钟内有效。",
   linkedPhones: "已连接的手机",
   noDevices: "尚未连接任何设备。",
-  unnamedDevice: "未命名设备",
+  defaultDeviceLabelSenior: "{name}的手机",
+  defaultDeviceLabelCaregiver: "家庭成员",
+  you: "您",
   roleLabel: "角色",
   caregiver: "照顾者",
   senior: "长者",
@@ -717,7 +723,9 @@ const ms: Dictionary = {
   shortCodeDuration: "Kod 6 digit ini sah untuk 15 minit.",
   linkedPhones: "Telefon yang dipautkan",
   noDevices: "Tiada peranti dipautkan lagi.",
-  unnamedDevice: "Peranti tanpa nama",
+  defaultDeviceLabelSenior: "Telefon {name}",
+  defaultDeviceLabelCaregiver: "Ahli keluarga",
+  you: "Anda",
   roleLabel: "Peranan",
   caregiver: "Penjaga",
   senior: "Warga emas",
@@ -898,7 +906,9 @@ const id: Dictionary = {
   shortCodeDuration: "Kode 6 digit ini berlaku selama 15 menit.",
   linkedPhones: "Telepon yang terhubung",
   noDevices: "Belum ada perangkat yang terhubung.",
-  unnamedDevice: "Perangkat tanpa nama",
+  defaultDeviceLabelSenior: "Telepon {name}",
+  defaultDeviceLabelCaregiver: "Anggota keluarga",
+  you: "Anda",
   roleLabel: "Peran",
   caregiver: "Perawat",
   senior: "Lansia",

@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         WHERE household_id = ${householdId}
       `,
       sql`
-        SELECT id, role, label, last_seen_at
+        SELECT id, role, label, last_seen_at, (id = ${auth.deviceId}) AS is_current
         FROM devices
         WHERE household_id = ${householdId}
       `,

@@ -164,9 +164,17 @@ function HomePageInner() {
     [state.medicines, state.doseLogs, today]
   );
 
-  // Senior redirect
-  if (isAuthenticated && state.role === "senior") {
-    router.replace("/today");
+  // Senior redirect — navigation must happen in an effect, never during
+  // render, otherwise React logs "Cannot update a component while rendering
+  // a different component".
+  const isSeniorDevice = isAuthenticated && state.role === "senior";
+  useEffect(() => {
+    if (isSeniorDevice) {
+      router.replace("/today");
+    }
+  }, [isSeniorDevice, router]);
+
+  if (isSeniorDevice) {
     return <LoadingShell />;
   }
 

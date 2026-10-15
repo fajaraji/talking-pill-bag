@@ -65,7 +65,7 @@ export interface AppState {
   customQuestions: CustomQuestion[];
   redirectedQuestions: RedirectedQuestion[];
   doneQuestionIds: string[];
-  devices: Array<{ id: string; role: string; label: string | null; lastSeenAt: string | null }>;
+  devices: Array<{ id: string; role: string; label: string | null; lastSeenAt: string | null; isCurrent: boolean }>;
   role: "caregiver" | "senior" | null;
   loading: boolean;
   syncError: string | null;
@@ -193,6 +193,7 @@ function normalizeState(raw: RawState, role: string | null): AppState {
     role: d.role,
     label: d.label,
     lastSeenAt: d.last_seen_at,
+    isCurrent: d.is_current,
   }));
 
   return {

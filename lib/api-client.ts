@@ -179,6 +179,7 @@ export interface RawState {
     role: string;
     label: string | null;
     last_seen_at: string | null;
+    is_current: boolean;
   }>;
 }
 

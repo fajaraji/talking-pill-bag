@@ -13,23 +13,23 @@ import type {
 // ---------------------------------------------------------------------------
 function svgDataUrl(svg: string): string {
   const encoded = encodeURIComponent(svg);
-  return `data:image/svg+xml,${encoded}`;
+  return `data:image/svg+xml;charset=utf-8,${encoded}`;
 }
 
 const pillBlue = svgDataUrl(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='12' y='22' width='40' height='20' rx='10' fill='%233b82f6'/></svg>`
+  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='12' y='22' width='40' height='20' rx='10' fill='#3b82f6'/></svg>`
 );
 
-const pillYellow = svgDataUrl(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='12' y='22' width='40' height='20' rx='10' fill='%23f59e0b'/></svg>`
+const pillAmber = svgDataUrl(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='12' y='22' width='40' height='20' rx='10' fill='#f59e0b'/></svg>`
 );
 
 const pillOrange = svgDataUrl(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='12' y='22' width='40' height='20' rx='10' fill='%23f97316'/></svg>`
+  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='12' y='22' width='40' height='20' rx='10' fill='#f97316'/></svg>`
 );
 
 const capsuleGreen = svgDataUrl(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='18' y='14' width='28' height='36' rx='14' fill='%2310b981'/></svg>`
+  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='18' y='14' width='28' height='36' rx='14' fill='#10b981'/></svg>`
 );
 
 // ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ export function generateDemoData(today: string): DemoData {
       quantity_dispensed: 60,
       dispensed_date: addedOn,
       unclear_fields: [],
-      photo: pillYellow,
+      photo: pillAmber,
       addedOn,
     },
     {

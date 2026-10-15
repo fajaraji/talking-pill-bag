@@ -43,16 +43,29 @@ export async function POST(request: NextRequest) {
     const shortHash = hashToken(shortCode);
     const longHash = hashToken(longCode);
 
+    // Default the label by role when none is given, so the joining device
+    // never shows up as "Unnamed device".
+    let resolvedLabel = label;
+    if (!resolvedLabel) {
+      const householdRows = await sql`
+        SELECT display_name FROM households WHERE id = ${auth.householdId}
+      `;
+      const displayName =
+        (householdRows[0] as { display_name?: string } | undefined)?.display_name ?? "";
+      resolvedLabel =
+        role === "senior" ? `${displayName}'s phone` : "Family member";
+    }
+
     const shortExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     const longExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await sql`
       INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device, label)
-      VALUES (${shortHash}, ${auth.householdId}, ${role}, ${shortExpiresAt.toISOString()}, ${auth.deviceId}, ${label ?? null})
+      VALUES (${shortHash}, ${auth.householdId}, ${role}, ${shortExpiresAt.toISOString()}, ${auth.deviceId}, ${resolvedLabel})
     `;
     await sql`
       INSERT INTO pairing_codes (code_hash, household_id, role, expires_at, created_by_device, label)
-      VALUES (${longHash}, ${auth.householdId}, ${role}, ${longExpiresAt.toISOString()}, ${auth.deviceId}, ${label ?? null})
+      VALUES (${longHash}, ${auth.householdId}, ${role}, ${longExpiresAt.toISOString()}, ${auth.deviceId}, ${resolvedLabel})
     `;
 
     const origin = getOrigin(request);

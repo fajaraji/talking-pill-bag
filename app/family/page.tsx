@@ -23,6 +23,23 @@ export default function FamilyPage() {
   return <FamilyPageInner />;
 }
 
+// Label shown for a device that has no stored label — mirrors the server-side
+// defaults in POST /api/v1/pairing-codes.
+function fallbackDeviceLabel(
+  lang: Language,
+  device: { label: string | null; role: string },
+  householdName: string
+): string {
+  if (device.label) return device.label;
+  if (device.role === "senior") {
+    return t(lang, "defaultDeviceLabelSenior").replace(
+      "{name}",
+      householdName || t(lang, "namePlaceholder")
+    );
+  }
+  return t(lang, "defaultDeviceLabelCaregiver");
+}
+
 function FamilyPageInner() {
   const router = useRouter();
   const { state, actions } = useStore();
@@ -46,12 +63,8 @@ function FamilyPageInner() {
   async function generateCode(role: "caregiver" | "senior") {
     setLoading(true);
     try {
-      const displayName = state.household?.displayName ?? "";
-      const label =
-        role === "senior"
-          ? `${displayName || t(lang, "namePlaceholder")}'s phone`
-          : "Family member";
-      const result = await actions.createPairingCode(role, label);
+      // No label sent — the server defaults it by role.
+      const result = await actions.createPairingCode(role);
       setShortCode(result.shortCode);
       const origin = typeof window !== "undefined" ? window.location.origin : "";
       const dataUrl = await QRCode.toDataURL(`${origin}/join?c=${result.shortCode}`, { width: 280, margin: 2 });
@@ -200,10 +213,12 @@ function FamilyPageInner() {
                       className="text-lg font-semibold text-slate-900 cursor-pointer hover:text-blue-700"
                       onClick={() => {
                         setEditingId(device.id);
-                        setEditLabel(device.label || t(lang, "unnamedDevice"));
+                        setEditLabel(fallbackDeviceLabel(lang, device, displayName));
                       }}
                     >
-                      {device.label || t(lang, "unnamedDevice")}
+                      {device.isCurrent && device.label === "Primary caregiver"
+                        ? t(lang, "you")
+                        : fallbackDeviceLabel(lang, device, displayName)}
                     </p>
                   )}
                   <p className="text-base text-slate-600">

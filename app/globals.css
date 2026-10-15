@@ -43,6 +43,15 @@ body {
     display: block !important;
   }
 
+  .print-only,
+  .print-medicines,
+  .print-questions,
+  .print-only *,
+  .print-medicines *,
+  .print-questions * {
+    color: #000 !important;
+  }
+
   .print-medicines {
     margin-bottom: 1.5rem;
     page-break-inside: avoid;

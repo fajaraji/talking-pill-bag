@@ -13,6 +13,9 @@ import { getDaysLeft } from "@/lib/supply";
 import { countMissedDosesInLastNDays } from "@/lib/adherence";
 import { useStore } from "@/lib/store";
 import { LoadingShell } from "@/app/loading-shell";
+import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 
 type QuestionItem = {
   id: string;
@@ -236,72 +239,53 @@ function QuestionsPageInner() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
+    <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
       {/* Header */}
-      <header className="flex w-full max-w-sm flex-col gap-2 self-center">
-        <div className="flex items-center justify-between no-print">
-          <button
-            onClick={() => router.push("/")}
-            className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-            aria-label={t(lang, "back")}
-          >
-            ← {t(lang, "back")}
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">
-            {t(lang, "questionsTitle")}
-          </h1>
-          <div className="w-16" />
+      <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+        <div className="no-print">
+          <AppHeader
+            title={t(lang, "questionsTitle")}
+            back={{ label: t(lang, "back"), onClick: () => router.push("/") }}
+          />
         </div>
         <div className="print-only hidden">
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-ink">
             {t(lang, "questionsForDoctor")}
           </h1>
-          <p className="text-base text-slate-600">
+          <p className="text-base text-muted">
             {t(lang, "printDate")}: {today}
           </p>
         </div>
-      </header>
+      </div>
 
       {/* Action buttons */}
       <div className="flex w-full max-w-sm flex-col gap-3 self-center no-print">
-        <button
-          onClick={handlePrint}
-          className="w-full rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-          style={{ minHeight: 56 }}
-        >
+        <Button variant="primary" className="w-full" onClick={handlePrint}>
           {t(lang, "printSavePDF")}
-        </button>
+        </Button>
         {allQuestions.length > 0 && (
           <div className="flex gap-3">
-            <button
-              onClick={handleShare}
-              className="flex-1 rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
-              style={{ minHeight: 56 }}
-            >
+            <Button variant="success" className="flex-1" onClick={handleShare}>
               {t(lang, "share")}
-            </button>
-            <button
-              onClick={handleCopy}
-              className="rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
-              style={{ minHeight: 56 }}
-            >
+            </Button>
+            <Button variant="secondary" onClick={handleCopy}>
               {copied ? t(lang, "copied") : t(lang, "copyText")}
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       {/* Current medicines (visible on print) */}
       <div className="print-medicines w-full max-w-sm self-center">
-        <h2 className="text-lg font-bold text-slate-900">
+        <h2 className="text-lg font-bold text-ink">
           {t(lang, "currentMedicines")}
         </h2>
         {state.medicines.length === 0 ? (
-          <p className="text-base text-slate-600">{t(lang, "noMedicines")}</p>
+          <p className="text-base text-muted">{t(lang, "noMedicines")}</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {state.medicines.map((med) => (
-              <li key={med.id} className="text-base text-slate-800">
+              <li key={med.id} className="text-base text-ink">
                 <span className="font-semibold">{med.drug_name}</span>{" "}
                 {med.strength} — {med.dose_per_time} ({med.time_slots.join(", ")})
               </li>
@@ -312,59 +296,65 @@ function QuestionsPageInner() {
 
       {/* Questions list */}
       <div className="print-questions flex w-full max-w-sm flex-col gap-4 self-center">
-        <h2 className="text-lg font-bold text-slate-900">
+        <h2 className="text-lg font-bold text-ink">
           {t(lang, "questionsForDoctor")}
         </h2>
 
         {allQuestions.length === 0 && !isLoading && (
-          <p className="py-6 text-center text-lg text-slate-500">
+          <p className="py-6 text-center text-lg text-muted">
             {t(lang, "noQuestions")}
           </p>
         )}
 
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3 no-print">
           {allQuestions.map((q) => {
             const done = state.doneQuestionIds.includes(q.id);
             return (
-              <li
-                key={q.id}
-                className={`flex items-start gap-3 rounded-xl border-2 p-4 ${
-                  done
-                    ? "border-slate-200 bg-slate-100"
-                    : "border-slate-200 bg-white"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={done}
-                  onChange={() => handleToggle(q.id)}
-                  className="mt-1 h-6 w-6 shrink-0 cursor-pointer accent-blue-600 no-print"
-                  aria-label={t(lang, "asked")}
-                />
-                <span
-                  className={`text-lg leading-snug ${
-                    done ? "text-slate-500 line-through" : "text-slate-900"
-                  }`}
-                >
-                  {q.text}
-                </span>
-                {!q.auto && (
-                  <button
-                    onClick={() => handleDeleteCustom(q.id.replace("custom-", ""))}
-                    className="ml-auto shrink-0 rounded-lg px-2 py-1 text-sm font-semibold text-red-600 hover:bg-red-100 no-print"
-                  >
-                    {t(lang, "delete")}
-                  </button>
-                )}
+              <li key={q.id}>
+                <Card className={done ? "bg-page" : ""}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={done}
+                      onChange={() => handleToggle(q.id)}
+                      className="mt-0.5 h-12 w-12 shrink-0 cursor-pointer accent-primary"
+                      aria-label={t(lang, "asked")}
+                    />
+                    <span
+                      className={`flex-1 text-lg leading-snug ${
+                        done ? "text-muted line-through" : "text-ink"
+                      }`}
+                    >
+                      {q.text}
+                    </span>
+                    {!q.auto && (
+                      <button
+                        onClick={() => handleDeleteCustom(q.id.replace("custom-", ""))}
+                        className="min-h-12 shrink-0 rounded-lg px-3 py-2 text-base font-semibold text-danger-text hover:bg-danger-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      >
+                        {t(lang, "delete")}
+                      </button>
+                    )}
+                  </div>
+                </Card>
               </li>
             );
           })}
         </ul>
+
+        {/* Print-only questions list (plain text for print) */}
+        <ol className="hidden print-only">
+          {allQuestions.map((q, idx) => (
+            <li key={q.id} className="text-base text-ink">
+              {idx + 1}. {q.text}
+            </li>
+          ))}
+        </ol>
       </div>
 
       {/* Add custom question */}
       <div className="flex w-full max-w-sm flex-col gap-3 self-center no-print">
-        <label className="text-base font-semibold text-slate-700">
+        <label className="text-base font-semibold text-ink">
           {t(lang, "addQuestion")}
         </label>
         <div className="flex gap-3">
@@ -376,15 +366,14 @@ function QuestionsPageInner() {
               if (e.key === "Enter") handleAddCustom();
             }}
             placeholder={t(lang, "addQuestion")}
-            className="flex-1 rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-lg text-slate-900"
+            className="flex-1 rounded-xl border border-line bg-white px-4 py-3 text-lg text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
-          <button
+          <Button
+            variant="success"
             onClick={handleAddCustom}
-            className="rounded-xl bg-green-600 px-5 py-3 text-lg font-semibold text-white hover:bg-green-700 active:bg-green-800"
-            style={{ minHeight: 48 }}
           >
             {t(lang, "save")}
-          </button>
+          </Button>
         </div>
       </div>
     </main>

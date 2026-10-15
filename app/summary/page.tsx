@@ -13,6 +13,9 @@ import { getDaysLeft } from "@/lib/supply";
 import { countMissedDosesInLastNDays } from "@/lib/adherence";
 import { useStore } from "@/lib/store";
 import { LoadingShell } from "@/app/loading-shell";
+import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 
 function getScheduledDosesInRange(
   medicine: { time_slots: string[]; addedOn?: string },
@@ -194,61 +197,44 @@ function SummaryPageInner() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col gap-6 bg-slate-50 px-4 py-6">
+    <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
       {/* Header */}
-      <header className="flex w-full max-w-sm flex-col gap-2 self-center">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.push("/")}
-            className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-            aria-label={t(lang, "back")}
-          >
-            ← {t(lang, "back")}
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">
-            {t(lang, "weeklySummary")}
-          </h1>
-          <div className="w-16" />
-        </div>
-        <p className="text-center text-base text-slate-600">
+      <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+        <AppHeader
+          title={t(lang, "weeklySummary")}
+          back={{ label: t(lang, "back"), onClick: () => router.push("/") }}
+        />
+        <p className="text-center text-base text-muted">
           {t(lang, "summaryForFamily")}
         </p>
         {today && (
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-muted">
             {fromDate} – {today}
           </p>
         )}
-      </header>
+      </div>
 
       {/* Share buttons */}
       {state.medicines.length > 0 && (
         <div className="flex w-full max-w-sm flex-col gap-3 self-center">
           <div className="flex gap-3">
-            <button
-              onClick={handleShare}
-              className="flex-1 rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
-              style={{ minHeight: 56 }}
-            >
+            <Button variant="success" className="flex-1" onClick={handleShare}>
               {t(lang, "share")}
-            </button>
-            <button
-              onClick={handleCopy}
-              className="rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
-              style={{ minHeight: 56 }}
-            >
+            </Button>
+            <Button variant="secondary" onClick={handleCopy}>
               {copied ? t(lang, "copied") : t(lang, "copyText")}
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Medicines adherence */}
       <div className="flex w-full max-w-sm flex-col gap-4 self-center">
-        <h2 className="text-lg font-bold text-slate-900">
+        <h2 className="text-lg font-bold text-ink">
           {t(lang, "dosesTakenVsScheduled")}
         </h2>
         {state.medicines.length === 0 && !isLoading && (
-          <p className="py-4 text-center text-lg text-slate-500">
+          <p className="py-4 text-center text-lg text-muted">
             {t(lang, "noMedicines")}
           </p>
         )}
@@ -258,27 +244,24 @@ function SummaryPageInner() {
           const missed = countMissedDosesInLastNDays(med, state.doseLogs, today, 7);
           const pct = scheduled > 0 ? Math.round((taken / scheduled) * 100) : 0;
           return (
-            <div
-              key={med.id}
-              className="flex flex-col gap-2 rounded-xl border-2 border-slate-200 bg-white p-4"
-            >
+            <Card key={med.id} className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-lg font-bold text-slate-900">
+                <span className="text-lg font-bold text-ink">
                   {med.drug_name}
                 </span>
-                <span className="text-base text-slate-600">
+                <span className="text-base text-muted">
                   {taken} / {scheduled} {t(lang, "doses")}
                 </span>
               </div>
-              <div className="h-4 w-full overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-blue-500" style={{ width: `${pct}%` }} />
+              <div className="h-4 w-full overflow-hidden rounded-full bg-line">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
               </div>
               {missed > 0 && (
-                <p className="text-base text-amber-700">
+                <p className="text-base text-attention-text">
                   {t(lang, "missedThisWeek").replace("{n}", String(missed))}
                 </p>
               )}
-            </div>
+            </Card>
           );
         })}
       </div>
@@ -286,7 +269,7 @@ function SummaryPageInner() {
       {/* Reasons recorded */}
       {reasons.length > 0 && (
         <div className="flex w-full max-w-sm flex-col gap-3 self-center">
-          <h2 className="text-lg font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-ink">
             {t(lang, "reasonsRecorded")}
           </h2>
           <div className="flex flex-col gap-2">
@@ -294,14 +277,11 @@ function SummaryPageInner() {
               const med = state.medicines.find((m) => m.id === r.medicineId);
               const reasonLabel = t(lang, r.reason as Parameters<typeof t>[1]) ?? r.reason;
               return (
-                <div
-                  key={idx}
-                  className="rounded-xl border-2 border-slate-200 bg-white p-3"
-                >
-                  <p className="text-base text-slate-800">
+                <Card key={idx}>
+                  <p className="text-base text-ink">
                     {med ? med.drug_name : r.medicineId}: {reasonLabel} ({r.recordedOn})
                   </p>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -310,42 +290,39 @@ function SummaryPageInner() {
 
       {/* BP average */}
       {bpStats ? (
-        <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-xl border-2 border-slate-200 bg-white p-4">
-          <h2 className="text-lg font-bold text-slate-900">
+        <Card className="w-full max-w-sm self-center">
+          <h2 className="text-lg font-bold text-ink">
             {t(lang, "bpAverage")}
           </h2>
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-2xl font-bold text-ink">
             {bpStats.avgSys}/{bpStats.avgDia}
           </p>
-          <p className="text-base text-slate-600">
+          <p className="text-base text-muted">
             {t(lang, "readingsCount").replace("{n}", String(bpStats.count))}
           </p>
-        </div>
+        </Card>
       ) : (
-        <div className="flex w-full max-w-sm flex-col gap-2 self-center rounded-xl border-2 border-slate-200 bg-white p-4">
-          <h2 className="text-lg font-bold text-slate-900">
+        <Card className="w-full max-w-sm self-center">
+          <h2 className="text-lg font-bold text-ink">
             {t(lang, "bpAverage")}
           </h2>
-          <p className="text-lg text-slate-500">{t(lang, "noReadingsYet")}</p>
-        </div>
+          <p className="text-lg text-muted">{t(lang, "noReadingsYet")}</p>
+        </Card>
       )}
 
       {/* Refills due */}
       {refills.length > 0 && (
         <div className="flex w-full max-w-sm flex-col gap-3 self-center">
-          <h2 className="text-lg font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-ink">
             {t(lang, "refillsDue")}
           </h2>
           <div className="flex flex-col gap-2">
             {refills.map(({ med, days }) => (
-              <div
-                key={med.id}
-                className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3"
-              >
-                <p className="text-base font-semibold text-amber-900">
+              <Card key={med.id} className="border-attention-border bg-attention-bg">
+                <p className="text-base font-semibold text-attention-text">
                   {t(lang, "refillQuestion").replace("{drug}", med.drug_name).replace("{n}", String(days))}
                 </p>
-              </div>
+              </Card>
             ))}
           </div>
         </div>

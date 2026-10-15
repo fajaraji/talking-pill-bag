@@ -20,6 +20,7 @@ import { getAdherencePrompts } from "@/lib/adherence";
 import { getDaysLeft } from "@/lib/supply";
 import { routeQuestion } from "@/lib/question-router";
 import { useStore } from "@/lib/store";
+import { LoadingShell } from "@/app/loading-shell";
 
 const SLOT_ORDER = ["morning", "afternoon", "evening", "bedtime"] as const;
 
@@ -222,8 +223,19 @@ function DoseCard({
 // Today page
 // ---------------------------------------------------------------------------
 export default function TodayPage() {
+  const { isHydrated } = useStore();
+
+  // Neutral loading shell until hydrated; the inner component holds all
+  // other hooks so their order never changes between renders.
+  if (!isHydrated) {
+    return <LoadingShell />;
+  }
+  return <TodayPageInner />;
+}
+
+function TodayPageInner() {
   const router = useRouter();
-  const { state, actions, isHydrated } = useStore();
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [undoMap, setUndoMap] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -249,16 +261,6 @@ export default function TodayPage() {
   } | null>(null);
 
   const isSenior = state.role === "senior";
-
-  // Show neutral loading shell until hydrated to avoid hydration mismatch
-  if (!isHydrated) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 py-12">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-        <p className="text-lg text-slate-500">Loading…</p>
-      </main>
-    );
-  }
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;

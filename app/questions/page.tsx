@@ -12,6 +12,7 @@ import { getToday } from "@/lib/clock";
 import { getDaysLeft } from "@/lib/supply";
 import { countMissedDosesInLastNDays } from "@/lib/adherence";
 import { useStore } from "@/lib/store";
+import { LoadingShell } from "@/app/loading-shell";
 
 type QuestionItem = {
   id: string;
@@ -34,23 +35,24 @@ function formatDateShort(lang: Language, dateStr: string): string {
 }
 
 export default function QuestionsPage() {
+  const { isHydrated } = useStore();
+
+  // Neutral loading shell until hydrated; the inner component holds all
+  // other hooks so their order never changes between renders.
+  if (!isHydrated) {
+    return <LoadingShell />;
+  }
+  return <QuestionsPageInner />;
+}
+
+function QuestionsPageInner() {
   const router = useRouter();
-  const { state, actions, isHydrated } = useStore();
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [today, setToday] = useState("");
   const [customInput, setCustomInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-
-  // Show neutral loading shell until hydrated to avoid hydration mismatch
-  if (!isHydrated) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 py-12">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-        <p className="text-lg text-slate-500">Loading…</p>
-      </main>
-    );
-  }
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;

@@ -123,8 +123,19 @@ function FamilyIcon({ className }: { className?: string }) {
 // Home page
 // ---------------------------------------------------------------------------
 export default function HomePage() {
+  const { isHydrated } = useStore();
+
+  // Neutral loading shell until hydrated; the inner component holds all
+  // other hooks so their order never changes between renders.
+  if (!isHydrated) {
+    return <LoadingShell />;
+  }
+  return <HomePageInner />;
+}
+
+function HomePageInner() {
   const router = useRouter();
-  const { state, isAuthenticated, isHydrated, setupHousehold, joinHousehold } = useStore();
+  const { state, isAuthenticated, setupHousehold, joinHousehold } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [onboardingStep, setOnboardingStep] = useState<"choice" | "caregiver" | "join">("choice");
   const [nameInput, setNameInput] = useState("");
@@ -142,10 +153,16 @@ export default function HomePage() {
     }
   }, []);
 
-  // Show neutral loading shell until hydrated to avoid hydration mismatch
-  if (!isHydrated) {
-    return <LoadingShell />;
-  }
+  // All hooks must run before any conditional return.
+  const { total: totalDoses, taken: takenDoses } = useMemo(
+    () => countTodayProgress(state.medicines, state.doseLogs, today),
+    [state.medicines, state.doseLogs, today]
+  );
+
+  const pendingSlot = useMemo(
+    () => nextPendingSlot(state.medicines, state.doseLogs, today),
+    [state.medicines, state.doseLogs, today]
+  );
 
   // Senior redirect
   if (isAuthenticated && state.role === "senior") {
@@ -307,16 +324,6 @@ export default function HomePage() {
   // ---------------------------------------------------------------------------
   // Caregiver home page
   // ---------------------------------------------------------------------------
-  const { total: totalDoses, taken: takenDoses } = useMemo(
-    () => countTodayProgress(state.medicines, state.doseLogs, today),
-    [state.medicines, state.doseLogs, today]
-  );
-
-  const pendingSlot = useMemo(
-    () => nextPendingSlot(state.medicines, state.doseLogs, today),
-    [state.medicines, state.doseLogs, today]
-  );
-
   const displayName = state.household?.displayName ?? "";
   const todayTitle = displayName
     ? t(lang, "todaysMedicinesNamed").replace("{name}", displayName)

@@ -9,11 +9,23 @@ import {
   t,
 } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
+import { LoadingShell } from "@/app/loading-shell";
 import QRCode from "qrcode";
 
 export default function FamilyPage() {
+  const { isHydrated } = useStore();
+
+  // Neutral loading shell until hydrated; the inner component holds all
+  // other hooks so their order never changes between renders.
+  if (!isHydrated) {
+    return <LoadingShell />;
+  }
+  return <FamilyPageInner />;
+}
+
+function FamilyPageInner() {
   const router = useRouter();
-  const { state, actions, isHydrated } = useStore();
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [qrUrl, setQrUrl] = useState("");
   const [shortCode, setShortCode] = useState("");
@@ -22,16 +34,6 @@ export default function FamilyPage() {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
-
-  // Show neutral loading shell until hydrated to avoid hydration mismatch
-  if (!isHydrated) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 py-12">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-        <p className="text-lg text-slate-500">Loading…</p>
-      </main>
-    );
-  }
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;

@@ -14,6 +14,7 @@ import { getDrugId } from "@/lib/drug-info";
 import { getToday } from "@/lib/clock";
 import { resizeImage, createThumbnail } from "@/lib/image";
 import { useStore } from "@/lib/store";
+import { LoadingShell } from "@/app/loading-shell";
 
 type Step = "capture" | "confirm" | "error";
 
@@ -31,7 +32,7 @@ const FOOD_OPTIONS: Array<{ value: LabelResult["food"]; label: string }> = [
   { value: "any", label: "Any (with or without food)" },
 ];
 
-function AddMedicinePageInner() {
+function AddMedicinePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -497,6 +498,17 @@ function AddMedicinePageInner() {
       </div>
     </main>
   );
+}
+
+function AddMedicinePageInner() {
+  const { isHydrated } = useStore();
+
+  // Neutral loading shell until hydrated; the content component holds all
+  // other hooks so their order never changes between renders.
+  if (!isHydrated) {
+    return <LoadingShell />;
+  }
+  return <AddMedicinePageContent />;
 }
 
 export default function AddMedicinePage() {

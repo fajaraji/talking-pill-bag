@@ -21,6 +21,7 @@ import {
   getDeviceToken,
   setDeviceToken,
   fetchState,
+  type DeviceToken,
   addMedicineApi,
   updateMedicineApi,
   deleteMedicineApi,
@@ -228,11 +229,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     isHydrated: false,
   });
 
+  // Token is read only inside effects so that the server render and the
+  // first client render match (localStorage is not touched during render).
+  const [authToken, setAuthToken] = useState<DeviceToken | null>(null);
+
   const lastFailedAction = useRef<(() => Promise<void>) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const token = getDeviceToken();
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!authToken;
 
   const load = useCallback(async () => {
     if (!getDeviceToken()) {
@@ -252,6 +256,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   // Initial load + periodic refresh
   useEffect(() => {
+    setAuthToken(getDeviceToken());
     load();
 
     // Refresh every 60s while visible
@@ -307,7 +312,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const setupHousehold = useCallback(
     async (displayName: string, language: string) => {
       const res = await createHousehold(displayName, language);
-      setDeviceToken({ token: res.token, role: "caregiver", householdId: res.household.id });
+      const token: DeviceToken = { token: res.token, role: "caregiver", householdId: res.household.id };
+      setDeviceToken(token);
+      setAuthToken(token);
       await load();
     },
     [load]
@@ -316,7 +323,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const joinHousehold = useCallback(
     async (code: string) => {
       const res = await joinWithCode(code);
-      setDeviceToken({ token: res.token, role: res.role as "caregiver" | "senior", householdId: res.household.id });
+      const token: DeviceToken = { token: res.token, role: res.role as "caregiver" | "senior", householdId: res.household.id };
+      setDeviceToken(token);
+      setAuthToken(token);
       await load();
     },
     [load]
@@ -324,7 +333,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const loadDemo = useCallback(async () => {
     const res = await createDemo();
-    setDeviceToken({ token: res.token, role: "caregiver", householdId: res.household.id });
+    const token: DeviceToken = { token: res.token, role: "caregiver", householdId: res.household.id };
+    setDeviceToken(token);
+    setAuthToken(token);
     await load();
   }, [load]);
 

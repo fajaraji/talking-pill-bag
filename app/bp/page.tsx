@@ -11,6 +11,7 @@ import {
 import { getToday, getNow } from "@/lib/clock";
 import { resizeImage } from "@/lib/image";
 import { useStore } from "@/lib/store";
+import { LoadingShell } from "@/app/loading-shell";
 
 type View = "main" | "add" | "confirm";
 
@@ -168,8 +169,19 @@ function BPChart({
 // BP page
 // ---------------------------------------------------------------------------
 export default function BPPage() {
+  const { isHydrated } = useStore();
+
+  // Neutral loading shell until hydrated; the inner component holds all
+  // other hooks so their order never changes between renders.
+  if (!isHydrated) {
+    return <LoadingShell />;
+  }
+  return <BPPageInner />;
+}
+
+function BPPageInner() {
   const router = useRouter();
-  const { state, actions, isHydrated } = useStore();
+  const { state, actions } = useStore();
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [view, setView] = useState<View>("main");
   const [today, setToday] = useState("");
@@ -188,16 +200,6 @@ export default function BPPage() {
   const [targetDia, setTargetDia] = useState("");
 
   const isSenior = state.role === "senior";
-
-  // Show neutral loading shell until hydrated to avoid hydration mismatch
-  if (!isHydrated) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 py-12">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-        <p className="text-lg text-slate-500">Loading…</p>
-      </main>
-    );
-  }
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;

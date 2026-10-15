@@ -10,6 +10,8 @@ import {
 } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { LoadingShell } from "@/app/loading-shell";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 
 function JoinPageContent() {
   const router = useRouter();
@@ -47,42 +49,43 @@ function JoinPageContent() {
   }, [searchParams, joinHousehold, router, lang]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 py-12">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-page px-6 py-12">
       <header className="text-center">
-        <h1 className="text-2xl font-bold text-slate-900">{t(lang, "appTitle")}</h1>
+        <h1 className="text-2xl font-bold text-ink">{t(lang, "appTitle")}</h1>
       </header>
 
       {status === "loading" && (
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-          <p className="text-lg text-slate-600">{t(lang, "loading")}</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-primary" />
+          <p className="text-lg text-muted">{t(lang, "loading")}</p>
         </div>
       )}
 
       {status === "success" && (
-        <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-xl border-2 border-green-200 bg-green-50 p-6 text-center">
-          <p className="text-xl font-bold text-green-800">
+        <Card className="w-full max-w-sm items-center text-center border-success-border bg-success-bg">
+          <p className="text-xl font-bold text-success-text">
             {t(lang, "joinSuccess")}
           </p>
-          <p className="text-base text-green-700">
+          <p className="text-base text-success-text">
             {t(lang, "redirecting")}
           </p>
-        </div>
+        </Card>
       )}
 
       {status === "error" && (
-        <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-xl border-2 border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-xl font-bold text-red-800">
+        <Card className="w-full max-w-sm items-center text-center border-danger-border bg-danger-bg">
+          <p className="text-xl font-bold text-danger-text">
             {t(lang, "joinFailed")}
           </p>
-          <p className="text-base text-red-700">{error}</p>
-          <button
+          <p className="text-base text-danger-text">{error}</p>
+          <Button
+            variant="primary"
+            className="mt-4 w-full"
             onClick={() => router.push("/")}
-            className="rounded-xl bg-blue-600 px-5 py-3 text-base font-semibold text-white hover:bg-blue-700"
           >
             {t(lang, "back")}
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
     </main>
   );
@@ -103,9 +106,9 @@ export default function JoinPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-          <p className="text-lg text-slate-600">Loading…</p>
+        <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-page px-6 py-12">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-primary" />
+          <p className="text-lg text-muted">Loading…</p>
         </main>
       }
     >

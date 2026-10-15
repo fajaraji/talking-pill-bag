@@ -15,6 +15,10 @@ import { getToday } from "@/lib/clock";
 import { resizeImage, createThumbnail } from "@/lib/image";
 import { useStore } from "@/lib/store";
 import { LoadingShell } from "@/app/loading-shell";
+import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { CameraIcon, UploadIcon, AlertIcon } from "@/components/icons";
 
 type Step = "capture" | "confirm" | "error";
 
@@ -243,12 +247,12 @@ function AddMedicinePageContent() {
       <div className="flex flex-col gap-1">
         <label
           className={`text-base font-semibold ${
-            unclear ? "text-red-600" : "text-slate-700"
+            unclear ? "text-danger-text" : "text-ink"
           }`}
         >
           {label}
           {unclear && (
-            <span className="ml-2 text-sm font-normal text-red-500">
+            <span className="ml-2 text-sm font-normal text-danger-text">
               ({t(lang, "unclearFields")})
             </span>
           )}
@@ -264,10 +268,10 @@ function AddMedicinePageContent() {
                 : e.target.value) as LabelResult[K]
             )
           }
-          className={`rounded-lg border-2 px-4 py-3 text-lg ${
+          className={`rounded-xl border px-4 py-3 text-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 ${
             unclear
-              ? "border-red-400 bg-red-50 text-red-900"
-              : "border-slate-200 bg-white text-slate-900"
+              ? "border-danger-border bg-danger-bg text-danger-text"
+              : "border-line bg-white text-ink"
           }`}
         />
       </div>
@@ -276,54 +280,50 @@ function AddMedicinePageContent() {
 
   if (step === "capture" || step === "error") {
     return (
-      <main className="flex min-h-screen flex-col items-center gap-6 px-6 py-8">
-        <header className="flex w-full max-w-sm items-center justify-between">
-          <button
-            onClick={() => router.push("/")}
-            className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-          >
-            ← {t(lang, "back")}
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">
-            {t(lang, "addMedicine")}
-          </h1>
-          <div className="w-16" />
-        </header>
+      <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
+        <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+          <AppHeader
+            title={t(lang, "addMedicine")}
+            back={{ label: t(lang, "back"), onClick: () => router.push("/") }}
+          />
+        </div>
 
         {image && (
-          <div className="w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200">
+          <div className="w-full max-w-sm overflow-hidden rounded-xl border border-line self-center">
             <img src={image} alt="Medication label" className="w-full object-contain" />
           </div>
         )}
 
         {loading && (
-          <div className="flex flex-col items-center gap-3 py-8">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-            <p className="text-lg text-slate-600">{t(lang, "analyzing")}</p>
+          <div className="flex w-full max-w-sm flex-col items-center gap-3 self-center py-8">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-primary" />
+            <p className="text-lg text-muted">{t(lang, "analyzing")}</p>
           </div>
         )}
 
         {step === "error" && !loading && (
-          <div className="w-full max-w-sm rounded-xl border-2 border-red-200 bg-red-50 p-6 text-center">
-            <p className="text-lg font-semibold text-red-700">
+          <Card className="w-full max-w-sm self-center text-center">
+            <p className="flex items-start justify-center gap-2 text-lg font-semibold text-danger-text">
+              <AlertIcon className="h-6 w-6 shrink-0" />
               {isRejected ? t(lang, "pharmacistMessage") : t(lang, "genericError")}
             </p>
-            <button
+            <Button
+              variant="primary"
+              className="mt-4 w-full"
               onClick={() => {
                 setStep("capture");
                 setImage(null);
                 setThumbnail(null);
                 setIsRejected(false);
               }}
-              className="mt-4 rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white hover:bg-blue-700"
             >
               {t(lang, "retry")}
-            </button>
-          </div>
+            </Button>
+          </Card>
         )}
 
         {!loading && step !== "error" && (
-          <div className="flex w-full max-w-sm flex-col gap-4">
+          <div className="flex w-full max-w-sm flex-col gap-4 self-center">
             <input
               ref={fileInputRef}
               type="file"
@@ -332,18 +332,14 @@ function AddMedicinePageContent() {
               onChange={handleFileSelect}
               className="hidden"
             />
-            <button
-              onClick={openCamera}
-              className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
-            >
+            <Button variant="primary" className="w-full" onClick={openCamera}>
+              <CameraIcon className="h-5 w-5" />
               {t(lang, "takePhoto")}
-            </button>
-            <button
-              onClick={openGallery}
-              className="flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
-            >
+            </Button>
+            <Button variant="secondary" className="w-full" onClick={openGallery}>
+              <UploadIcon className="h-5 w-5" />
               {t(lang, "uploadPhoto")}
-            </button>
+            </Button>
           </div>
         )}
       </main>
@@ -351,39 +347,33 @@ function AddMedicinePageContent() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-6 px-6 py-8">
-      <header className="flex w-full max-w-sm items-center justify-between">
-        <button
-          onClick={() => router.push("/")}
-          className="rounded-lg px-3 py-2 text-lg text-slate-600 hover:bg-slate-100"
-        >
-          ← {t(lang, "back")}
-        </button>
-        <h1 className="text-xl font-bold text-slate-900">
-          {t(lang, "addMedicine")}
-        </h1>
-        <div className="w-16" />
-      </header>
+    <main className="flex min-h-screen flex-col gap-6 bg-page px-4 py-6">
+      <div className="flex w-full max-w-sm flex-col gap-2 self-center">
+        <AppHeader
+          title={t(lang, "addMedicine")}
+          back={{ label: t(lang, "back"), onClick: () => router.push("/") }}
+        />
+      </div>
 
-      <div className="flex w-full max-w-sm flex-col gap-6">
+      <div className="flex w-full max-w-sm flex-col gap-6 self-center">
         {image && (
-          <div className="overflow-hidden rounded-xl border-2 border-slate-200">
+          <div className="overflow-hidden rounded-xl border border-line">
             <img src={image} alt="Medication label" className="w-full object-contain" />
           </div>
         )}
 
         {editedResult && (
-          <div className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-4">
             {renderTextField(t(lang, "drugName"), "drug_name", editedResult.drug_name)}
             {renderTextField(t(lang, "strength"), "strength", editedResult.strength)}
             {renderTextField(t(lang, "dose"), "dose_per_time", editedResult.dose_per_time)}
             {renderTextField(t(lang, "timesPerDay"), "times_per_day", editedResult.times_per_day, "number")}
 
             <div className="flex flex-col gap-2">
-              <label className={`text-base font-semibold ${isUnclear("time_slots") ? "text-red-600" : "text-slate-700"}`}>
+              <label className={`text-base font-semibold ${isUnclear("time_slots") ? "text-danger-text" : "text-ink"}`}>
                 {t(lang, "timeSlots")}
                 {isUnclear("time_slots") && (
-                  <span className="ml-2 text-sm font-normal text-red-500">({t(lang, "unclearFields")})</span>
+                  <span className="ml-2 text-sm font-normal text-danger-text">({t(lang, "unclearFields")})</span>
                 )}
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -392,8 +382,8 @@ function AddMedicinePageContent() {
                   return (
                     <label
                       key={opt.value}
-                      className={`flex items-center gap-2 rounded-lg border-2 px-3 py-3 text-lg ${
-                        checked ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-white"
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-lg ${
+                        checked ? "border-primary bg-primary/5" : "border-line bg-white"
                       }`}
                     >
                       <input
@@ -420,19 +410,19 @@ function AddMedicinePageContent() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className={`text-base font-semibold ${isUnclear("food") ? "text-red-600" : "text-slate-700"}`}>
+              <label className={`text-base font-semibold ${isUnclear("food") ? "text-danger-text" : "text-ink"}`}>
                 {t(lang, "food")}
                 {isUnclear("food") && (
-                  <span className="ml-2 text-sm font-normal text-red-500">({t(lang, "unclearFields")})</span>
+                  <span className="ml-2 text-sm font-normal text-danger-text">({t(lang, "unclearFields")})</span>
                 )}
               </label>
               <select
                 value={editedResult.food}
                 onChange={(e) => updateField("food", e.target.value as LabelResult["food"])}
-                className={`rounded-lg border-2 px-4 py-3 text-lg ${
+                className={`rounded-xl border px-4 py-3 text-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                   isUnclear("food")
-                    ? "border-red-400 bg-red-50 text-red-900"
-                    : "border-slate-200 bg-white text-slate-900"
+                    ? "border-danger-border bg-danger-bg text-danger-text"
+                    : "border-line bg-white text-ink"
                 }`}
               >
                 {FOOD_OPTIONS.map((opt) => (
@@ -444,10 +434,10 @@ function AddMedicinePageContent() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className={`text-base font-semibold ${isUnclear("special_instructions") ? "text-red-600" : "text-slate-700"}`}>
+              <label className={`text-base font-semibold ${isUnclear("special_instructions") ? "text-danger-text" : "text-ink"}`}>
                 {t(lang, "specialInstructions")}
                 {isUnclear("special_instructions") && (
-                  <span className="ml-2 text-sm font-normal text-red-500">({t(lang, "unclearFields")})</span>
+                  <span className="ml-2 text-sm font-normal text-danger-text">({t(lang, "unclearFields")})</span>
                 )}
               </label>
               <textarea
@@ -462,27 +452,26 @@ function AddMedicinePageContent() {
                   )
                 }
                 rows={3}
-                className={`rounded-lg border-2 px-4 py-3 text-lg ${
+                className={`rounded-xl border px-4 py-3 text-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                   isUnclear("special_instructions")
-                    ? "border-red-400 bg-red-50 text-red-900"
-                    : "border-slate-200 bg-white text-slate-900"
+                    ? "border-danger-border bg-danger-bg text-danger-text"
+                    : "border-line bg-white text-ink"
                 }`}
               />
             </div>
 
             {renderTextField(t(lang, "quantityDispensed"), "quantity_dispensed", editedResult.quantity_dispensed, "number")}
             {renderTextField(t(lang, "dispensedDate"), "dispensed_date", editedResult.dispensed_date)}
-          </div>
+          </Card>
         )}
 
         <div className="flex flex-col gap-3 pt-4">
-          <button
-            onClick={handleConfirm}
-            className="rounded-xl bg-green-600 px-5 py-4 text-lg font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800"
-          >
+          <Button variant="success" className="w-full" onClick={handleConfirm}>
             {t(lang, "confirm")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="w-full"
             onClick={() => {
               setStep("capture");
               setImage(null);
@@ -490,10 +479,9 @@ function AddMedicinePageContent() {
               setResult(null);
               setEditedResult(null);
             }}
-            className="rounded-xl border-2 border-slate-300 bg-white px-5 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50"
           >
             {t(lang, "retry")}
-          </button>
+          </Button>
         </div>
       </div>
     </main>
@@ -515,9 +503,9 @@ export default function AddMedicinePage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-          <p className="text-lg text-slate-600">Loading…</p>
+        <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-page px-6 py-12">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-line border-t-primary" />
+          <p className="text-lg text-muted">Loading…</p>
         </main>
       }
     >

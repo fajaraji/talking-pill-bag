@@ -75,3 +75,30 @@ Do not touch .env.local. Do not enter plan mode. End with a short summary includ
 
 
 ### Result
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        All done. Here's the summary:
+
+**Commits made (4):**
+1. `fix: atomic join consumption, 15-min short code expiry, is_demo test flag`
+2. `feat: client data layer with server sync, onboarding, family/join pages, senior mode`
+3. `feat: PWA manifest and icons, i18n strings, update README and DEV-LOG`
+4. `docs: add CodeBuddy CLI session log for T12 family sharing UI`
+
+**Test results:**
+- `npm test` ΓÇö 38 passed, 0 failed (adherence + question-router)
+- `npm run typecheck` ΓÇö clean
+- `npm run build` ΓÇö clean (31 routes generated)
+- `BASE_URL=http://localhost:3001 npm run test:api` ΓÇö **34 passed, 0 failed**
+
+**What was implemented:**
+- **Security fixes:** Atomic `UPDATE ΓÇª RETURNING` in join endpoint eliminates race condition; 6-digit short codes expire in 15 min (QR join link keeps 24h); test households created with `is_demo = true` when `x-test-run: 1` header is present.
+- **Client data layer:** `lib/api-client.ts` (typed fetch wrapper) + `lib/store.tsx` (React context) that loads state from `GET /api/v1/state` on start/focus/60s interval, applies optimistic updates with rollback on error, and shows a non-blocking retry banner.
+- **Onboarding:** New `/` page with "I look after someone's medicines" and "I have a code from my family" paths; `/join?c=<code>` auto-joins.
+- **Senior mode:** Redirects `/` to `/today`, hides add/edit medicine, BP history editing, questions, weekly summary, and settings; shows "Ask your family for help" line.
+- **Family page (`/family`):** QR code + 6-digit code with expiry, device list with unlink confirmation, PWA install hint.
+- **Demo mode:** `?demo=1` now calls `POST /api/v1/demo` server-side instead of localStorage-only loader.
+- **Sharing:** "Share" uses `navigator.share` with fallback to WhatsApp; "Copy text" button added.
+- **PWA:** `manifest.ts`, `icon.tsx`, `apple-icon.tsx`, `/icon-192` and `/icon-512` routes with generated pill-shaped icons.
+- **i18n:** All new UI strings added in English, Σ╕¡µûç, Bahasa Melayu, and Bahasa Indonesia.
+- **Docs:** README updated with family phones/senior mode and demo mode details; DEV-LOG updated with T12 session entry.
+
+- Duration: 10.9 min, turns:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         128, error:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         False

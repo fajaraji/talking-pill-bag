@@ -54,8 +54,11 @@ type StringKey =
   | "foodAny"
   | "done"
   | "takenAt"
+  | "takenAtBy"
   | "undo"
   | "dosesTaken"
+  | "progressDone"
+  | "allDoneToday"
   | "timeNotSet"
   | "editTime"
   | "todaysMedicines"
@@ -136,6 +139,12 @@ type StringKey =
   | "whoIsThisFor"
   | "namePlaceholder"
   | "yourName"
+  | "yourNamePlaceholder"
+  | "joinAction"
+  | "recoveryCode"
+  | "recoveryCodeHint"
+  | "newRecoveryCode"
+  | "gotIt"
   | "settings"
   | "changeNameLanguage"
   | "todaysMedicinesNamed"
@@ -244,8 +253,11 @@ const en: Dictionary = {
   foodAny: "Any time",
   done: "Done",
   takenAt: "Taken at",
+  takenAtBy: "Taken at {time} by {name}",
   undo: "Undo",
   dosesTaken: "doses taken",
+  progressDone: "{taken} of {total} done today",
+  allDoneToday: "All done for today",
   timeNotSet: "Time not set",
   editTime: "Edit time",
   todaysMedicines: "Today's medicines",
@@ -330,6 +342,13 @@ const en: Dictionary = {
   whoIsThisFor: "Who is this for?",
   namePlaceholder: "Name, e.g. Mum",
   yourName: "Your name",
+  yourNamePlaceholder: "e.g. Mei (daughter)",
+  joinAction: "Join",
+  recoveryCode: "Recovery code",
+  recoveryCodeHint:
+    "Save this code. If this phone loses its data, use it to get back in.",
+  newRecoveryCode: "New recovery code",
+  gotIt: "Got it",
   settings: "Settings",
   changeNameLanguage: "Change name and language",
   todaysMedicinesNamed: "{name}'s medicines today",
@@ -426,8 +445,11 @@ const zh: Dictionary = {
   foodAny: "任何时间",
   done: "完成",
   takenAt: "已于",
+  takenAtBy: "已于 {time} 由 {name} 服用",
   undo: "撤销",
   dosesTaken: "剂已服用",
+  progressDone: "今天已完成 {taken} / {total}",
+  allDoneToday: "今天的药都已完成",
   timeNotSet: "未设定时间",
   editTime: "编辑时间",
   todaysMedicines: "今日药物",
@@ -509,6 +531,12 @@ const zh: Dictionary = {
   whoIsThisFor: "这是给谁的？",
   namePlaceholder: "名字，例如妈妈",
   yourName: "您的名字",
+  yourNamePlaceholder: "例如 美（女儿）",
+  joinAction: "加入",
+  recoveryCode: "恢复码",
+  recoveryCodeHint: "请保存此代码。如果此手机数据丢失，可用它重新登录。",
+  newRecoveryCode: "新的恢复码",
+  gotIt: "知道了",
   settings: "设置",
   changeNameLanguage: "更改名字和语言",
   todaysMedicinesNamed: "{name} 今天的药物",
@@ -606,8 +634,11 @@ const ms: Dictionary = {
   foodAny: "Bila-bila masa",
   done: "Sudah",
   takenAt: "Diambil pada",
+  takenAtBy: "Diambil pada {time} oleh {name}",
   undo: "Buat asal",
   dosesTaken: "dosis diambil",
+  progressDone: "{taken} daripada {total} selesai hari ini",
+  allDoneToday: "Semua selesai untuk hari ini",
   timeNotSet: "Masa tidak ditetapkan",
   editTime: "Sunting masa",
   todaysMedicines: "Ubat hari ini",
@@ -694,6 +725,13 @@ const ms: Dictionary = {
   whoIsThisFor: "Ini untuk siapa?",
   namePlaceholder: "Nama, contohnya Mak",
   yourName: "Nama anda",
+  yourNamePlaceholder: "cth. Mei (anak perempuan)",
+  joinAction: "Sertai",
+  recoveryCode: "Kod pemulihan",
+  recoveryCodeHint:
+    "Simpan kod ini. Jika telefon ini kehilangan datanya, gunakannya untuk masuk semula.",
+  newRecoveryCode: "Kod pemulihan baharu",
+  gotIt: "Faham",
   settings: "Tetapan",
   changeNameLanguage: "Tukar nama dan bahasa",
   todaysMedicinesNamed: "Ubat {name} hari ini",
@@ -791,8 +829,11 @@ const id: Dictionary = {
   foodAny: "Kapan saja",
   done: "Sudah",
   takenAt: "Diambil pukul",
+  takenAtBy: "Diambil pukul {time} oleh {name}",
   undo: "Batalkan",
   dosesTaken: "dosis sudah diambil",
+  progressDone: "{taken} dari {total} selesai hari ini",
+  allDoneToday: "Semua selesai untuk hari ini",
   timeNotSet: "Waktu belum diatur",
   editTime: "Atur waktu",
   todaysMedicines: "Obat hari ini",
@@ -879,6 +920,13 @@ const id: Dictionary = {
   whoIsThisFor: "Ini untuk siapa?",
   namePlaceholder: "Nama, misalnya Ibu",
   yourName: "Nama Anda",
+  yourNamePlaceholder: "mis. Mei (anak perempuan)",
+  joinAction: "Gabung",
+  recoveryCode: "Kode pemulihan",
+  recoveryCodeHint:
+    "Simpan kode ini. Jika ponsel ini kehilangan datanya, gunakan untuk masuk kembali.",
+  newRecoveryCode: "Kode pemulihan baru",
+  gotIt: "Mengerti",
   settings: "Pengaturan",
   changeNameLanguage: "Ubah nama dan bahasa",
   todaysMedicinesNamed: "Obat {name} hari ini",

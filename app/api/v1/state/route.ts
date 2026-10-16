@@ -37,9 +37,11 @@ export async function GET(request: NextRequest) {
         WHERE household_id = ${householdId} AND deleted_at IS NULL
       `,
       sql`
-        SELECT id, medicine_id, to_char(date, 'YYYY-MM-DD') AS date, slot, taken_at
-        FROM dose_logs
-        WHERE household_id = ${householdId} AND date >= ${cutoffDate}
+        SELECT d.id, d.medicine_id, to_char(d.date, 'YYYY-MM-DD') AS date, d.slot, d.taken_at,
+               d.taken_by_device, dev.label AS taken_by_label
+        FROM dose_logs d
+        LEFT JOIN devices dev ON dev.id = d.taken_by_device
+        WHERE d.household_id = ${householdId} AND d.date >= ${cutoffDate}
       `,
       sql`
         SELECT id, medicine_id, reason, missed_count, to_char(recorded_on, 'YYYY-MM-DD') AS recorded_on

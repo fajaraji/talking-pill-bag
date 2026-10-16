@@ -35,11 +35,11 @@ export async function POST(request: NextRequest) {
     }
 
     const rows = await sql`
-      INSERT INTO dose_logs (household_id, medicine_id, date, slot, taken_at)
-      VALUES (${auth.householdId}, ${medicineId}, ${date}, ${slot}, ${new Date().toISOString()})
+      INSERT INTO dose_logs (household_id, medicine_id, date, slot, taken_at, taken_by_device)
+      VALUES (${auth.householdId}, ${medicineId}, ${date}, ${slot}, ${new Date().toISOString()}, ${auth.deviceId})
       ON CONFLICT (medicine_id, date, slot)
-      DO UPDATE SET taken_at = EXCLUDED.taken_at
-      RETURNING id, medicine_id, to_char(date, 'YYYY-MM-DD') AS date, slot, taken_at
+      DO UPDATE SET taken_at = EXCLUDED.taken_at, taken_by_device = EXCLUDED.taken_by_device
+      RETURNING id, medicine_id, to_char(date, 'YYYY-MM-DD') AS date, slot, taken_at, taken_by_device
     `;
 
     return NextResponse.json({ dose: rows[0] });

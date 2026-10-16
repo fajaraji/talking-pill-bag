@@ -89,6 +89,31 @@ export function generateLongCode(): string {
 }
 
 // ---------------------------------------------------------------------------
+// Recovery codes
+// ---------------------------------------------------------------------------
+
+// Letters and digits without easily confused characters (no I, O, 0, 1).
+const RECOVERY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+// A long, human-readable recovery code: 4 groups of 5 characters.
+export function generateRecoveryCode(): string {
+  const groups: string[] = [];
+  for (let g = 0; g < 4; g++) {
+    let group = "";
+    for (let i = 0; i < 5; i++) {
+      group += RECOVERY_ALPHABET[crypto.randomInt(0, RECOVERY_ALPHABET.length)];
+    }
+    groups.push(group);
+  }
+  return groups.join("-");
+}
+
+// Uppercase and strip separators so a typed code matches its stored hash.
+export function normalizeRecoveryCode(code: string): string {
+  return code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+// ---------------------------------------------------------------------------
 // Rate limiting (in-memory, per-IP)
 // ---------------------------------------------------------------------------
 

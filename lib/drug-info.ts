@@ -47,11 +47,15 @@ export function buildSourceText(entry: DrugInfoEntry): string {
   parts.push(`If you miss a dose: ${entry.if_missed}`);
   if (entry.common_side_effects.length > 0) {
     parts.push(
-      `Common side effects: ${entry.common_side_effects.join("; ")}`
+      `Common side effects:\n${entry.common_side_effects
+        .map((item) => `- ${item}`)
+        .join("\n")}`
     );
   }
   if (entry.seek_help_if.length > 0) {
-    parts.push(`Seek help if: ${entry.seek_help_if.join("; ")}`);
+    parts.push(
+      `Seek help if:\n${entry.seek_help_if.map((item) => `- ${item}`).join("\n")}`
+    );
   }
   return parts.join("\n\n");
 }

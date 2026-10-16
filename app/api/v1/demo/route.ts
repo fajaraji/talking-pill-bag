@@ -2,11 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { sql } from "@/lib/db";
 import { generateToken, hashToken } from "@/lib/auth";
-import { generateDemoData } from "@/lib/demo-data";
+import { generateDemoData, DEFAULT_UTC_OFFSET_MINUTES } from "@/lib/demo-data";
 
 const demoSchema = z.object({
   today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  // Device offset from UTC in minutes, as returned by getTimezoneOffset().
+  timezoneOffset: z.number().int().min(-840).max(840).optional(),
+  // Alternative to timezoneOffset: an IANA zone such as "Asia/Singapore".
+  timezone: z.string().min(1).max(64).optional(),
 });
+
+/**
+ * Offset in minutes to add to UTC to get local wall-clock time in `timeZone`
+ * on `dateStr` (YYYY-MM-DD). Samples the date at noon UTC so daylight-saving
+ * transitions (which happen in the early morning) do not skew the result.
+ */
+function zoneOffsetMinutes(timeZone: string, dateStr: string): number {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const sample = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(sample);
+  const values: Record<string, number> = {};
+  for (const part of parts) {
+    if (part.type !== "literal") values[part.type] = Number(part.value);
+  }
+  const localAsUtc = Date.UTC(
+    values.year,
+    values.month - 1,
+    values.day,
+    values.hour % 24,
+    values.minute,
+    values.second
+  );
+  return Math.round((localAsUtc - sample.getTime()) / 60_000);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,11 +54,28 @@ export async function POST(request: NextRequest) {
       // Empty or invalid body: fall back to the Asia/Singapore date.
     }
     const parsed = demoSchema.safeParse(body);
+    const input = parsed.success ? parsed.data : {};
     const today =
-      parsed.success && parsed.data.today
-        ? parsed.data.today
-        : new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
-    const demo = generateDemoData(today);
+      input.today ?? new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
+
+    const offsetMinutesFor = (dateStr: string): number => {
+      if (input.timezone) {
+        try {
+          return zoneOffsetMinutes(input.timezone, dateStr);
+        } catch {
+          // Unknown IANA zone: fall back to the numeric offset or default.
+        }
+      }
+      // getTimezoneOffset() returns UTC - local, so negate to get local - UTC.
+      if (typeof input.timezoneOffset === "number") return -input.timezoneOffset;
+      return DEFAULT_UTC_OFFSET_MINUTES;
+    };
+
+    // The client's current local time with wall-clock values in the UTC fields,
+    // so today's doses are never seeded ahead of the client's clock.
+    const nowLocal = new Date(Date.now() + offsetMinutesFor(today) * 60_000);
+
+    const demo = generateDemoData(today, { offsetMinutesFor, nowLocal });
 
     // Clean up old demo households (> 7 days)
     const sevenDaysAgo = new Date();

@@ -55,14 +55,58 @@ function dateMinus(today: string, days: number): string {
   return `${y}-${m}-${day}`;
 }
 
-function timeOnDate(dateStr: string, hour: number, minute: number): string {
-  const d = new Date(dateStr + "T00:00:00");
-  d.setHours(hour, minute, 0, 0);
-  return d.toISOString();
+/** Default UTC offset in minutes: Asia/Singapore (+08:00). */
+export const DEFAULT_UTC_OFFSET_MINUTES = 480;
+
+export interface DemoOptions {
+  /**
+   * Returns the offset in minutes to add to UTC to obtain the local wall-clock
+   * time for the given `YYYY-MM-DD` date (e.g. +480 for Asia/Singapore).
+   * Defaults to Asia/Singapore when omitted or invalid.
+   */
+  offsetMinutesFor?: (dateStr: string) => number;
+  /**
+   * The client's current local time, expressed as a Date whose UTC fields hold
+   * the client's wall-clock values. Used to avoid seeding doses for "today"
+   * that have not happened yet on the client's clock.
+   */
+  nowLocal?: Date;
 }
 
-export function generateDemoData(today: string): DemoData {
+function offsetFor(options: DemoOptions, dateStr: string): number {
+  const value = options.offsetMinutesFor?.(dateStr);
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : DEFAULT_UTC_OFFSET_MINUTES;
+}
+
+/**
+ * Build an ISO timestamp for the given local wall-clock time in the caller's
+ * time zone. `offsetMinutes` is the number of minutes to add to UTC to obtain
+ * local time, so the stored instant renders as `hour:minute` on that client.
+ */
+function timeOnDate(
+  dateStr: string,
+  hour: number,
+  minute: number,
+  offsetMinutes: number
+): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const utcMs =
+    Date.UTC(year, month - 1, day, hour, minute, 0, 0) - offsetMinutes * 60_000;
+  return new Date(utcMs).toISOString();
+}
+
+export function generateDemoData(today: string, options: DemoOptions = {}): DemoData {
   const addedOn = dateMinus(today, 14);
+
+  // Only seed a "today" dose once its slot time has passed on the client's clock.
+  const slotHasPassed = (dateStr: string, hour: number, minute: number): boolean => {
+    if (dateStr !== today || !options.nowLocal) return true;
+    const nowMinutes =
+      options.nowLocal.getUTCHours() * 60 + options.nowLocal.getUTCMinutes();
+    return nowMinutes >= hour * 60 + minute;
+  };
 
   const medicines: Medicine[] = [
     {
@@ -140,24 +184,25 @@ export function generateDemoData(today: string): DemoData {
   // Generate dose log for the last 13 days (exclusive of today) plus today
   for (let i = 13; i >= 0; i--) {
     const date = dateMinus(today, i);
+    const offset = offsetFor(options, date);
 
     // Amlodipine morning — always taken (except we keep it realistic)
-    if (i > 0 || date === today) {
+    if ((i > 0 || date === today) && slotHasPassed(date, 8, 5)) {
       doseLog.push({
         medicineId: "demo-amlodipine",
         date,
         slot: "morning",
-        takenAt: timeOnDate(date, 8, 5),
+        takenAt: timeOnDate(date, 8, 5, offset),
       });
     }
 
     // Metformin morning — always taken
-    if (i > 0 || date === today) {
+    if ((i > 0 || date === today) && slotHasPassed(date, 8, 10)) {
       doseLog.push({
         medicineId: "demo-metformin",
         date,
         slot: "morning",
-        takenAt: timeOnDate(date, 8, 10),
+        takenAt: timeOnDate(date, 8, 10, offset),
       });
     }
 
@@ -172,7 +217,7 @@ export function generateDemoData(today: string): DemoData {
             medicineId: "demo-metformin",
             date,
             slot: "evening",
-            takenAt: timeOnDate(date, 19, 15),
+            takenAt: timeOnDate(date, 19, 15, offset),
           });
         }
       }
@@ -184,19 +229,19 @@ export function generateDemoData(today: string): DemoData {
         medicineId: "demo-atorvastatin",
         date,
         slot: "bedtime",
-        takenAt: timeOnDate(date, 22, 0),
+        takenAt: timeOnDate(date, 22, 0, offset),
       });
     }
 
     // Omeprazole morning — missed twice (today-7 and today-3)
     const isOmeprazoleMissed = i === 7 || i === 3;
     if (!isOmeprazoleMissed) {
-      if (i > 0 || date === today) {
+      if ((i > 0 || date === today) && slotHasPassed(date, 7, 45)) {
         doseLog.push({
           medicineId: "demo-omeprazole",
           date,
           slot: "morning",
-          takenAt: timeOnDate(date, 7, 45),
+          takenAt: timeOnDate(date, 7, 45, offset),
         });
       }
     }

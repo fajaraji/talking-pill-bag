@@ -105,7 +105,21 @@ export async function joinWithCode(code: string): Promise<{ token: string; role:
 }
 
 export async function createDemo(): Promise<{ token: string; household: { id: string } }> {
-  const { status, data } = await apiReq("POST", "/api/v1/demo");
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
+    now.getDate()
+  ).padStart(2, "0")}`;
+  let timezone: string | undefined;
+  try {
+    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    timezone = undefined;
+  }
+  const { status, data } = await apiReq("POST", "/api/v1/demo", {
+    today,
+    timezone,
+    timezoneOffset: now.getTimezoneOffset(),
+  });
   if (status !== 200) {
     throw new Error((data as { error?: string })?.error || "Failed to create demo");
   }

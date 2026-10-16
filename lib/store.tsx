@@ -43,6 +43,7 @@ import {
   createDemo,
   joinWithCode,
   createHousehold,
+  regenerateRecoveryCodeApi,
   type RawState,
 } from "@/lib/api-client";
 
@@ -80,7 +81,7 @@ interface StoreContextValue {
   isHydrated: boolean;
   // Onboarding
   setupHousehold: (displayName: string, language: string) => Promise<void>;
-  joinHousehold: (code: string) => Promise<void>;
+  joinHousehold: (code: string, name?: string) => Promise<void>;
   loadDemo: () => Promise<void>;
   logout: () => void;
   // Actions
@@ -103,6 +104,7 @@ interface StoreContextValue {
     unlinkDevice: (id: string) => Promise<void>;
     createPairingCode: (role: "caregiver" | "senior", label?: string) => Promise<{ shortCode: string; joinUrl: string; shortExpiresAt: string; longExpiresAt: string }>;
     updateDeviceLabel: (id: string, label: string) => Promise<void>;
+    regenerateRecoveryCode: () => Promise<{ recoveryCode: string }>;
   };
 }
 
@@ -149,6 +151,8 @@ function normalizeState(raw: RawState, role: string | null): AppState {
     date: d.date,
     slot: d.slot,
     takenAt: d.taken_at,
+    takenByDevice: d.taken_by_device ?? null,
+    takenByLabel: d.taken_by_label ?? null,
   }));
 
   const missedReasons: MissedReasonEntry[] = raw.missedReasons.map((r) => ({
@@ -316,14 +320,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const token: DeviceToken = { token: res.token, role: "caregiver", householdId: res.household.id };
       setDeviceToken(token);
       setAuthToken(token);
+      // Keep the one-time recovery code until the caregiver has seen it.
+      if (res.recoveryCode && typeof window !== "undefined") {
+        localStorage.setItem("tpb-recovery-code", res.recoveryCode);
+      }
       await load();
     },
     [load]
   );
 
   const joinHousehold = useCallback(
-    async (code: string) => {
-      const res = await joinWithCode(code);
+    async (code: string, name?: string) => {
+      const res = await joinWithCode(code, name);
       const token: DeviceToken = { token: res.token, role: res.role as "caregiver" | "senior", householdId: res.household.id };
       setDeviceToken(token);
       setAuthToken(token);
@@ -623,6 +631,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [withOptimistic, load]
   );
 
+  const regenerateRecoveryCode = useCallback(async () => {
+    return regenerateRecoveryCodeApi();
+  }, []);
+
   const retry = useCallback(async () => {
     if (lastFailedAction.current) {
       setState((s) => ({ ...s, syncError: null }));
@@ -664,6 +676,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       unlinkDevice: unlinkDeviceAction,
       createPairingCode: createPairingCodeAction,
       updateDeviceLabel: updateDeviceLabelAction,
+      regenerateRecoveryCode,
     },
   };
 

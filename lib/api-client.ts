@@ -85,7 +85,7 @@ async function apiReq(
 export async function createHousehold(
   displayName: string,
   language: string
-): Promise<{ token: string; household: { id: string; display_name: string; language: string; is_demo: boolean } }> {
+): Promise<{ token: string; household: { id: string; display_name: string; language: string; is_demo: boolean }; recoveryCode?: string }> {
   const { status, data } = await apiReq("POST", "/api/v1/households", {
     displayName,
     language,
@@ -93,15 +93,23 @@ export async function createHousehold(
   if (status !== 200) {
     throw new Error((data as { error?: string })?.error || "Failed to create household");
   }
-  return data as { token: string; household: { id: string; display_name: string; language: string; is_demo: boolean } };
+  return data as { token: string; household: { id: string; display_name: string; language: string; is_demo: boolean }; recoveryCode?: string };
 }
 
-export async function joinWithCode(code: string): Promise<{ token: string; role: string; household: { id: string } }> {
-  const { status, data } = await apiReq("POST", "/api/v1/join", { code });
+export async function joinWithCode(code: string, name?: string): Promise<{ token: string; role: string; household: { id: string } }> {
+  const { status, data } = await apiReq("POST", "/api/v1/join", { code, name });
   if (status !== 200) {
     throw new Error((data as { error?: string })?.error || "Invalid or expired code.");
   }
   return data as { token: string; role: string; household: { id: string } };
+}
+
+// Pre-fill label for a join code, without consuming it. Returns null when the
+// code is unknown (the endpoint never reveals validity).
+export async function peekJoinCode(code: string): Promise<{ label: string | null; role: string | null }> {
+  const { status, data } = await apiReq("GET", `/api/v1/join?code=${encodeURIComponent(code)}`);
+  if (status !== 200) return { label: null, role: null };
+  return data as { label: string | null; role: string | null };
 }
 
 export async function createDemo(): Promise<{ token: string; household: { id: string } }> {
@@ -162,6 +170,8 @@ export interface RawState {
     date: string;
     slot: string;
     taken_at: string;
+    taken_by_device: string | null;
+    taken_by_label: string | null;
   }>;
   missedReasons: Array<{
     id: string;
@@ -422,4 +432,16 @@ export async function createPairingCodeApi(role: "caregiver" | "senior", label?:
     throw new Error((data as { error?: string })?.error || "Failed to create pairing code");
   }
   return data as { shortCode: string; joinUrl: string; shortExpiresAt: string; longExpiresAt: string };
+}
+
+// ---------------------------------------------------------------------------
+// Recovery codes
+// ---------------------------------------------------------------------------
+
+export async function regenerateRecoveryCodeApi(): Promise<{ recoveryCode: string }> {
+  const { status, data } = await apiReq("POST", "/api/v1/recovery-codes");
+  if (status !== 200) {
+    throw new Error((data as { error?: string })?.error || "Failed to generate recovery code");
+  }
+  return data as { recoveryCode: string };
 }

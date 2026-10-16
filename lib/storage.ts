@@ -22,6 +22,9 @@ export interface DoseLogEntry {
   date: string; // YYYY-MM-DD
   slot: string; // morning | afternoon | evening | bedtime
   takenAt: string; // ISO string
+  // Device that recorded the dose (null when unknown or the device was removed).
+  takenByDevice?: string | null;
+  takenByLabel?: string | null;
 }
 
 // ---------------------------------------------------------------------------

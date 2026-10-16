@@ -22,3 +22,41 @@ Do:
 
 
 ## Result
+                                                                                                                                                                                                                                                                       Semua tugas selesai. Berikut ringkasan perubahan:
+
+**1. UI (app/today/page.tsx)**
+- Menghapus tampilan "Source: HealthHub" dan link sumber dari panel penjelasan serta kutipan missed-dose.
+- Menambahkan baris atribusi OGL: `"Contains public sector information licensed under the Open Government Licence v3.0."` dengan link ke https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/.
+- `source_name`, `source_url`, `source_title` tidak lagi ditampilkan di UI (tetap ada di data sebagai internal provenance).
+
+**2. i18n (lib/i18n.ts)**
+- Key `whatHealthHubSaysAboutMissedDose` diganti menjadi `whatSourceSaysAboutMissedDose` dengan terjemahan yang tidak menyebut HealthHub.
+- Ditambahkan key `oglAttribution` dengan kalimat bahasa Inggris yang sama untuk keempat bahasa.
+
+**3. LLM system prompt (app/api/explain/route.ts)**
+- Prompt sekarang menyebutkan "openly licensed public-sector patient information" dan tetap melarang penambahan fakta.
+- Tidak ada mention HealthHub atau NHS.
+
+**4. Dokumentasi**
+- **README.md**: Semua referensi HealthHub diganti. Ditambahkan bagian "Licences and credits" dengan atribusi OGL dan kredit musik demo video (Kevin MacLeod, CC BY 4.0).
+- **SPEC.md, TASKS.md, docs/id/SPEC.id.md**: Referensi HealthHub diganti dengan deskripsi konten berlisensi terbuka.
+- **docs/DEV-LOG.md**: Ditambahkan baris T21 tentang perubahan sumber informasi obat.
+
+**5. Code cleanup**
+- `lib/storage.ts`, `lib/question-router.ts`, `app/add/page.tsx`, `app/api/explain/route.ts`: Dibersihkan dari field `sourceUrl`/`sourceTitle` yang tidak lagi digunakan.
+- `scripts/test-question-router.ts`: Komentar diperbarui.
+
+**6. Verifikasi**
+- `npm test` : pass
+- `npm run typecheck` : pass
+- `npm run build` : pass
+
+**Commit:** `fix: replace HealthHub content with OGL-licensed medicine information and required attribution` (14 files changed).
+
+## Stats
+
+- Duration: 12.3 min
+- Turns:                                                                                                                                                                                                                                                                        218
+- Is error:                                                                                                                                                                                                                                                                        False
+- Session id:                                                                                                                                                                                                                                                                        01a14427-d812-7b02-9998-e2ab8ee6f21e
+- Cost/usage: {"input_tokens":1783561,"output_tokens":14862,"cache_creation_input_tokens":100105,"cache_read_input_tokens":1683456,"cache_creation":null,"server_tool_use":null,"service_tier":null}  total_cost_usd=                                                                                                                                                                                                                                                                       0

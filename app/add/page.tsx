@@ -22,6 +22,12 @@ import { CameraIcon, UploadIcon, AlertIcon } from "@/components/icons";
 
 type Step = "capture" | "confirm" | "error";
 
+// Why the read failed:
+// - "unreadable": label read but not identifiable → ask pharmacist
+// - "retryable": model/service problem → offer Retry on the same photo
+// - "generic": client-side problem (e.g. image processing)
+type ErrorKind = "unreadable" | "retryable" | "generic";
+
 const TIME_SLOT_OPTIONS: Array<{ value: LabelResult["time_slots"][number]; label: string }> = [
   { value: "morning", label: "Morning" },
   { value: "afternoon", label: "Afternoon" },
@@ -48,7 +54,7 @@ function AddMedicinePageContent() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LabelResult | null>(null);
   const [editedResult, setEditedResult] = useState<LabelResult | null>(null);
-  const [isRejected, setIsRejected] = useState(false);
+  const [errorKind, setErrorKind] = useState<ErrorKind>("generic");
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
@@ -96,7 +102,7 @@ function AddMedicinePageContent() {
       setThumbnail(thumb);
       sendToApi(resized.dataUrl);
     } catch {
-      setIsRejected(false);
+      setErrorKind("generic");
       setStep("error");
     }
   }
@@ -104,7 +110,7 @@ function AddMedicinePageContent() {
   async function sendToApi(dataUrl: string) {
     setLoading(true);
     setStep("capture");
-    setIsRejected(false);
+    setErrorKind("generic");
     try {
       const res = await fetch("/api/read-label", {
         method: "POST",
@@ -115,13 +121,15 @@ function AddMedicinePageContent() {
         result?: LabelResult;
         error?: string;
         rejected?: boolean;
+        retryable?: boolean;
       };
 
       if (!res.ok) {
         if (res.status === 422 && data.rejected) {
-          setIsRejected(true);
+          setErrorKind("unreadable");
         } else {
-          setIsRejected(false);
+          // 503 (retryable) and any other server problem → try again.
+          setErrorKind("retryable");
         }
         setStep("error");
         setLoading(false);
@@ -133,11 +141,11 @@ function AddMedicinePageContent() {
         setEditedResult(data.result);
         setStep("confirm");
       } else {
-        setIsRejected(true);
+        setErrorKind("retryable");
         setStep("error");
       }
     } catch {
-      setIsRejected(false);
+      setErrorKind("retryable");
       setStep("error");
     } finally {
       setLoading(false);
@@ -220,6 +228,19 @@ function AddMedicinePageContent() {
     }
   }, []);
 
+  function handleErrorRetry() {
+    // A service problem is worth retrying on the same photo; anything else
+    // (unreadable label, image problem) starts over from the camera.
+    if (errorKind === "retryable" && image) {
+      sendToApi(image);
+      return;
+    }
+    setStep("capture");
+    setImage(null);
+    setThumbnail(null);
+    setErrorKind("generic");
+  }
+
   function openGallery() {
     if (fileInputRef.current) {
       fileInputRef.current.removeAttribute("capture");
@@ -301,17 +322,16 @@ function AddMedicinePageContent() {
           <Card className="w-full max-w-sm self-center text-center">
             <p className="flex items-start justify-center gap-2 text-lg font-semibold text-danger-text">
               <AlertIcon className="h-6 w-6 shrink-0" />
-              {isRejected ? t(lang, "pharmacistMessage") : t(lang, "genericError")}
+              {errorKind === "unreadable"
+                ? t(lang, "pharmacistMessage")
+                : errorKind === "retryable"
+                  ? t(lang, "readFailed")
+                  : t(lang, "genericError")}
             </p>
             <Button
               variant="primary"
               className="mt-4 w-full"
-              onClick={() => {
-                setStep("capture");
-                setImage(null);
-                setThumbnail(null);
-                setIsRejected(false);
-              }}
+              onClick={handleErrorRetry}
             >
               {t(lang, "retry")}
             </Button>

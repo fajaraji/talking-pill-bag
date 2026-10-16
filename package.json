@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test-adherence.ts && node scripts/test-question-router.ts",
+    "test": "node scripts/test-adherence.ts && node scripts/test-question-router.ts && node scripts/test-label-normalise.ts",
     "db:migrate": "node scripts/db-migrate.ts",
     "test:api": "node scripts/test-api.ts"
   },

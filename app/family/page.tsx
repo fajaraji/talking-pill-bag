@@ -13,6 +13,7 @@ import { LoadingShell } from "@/app/loading-shell";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { CopyIcon } from "@/components/icons";
 import QRCode from "qrcode";
 
 export default function FamilyPage() {
@@ -54,6 +55,9 @@ function FamilyPageInner() {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
+  const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("tpb-lang") as Language | null;
@@ -82,6 +86,30 @@ function FamilyPageInner() {
       console.error("Failed to create pairing code:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function generateRecovery() {
+    setRecoveryLoading(true);
+    try {
+      const result = await actions.regenerateRecoveryCode();
+      setRecoveryCode(result.recoveryCode);
+      setCodeCopied(false);
+    } catch (err) {
+      console.error("Failed to generate recovery code:", err);
+    } finally {
+      setRecoveryLoading(false);
+    }
+  }
+
+  async function copyRecovery() {
+    if (!recoveryCode || typeof navigator === "undefined" || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(recoveryCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      // Ignore clipboard errors.
     }
   }
 
@@ -116,6 +144,14 @@ function FamilyPageInner() {
             >
               {t(lang, "addFamilyMember")}
             </Button>
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={generateRecovery}
+              disabled={recoveryLoading}
+            >
+              {t(lang, "newRecoveryCode")}
+            </Button>
           </>
         ) : (
           <Card className="flex flex-col gap-4 items-center text-center">
@@ -140,6 +176,30 @@ function FamilyPageInner() {
             >
               {t(lang, "close")}
             </Button>
+          </Card>
+        )}
+
+        {/* Recovery code — shown once, invalidates any previous code */}
+        {recoveryCode && (
+          <Card className="flex flex-col gap-3 border-success-border bg-success-bg">
+            <p className="text-lg font-semibold text-success-text">
+              {t(lang, "recoveryCode")}
+            </p>
+            <p className="break-all font-mono text-3xl font-bold tracking-[0.15em] text-ink">
+              {recoveryCode}
+            </p>
+            <p className="text-base text-success-text">
+              {t(lang, "recoveryCodeHint")}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={copyRecovery}>
+                <CopyIcon className="h-5 w-5" />
+                {codeCopied ? t(lang, "copied") : t(lang, "copyText")}
+              </Button>
+              <Button variant="secondary" onClick={() => setRecoveryCode(null)}>
+                {t(lang, "close")}
+              </Button>
+            </div>
           </Card>
         )}
 

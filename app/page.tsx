@@ -10,6 +10,7 @@ import {
 } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { getToday } from "@/lib/clock";
+import { peekJoinCode } from "@/lib/api-client";
 import { LoadingShell } from "./loading-shell";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/Button";
@@ -20,6 +21,7 @@ import {
   CheckIcon,
   ChevronRightIcon,
   ClipboardQuestionIcon,
+  CopyIcon,
   HeartPulseIcon,
   PillIcon,
   UsersIcon,
@@ -97,9 +99,12 @@ function HomePageInner() {
   const [lang, setLang] = useState<Language>(defaultLanguage);
   const [onboardingStep, setOnboardingStep] = useState<"choice" | "caregiver" | "join">("choice");
   const [nameInput, setNameInput] = useState("");
+  const [joinName, setJoinName] = useState("");
   const [codeInput, setCodeInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const today = getToday();
 
@@ -110,6 +115,48 @@ function HomePageInner() {
       setLang(stored);
     }
   }, []);
+
+  // Show the one-time recovery code until the caregiver has seen it.
+  useEffect(() => {
+    const stored = localStorage.getItem("tpb-recovery-code");
+    if (stored) setRecoveryCode(stored);
+  }, []);
+
+  // Pre-fill the join name from the code's default label (senior phone label).
+  useEffect(() => {
+    if (onboardingStep !== "join" || codeInput.length !== 6) return;
+    let cancelled = false;
+    peekJoinCode(codeInput)
+      .then((res) => {
+        if (!cancelled && res.label) {
+          setJoinName((current) => (current ? current : res.label ?? ""));
+        }
+      })
+      .catch(() => {
+        // Ignore: pre-fill is best-effort.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [onboardingStep, codeInput]);
+
+  function dismissRecoveryCode() {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tpb-recovery-code");
+    }
+    setRecoveryCode(null);
+  }
+
+  async function copyRecoveryCode() {
+    if (!recoveryCode || typeof navigator === "undefined" || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(recoveryCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      // Ignore clipboard errors.
+    }
+  }
 
   // All hooks must run before any conditional return.
   const { total: totalDoses, taken: takenDoses } = useMemo(
@@ -254,6 +301,19 @@ function HomePageInner() {
                 back={{ label: t(lang, "back"), onClick: () => setOnboardingStep("choice") }}
               />
               <Card className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-base font-semibold text-ink">
+                    {t(lang, "yourName")}
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={40}
+                    value={joinName}
+                    onChange={(e) => setJoinName(e.target.value)}
+                    placeholder={t(lang, "yourNamePlaceholder")}
+                    className="w-full rounded-xl border border-line bg-white px-5 py-4 text-lg text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -272,7 +332,7 @@ function HomePageInner() {
                     setLoading(true);
                     setError("");
                     try {
-                      await joinHousehold(codeInput);
+                      await joinHousehold(codeInput, joinName.trim() || undefined);
                       localStorage.setItem("tpb-lang", lang);
                       window.location.reload();
                     } catch (err) {
@@ -282,7 +342,7 @@ function HomePageInner() {
                     }
                   }}
                 >
-                  {loading ? t(lang, "loading") : t(lang, "save")}
+                  {loading ? t(lang, "loading") : t(lang, "joinAction")}
                 </Button>
                 {error && <p className="text-base text-danger-text">{error}</p>}
               </Card>
@@ -339,6 +399,30 @@ function HomePageInner() {
       <div className="flex w-full max-w-sm flex-col gap-6 self-center">
         {/* App header */}
         <AppHeader title={t(lang, "appTitle")} />
+
+        {/* One-time recovery code, shown once after the household is created */}
+        {recoveryCode && (
+          <Card className="flex flex-col gap-3 border-success-border bg-success-bg">
+            <p className="text-lg font-semibold text-success-text">
+              {t(lang, "recoveryCode")}
+            </p>
+            <p className="text-4xl font-bold tracking-[0.2em] text-ink font-mono">
+              {recoveryCode}
+            </p>
+            <p className="text-base text-success-text">
+              {t(lang, "recoveryCodeHint")}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={copyRecoveryCode}>
+                <CopyIcon className="h-5 w-5" />
+                {codeCopied ? t(lang, "copied") : t(lang, "copyText")}
+              </Button>
+              <Button variant="secondary" onClick={dismissRecoveryCode}>
+                {t(lang, "gotIt")}
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {state.medicines.length === 0 ? (
           <>

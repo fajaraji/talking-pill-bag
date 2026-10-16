@@ -110,6 +110,31 @@ function formatTime(iso: string): string {
   return `${h}:${min}`;
 }
 
+// Renders the OGL attribution with the licence name as a single link,
+// so the licence title is not printed twice.
+function OglAttribution({ lang }: { lang: Language }) {
+  const text = t(lang, "oglAttribution");
+  const linkText = "Open Government Licence v3.0";
+  const idx = text.indexOf(linkText);
+  if (idx === -1) {
+    return <p className="mt-3 text-sm text-muted">{text}</p>;
+  }
+  return (
+    <p className="mt-3 text-sm text-muted">
+      {text.slice(0, idx)}
+      <a
+        href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline"
+      >
+        {linkText}
+      </a>
+      {text.slice(idx + linkText.length)}
+    </p>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Food icon
 // ---------------------------------------------------------------------------
@@ -163,6 +188,7 @@ function DoseCard({
   lang,
   taken,
   takenAt,
+  takenBy,
   onTake,
   onUndo,
   undoAvailable,
@@ -182,6 +208,7 @@ function DoseCard({
   lang: Language;
   taken: boolean;
   takenAt: string | null;
+  takenBy: string | null;
   onTake: () => void;
   onUndo: () => void;
   undoAvailable: boolean;
@@ -208,10 +235,14 @@ function DoseCard({
             {foodLabel(lang, medicine.food)}
           </span>
           {medicine.special_instructions.length > 0 && (
-            <p className="flex items-start gap-1.5 text-base font-medium text-attention-text">
+            <div className="flex items-start gap-1.5 text-base font-medium text-attention-text">
               <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{medicine.special_instructions.join("; ")}</span>
-            </p>
+              <ul className="flex list-disc flex-col gap-1 pl-4">
+                {medicine.special_instructions.map((instruction, index) => (
+                  <li key={index}>{instruction}</li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </div>
@@ -220,7 +251,11 @@ function DoseCard({
         <div className="flex items-center justify-between gap-3 rounded-xl bg-success-bg px-4 py-3">
           <span className="flex items-center gap-2 text-lg font-semibold text-success-text">
             <CheckIcon className="h-6 w-6 shrink-0" />
-            {t(lang, "takenAt")} {formatTime(takenAt)}
+            {takenBy
+              ? t(lang, "takenAtBy")
+                  .replace("{time}", formatTime(takenAt))
+                  .replace("{name}", takenBy)
+              : `${t(lang, "takenAt")} ${formatTime(takenAt)}`}
           </span>
           {undoAvailable && (
             <button
@@ -373,6 +408,20 @@ function TodayPageInner() {
       return entry?.takenAt ?? null;
     },
     [state.doseLogs, today]
+  );
+
+  const currentDeviceId = state.devices.find((d) => d.isCurrent)?.id ?? null;
+
+  const getTakenBy = useCallback(
+    (medicineId: string, slot: Slot): string | null => {
+      const entry = state.doseLogs.find(
+        (e) => e.medicineId === medicineId && e.date === today && e.slot === slot
+      );
+      if (!entry || !entry.takenByDevice) return null;
+      if (entry.takenByDevice === currentDeviceId) return t(lang, "you");
+      return entry.takenByLabel ?? t(lang, "caregiver");
+    },
+    [state.doseLogs, today, currentDeviceId, lang]
   );
 
   function handleTake(medicineId: string, slot: Slot) {
@@ -577,9 +626,28 @@ function TodayPageInner() {
           }
         />
         {totalDoses > 0 && (
-          <p className="text-base font-medium text-muted">
-            {takenDoses} / {totalDoses} {t(lang, "dosesTaken")}
-          </p>
+          <div className="flex flex-col gap-2">
+            <p className="text-lg font-semibold text-ink">
+              {t(lang, "progressDone")
+                .replace("{taken}", String(takenDoses))
+                .replace("{total}", String(totalDoses))}
+            </p>
+            <div
+              role="progressbar"
+              aria-valuenow={takenDoses}
+              aria-valuemin={0}
+              aria-valuemax={totalDoses}
+              aria-label={t(lang, "progressDone")
+                .replace("{taken}", String(takenDoses))
+                .replace("{total}", String(totalDoses))}
+              className="h-4 w-full overflow-hidden rounded-full bg-line"
+            >
+              <div
+                className="h-full rounded-full bg-success-text transition-all"
+                style={{ width: `${(takenDoses / totalDoses) * 100}%` }}
+              />
+            </div>
+          </div>
         )}
       </div>
 
@@ -667,6 +735,16 @@ function TodayPageInner() {
         </div>
       )}
 
+      {/* All done banner */}
+      {totalDoses > 0 && takenDoses === totalDoses && (
+        <div className="flex w-full max-w-sm items-center gap-3 self-center rounded-2xl border border-success-border bg-success-bg p-4">
+          <CheckIcon className="h-6 w-6 shrink-0 text-success-text" />
+          <p className="text-lg font-semibold text-success-text">
+            {t(lang, "allDoneToday")}
+          </p>
+        </div>
+      )}
+
       {/* Dose sections */}
       <div className="flex w-full max-w-sm flex-col gap-6 self-center">
         {SLOT_ORDER.map((slot) => {
@@ -690,6 +768,7 @@ function TodayPageInner() {
                       lang={lang}
                       taken={taken}
                       takenAt={takenTime}
+                      takenBy={getTakenBy(med.id, slot)}
                       onTake={() => handleTake(med.id, slot)}
                       onUndo={() => handleUndo(med.id, slot)}
                       undoAvailable={undoAvailable(med.id, slot)}
@@ -869,17 +948,7 @@ function TodayPageInner() {
                       {panelData.explanation?.text}
                     </p>
                     {panelData.explanation?.known && (
-                      <p className="mt-3 text-sm text-muted">
-                        {t(lang, "oglAttribution")}{" "}
-                        <a
-                          href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline"
-                        >
-                          Open Government Licence v3.0
-                        </a>
-                      </p>
+                      <OglAttribution lang={lang} />
                     )}
                     {panelData.explanation?.fallback && (
                       <p className="mt-2 text-sm text-attention-text">
@@ -946,17 +1015,7 @@ function TodayPageInner() {
                             <p className="text-base leading-relaxed text-ink">
                               {questionResult.ifMissedQuote}
                             </p>
-                            <p className="text-sm text-muted">
-                              {t(lang, "oglAttribution")}{" "}
-                              <a
-                                href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline"
-                              >
-                                Open Government Licence v3.0
-                              </a>
-                            </p>
+                            <OglAttribution lang={lang} />
                           </div>
                         )}
                       </div>

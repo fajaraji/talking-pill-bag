@@ -197,6 +197,15 @@ async function run() {
   assert(cgDoseDate === today, `Caregiver dose date is exactly "${today}"`);
   assert(srDoseDate === today, `Senior dose date is exactly "${today}"`);
 
+  // 7b. Dose records who marked it (device id + label)
+  console.log("7b. Dose taken-by device");
+  const cgDose = cgDoses[0] as { taken_by_device?: string | null; taken_by_label?: string | null };
+  assert(typeof cgDose?.taken_by_device === "string", "Dose records the marking device id");
+  assert(
+    cgDose?.taken_by_label === "Test Family's phone",
+    "Dose taken_by_label is the marking device label"
+  );
+
   // 8. Second household cannot read first household's data
   console.log("8. Cross-household isolation");
   const create2Res = await req("POST", "/api/v1/households", {
@@ -243,6 +252,48 @@ async function run() {
   assert(join2Reuse.status === 400, "Second use of second code returns 400");
   const join2Error = (join2Reuse.data as { error?: string })?.error;
   assert(join2Error === "Invalid or expired code.", "Second use returns generic error");
+
+  // 11. Household creation returns a recovery code (hash stored server-side)
+  console.log("11. Recovery code generated on household creation");
+  const recoveryCode = (createRes.data as { recoveryCode?: string })?.recoveryCode;
+  assert(
+    typeof recoveryCode === "string" && /^[A-Z0-9]{5}(-[A-Z0-9]{5}){3}$/.test(recoveryCode),
+    "Household creation returns a formatted recovery code"
+  );
+
+  // 12. Regenerating invalidates the old code; a recovery code joins as caregiver
+  console.log("12. Recovery code regenerate + join");
+  const regenRes = await req("POST", "/api/v1/recovery-codes", {}, caregiverToken);
+  assert(regenRes.status === 200, "Regenerate recovery code returns 200");
+  const newRecoveryCode = (regenRes.data as { recoveryCode?: string })?.recoveryCode;
+  assert(
+    typeof newRecoveryCode === "string" && newRecoveryCode !== recoveryCode,
+    "New recovery code differs from the old one"
+  );
+
+  const oldRecoveryJoin = await req("POST", "/api/v1/join", { code: recoveryCode });
+  assert(oldRecoveryJoin.status === 400, "Old recovery code is invalidated");
+
+  const recoveryJoin = await req("POST", "/api/v1/join", {
+    code: newRecoveryCode,
+    name: "Mei (daughter)",
+  });
+  assert(recoveryJoin.status === 200, "Recovery code joins successfully");
+  const recoveryRole = (recoveryJoin.data as { role?: string })?.role;
+  assert(recoveryRole === "caregiver", "Recovery code joins as caregiver");
+
+  const recoveryReuse = await req("POST", "/api/v1/join", { code: newRecoveryCode });
+  assert(recoveryReuse.status === 400, "Recovery code is single use");
+
+  // 12b. The name sent when joining is stored as the device label
+  console.log("12b. Join name stored as device label");
+  const recoveryToken = (recoveryJoin.data as { token?: string })?.token;
+  const recoveryState = await req("GET", "/api/v1/state", undefined, recoveryToken);
+  const recoveryDevices =
+    (recoveryState.data as { devices?: Array<{ label?: string | null; is_current?: boolean }> })
+      ?.devices ?? [];
+  const currentDevice = recoveryDevices.find((d) => d.is_current);
+  assert(currentDevice?.label === "Mei (daughter)", "Join name is stored as the device label");
 
   // Summary
   console.log(`\n${passed} passed, ${failed} failed`);

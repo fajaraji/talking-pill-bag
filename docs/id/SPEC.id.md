@@ -32,7 +32,7 @@ Fokus populasi demo: **lansia dengan hipertensi** yang minum beberapa obat kroni
    jawab persis: "I'm not able to identify that medication, please check with your pharmacist."
    (beserta terjemahannya di bahasa yang dipilih). Jangan menebak.
 3. **Penjelasan obat hanya dari dua sumber:** teks label yang sudah dikonfirmasi manusia, dan
-   file `data/drug-info.json` (ringkasan dari HealthHub Medications A-Z). LLM boleh
+   file `data/drug-info.json` (adaptasi bahasa sederhana dari informasi pasien sektor awam berlesen terbuka). LLM boleh
    menyederhanakan dan menerjemahkan teks itu, tidak boleh menambah fakta medis.
 4. **Human-in-the-loop:** hasil bacaan AI selalu tampil di samping foto aslinya dan harus
    ditekan "Benar" (atau diperbaiki) sebelum masuk jadwal.

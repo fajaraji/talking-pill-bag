@@ -136,8 +136,6 @@ export function removeDoseLogEntry(
 
 export interface CachedExplanation {
   text: string;
-  sourceUrl: string;
-  sourceTitle: string;
   known: boolean;
   fallback?: boolean;
 }

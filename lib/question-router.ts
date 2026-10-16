@@ -5,8 +5,6 @@ import type { CachedExplanation } from "./storage.ts";
 export interface QuestionRouteResult {
   reply: string;
   ifMissedQuote?: string;
-  sourceUrl?: string;
-  sourceTitle?: string;
   saveToQuestions: {
     medicineId: string;
     drugName: string;
@@ -35,7 +33,7 @@ const PHARMACIST_MESSAGES: Record<Language, string> = {
  * Deterministic question router. NEVER calls an LLM.
  * Always redirects the question to a doctor/pharmacist.
  * If the question mentions a missed dose and the drug is known with if_missed,
- * also returns the official HealthHub quote (English; translated cache not
+ * also returns the official missed-dose quote (English; translated cache not
  * reliably extractable for this section alone).
  * If the medicine is unknown, replies with the pharmacist sentence only.
  */
@@ -72,20 +70,14 @@ export function routeQuestion(args: {
   const mentionsMissed = allKeywords.some((k) => lowerQ.includes(k.toLowerCase()));
 
   let ifMissedQuote: string | undefined;
-  let sourceUrl: string | undefined;
-  let sourceTitle: string | undefined;
 
   if (mentionsMissed && drug.if_missed) {
     ifMissedQuote = drug.if_missed;
-    sourceUrl = drug.source_url;
-    sourceTitle = drug.source_title;
   }
 
   return {
     reply,
     ifMissedQuote,
-    sourceUrl,
-    sourceTitle,
     saveToQuestions: {
       medicineId,
       drugName,

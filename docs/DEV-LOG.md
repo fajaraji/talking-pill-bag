@@ -36,6 +36,7 @@ All application code was written by **CodeBuddy**. Between sessions, a separate 
 | T13 | Date/QR/label fixes, finished in the CodeBuddy IDE after the CLI kept failing with HTTP 502 from codebuddy.ai | Missing `pairing_codes.label` column (`CREATE TABLE IF NOT EXISTS` does not alter tables) | T14 session |
 | T14 | Idempotent `ALTER TABLE` migration | — | — |
 | T15 | Split pages into loading shell + inner component | — | — |
+| T21 | Medicine-information source changed after reviewing HealthHub terms of use; now OGL v3.0 public-sector content with the required attribution | — | — |
 | T16 | Coloured demo thumbnails, default device labels, senior redirect moved into an effect | — | — |
 | T17 | Design tokens, Atkinson Hyperlegible font, shared components and icons for `/` and `/today` | — | — |
 | T18 | Polish of all remaining pages, solid "Done" button, 375px checks | — | — |

@@ -2,107 +2,153 @@
   {
     "id": "amlodipine",
     "names": ["Amlodipine"],
-    "used_for": "Amlodipine lowers blood pressure. It works by relaxing and widening the blood vessels.",
-    "how_to_take": "You can take it with or without food. Do not stop taking it without checking with your healthcare professional.",
-    "if_missed": "Take it as soon as you remember, then take the next dose at the usual time. Do not take two doses to make up for the missed dose.",
+    "used_for": "Amlodipine lowers high blood pressure. This reduces the risk of serious problems like heart attack and stroke. It is also used to prevent angina attacks. It is a calcium-channel blocker. It relaxes and widens your blood vessels, so blood can flow around your body more easily.",
+    "how_to_take": "You usually take it once a day, at the same time every day. You can take it before or after eating or drinking. Your doctor will tell you how much to take and for how long. Most people need it for a long time. Keep taking it unless a doctor tells you to stop, because stopping suddenly can be dangerous. Do not eat grapefruit or drink grapefruit juice while taking it. If you feel dizzy or sleepy, do not drive, ride a bike or use machinery until this passes. Always check the packet or leaflet. Ask a pharmacist or doctor if you are not sure how to take it.",
+    "if_missed": "Skip the missed dose and take your next dose as usual. Do not take 2 doses to make up for a missed dose.",
     "common_side_effects": [
-      "Leg swelling",
-      "Headache",
-      "Face looks red and feels warm",
-      "Dizziness or lightheadedness when getting up from sitting or lying down"
+      "Swelling in your ankles, feet and legs",
+      "Headache, dizziness or feeling sleepy",
+      "A fast heartbeat, or a heartbeat you can feel more than usual (palpitations)",
+      "A red and warm face or neck (flushing)",
+      "Tummy pain or feeling sick (nausea)",
+      "Constipation or diarrhoea",
+      "Feeling weak and tired"
     ],
     "seek_help_if": [
-      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See your healthcare professional immediately.",
-      "Signs of liver problems: dark urine, light-coloured stools, nausea, vomiting, loss of appetite, stomach pain, or yellow eyes or skin. See a doctor immediately."
+      "You have side effects that bother you or do not go away. Speak to a pharmacist or doctor.",
+      "Signs of a serious allergic reaction: a swollen throat or tongue, a raised itchy rash, or difficulty breathing. Get urgent medical advice straight away.",
+      "Sudden, severe tummy pain that does not go away. This can be a sign of a swollen pancreas. Get urgent medical advice straight away.",
+      "Blistering or peeling skin, painful sores and flu-like symptoms. This can be a sign of a serious skin reaction. Get urgent medical advice straight away.",
+      "You have taken more than your prescribed dose. Taking extra can be dangerous. Get urgent medical advice straight away.",
+      "You are pregnant, get pregnant, or are breastfeeding. Tell your doctor."
     ],
-    "source_url": "https://www.healthhub.sg/a-z/medications/amlodipine",
+    "source_url": "https://www.nhs.uk/medicines/amlodipine/",
     "source_title": "Amlodipine",
-    "source_last_reviewed": "2026-03-02",
-    "retrieved": "2026-10-12"
+    "source_last_reviewed": "2026-06-09",
+    "retrieved": "2026-10-16",
+    "source_name": "NHS website",
+    "attribution": "Contains public sector information licensed under the Open Government Licence v3.0."
   },
   {
     "id": "metformin",
     "names": ["Metformin"],
-    "used_for": "Metformin helps control diabetes. It helps your body use insulin better and lowers the amount of sugar your liver makes. It works together with a healthy diet and regular exercise.",
-    "how_to_take": "Take it with or after food. This lowers the chance of stomach discomfort, nausea or diarrhoea.",
-    "if_missed": "Take the missed dose with food as soon as you remember. If your next dose is almost due, just take your usual dose. Do not double the dose or take extra to make up for it.",
+    "used_for": "Metformin lowers your blood sugar level. It is used to treat type 2 diabetes, on its own or with other diabetes medicines. It is also used for diabetes that starts during pregnancy (gestational diabetes), for symptoms of polyendocrine metabolic ovarian syndrome (PMOS, previously called PCOS), and for type 1 diabetes together with insulin.",
+    "how_to_take": "Take it with food. Swallow tablets whole with some water. Do not crush or chew them. For the liquid, use the spoon or syringe that comes with it to measure the dose. How much you take depends on why you are taking it and your age. Your doctor will tell you. You may need to take it for a long time. Keep taking it, because your blood sugar may rise again if you stop. Talk to your doctor if you have problems with your medicine. Always check the packet or leaflet. Ask a pharmacist or doctor if you are not sure how to take it.",
+    "if_missed": "If you take it once a day, take it as soon as you remember, unless it is nearly time for your next dose. If you take it more than once a day and your next dose is nearly due, skip the missed dose and take the next one at the usual time. Do not take 2 doses to make up for a missed dose.",
     "common_side_effects": [
+      "Feeling sick (nausea) or being sick (vomiting)",
       "Diarrhoea",
-      "Nausea, vomiting or stomach discomfort"
+      "Tummy pain",
+      "Loss of appetite",
+      "A change in the way things taste",
+      "Low vitamin B12, which can make you feel very tired"
     ],
     "seek_help_if": [
-      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See your healthcare professional immediately.",
-      "Signs of lactic acidosis (very rare but serious): loss of appetite, vomiting or stomach pain that goes on for some time, feeling generally unwell with feeling cold or very tired, or fast, shallow breathing. See your healthcare professional immediately."
+      "You have side effects that bother you or do not go away. Speak to a pharmacist or doctor.",
+      "Signs of too much acid in your blood (lactic acidosis): being sick, stomach pain, muscle cramps, breathing problems, or feeling severely tired. Get emergency help straight away.",
+      "Signs of a serious allergic reaction: a swollen throat or tongue, a raised itchy rash, or difficulty breathing. Get emergency help straight away.",
+      "Yellow skin or yellow whites of the eyes. This can be a sign of liver inflammation. Yellow skin may be harder to see on brown or black skin. Get urgent medical advice straight away.",
+      "You are ill with vomiting, diarrhoea or a high temperature (fever). You may get dehydrated. Talk to a pharmacist or doctor, or follow the advice they have already given you.",
+      "You have taken more than your prescribed dose. Taking extra can be dangerous. Get urgent medical advice straight away.",
+      "You are pregnant, get pregnant, or are breastfeeding. Tell your doctor."
     ],
-    "source_url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/metformin",
+    "source_url": "https://www.nhs.uk/medicines/metformin/",
     "source_title": "Metformin",
-    "source_last_reviewed": "2026-07-27",
-    "retrieved": "2026-10-12"
+    "source_last_reviewed": "2026-08-05",
+    "retrieved": "2026-10-16",
+    "source_name": "NHS website",
+    "attribution": "Contains public sector information licensed under the Open Government Licence v3.0."
   },
   {
     "id": "atorvastatin",
     "names": ["Atorvastatin"],
-    "used_for": "Atorvastatin is a statin. It lowers 'bad' cholesterol and triglycerides and raises 'good' cholesterol. This may lower your risk of heart attack and stroke.",
-    "how_to_take": "You can take it with or without food. Do not stop taking it without checking with your healthcare professional, because your 'bad' cholesterol may go up again.",
-    "if_missed": "Take it as soon as you remember. If your next dose is nearly due, just take your usual dose. Do not double the dose.",
+    "used_for": "Atorvastatin is a statin. It brings down high cholesterol. It helps prevent angina, heart attack, stroke and other problems in people with heart and blood vessel disease. You may also be given it if you have diabetes, kidney disease, or an inherited condition that causes high cholesterol (familial hypercholesterolaemia).",
+    "how_to_take": "Take it once a day. Try to take it at the same time each day. You can take it with or without food. Swallow tablets whole with some water. Chewable tablets can be chewed or swallowed whole. For the liquid, use the syringe or spoon that comes with it to measure the dose. How much you take depends on why you are taking it. Your doctor will tell you. You usually take it for a long time, sometimes for life. Keep taking it unless your doctor tells you to stop, because your cholesterol may go up again. Do not have more than 1 or 2 small glasses of grapefruit juice a day. Always check the packet or leaflet. Ask a pharmacist or doctor if you are not sure how to take it.",
+    "if_missed": "Skip the missed dose and take your next dose at the usual time. Do not take 2 doses to make up for a missed dose.",
     "common_side_effects": [
-      "Mild muscle aches or weakness",
-      "Feeling tired",
-      "Stomach upset, such as stomach pain, constipation or diarrhoea",
       "Headache",
-      "Joint pain or back pain"
+      "Dizziness",
+      "Feeling sick (nausea)",
+      "Digestive problems, such as constipation, diarrhoea, indigestion or wind",
+      "Muscle aches and swollen joints",
+      "Blocked or runny nose, or nosebleeds",
+      "Sleep problems"
     ],
     "seek_help_if": [
-      "Signs of muscle breakdown: severe muscle pain with no clear cause that does not go away, muscle weakness or cramps all over the body, or dark brown urine. See a doctor immediately.",
-      "Signs of liver problems: dark brown urine, pale or clay-coloured stools, nausea, vomiting, loss of appetite, or yellow skin or eyes. See a doctor immediately.",
-      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See a doctor immediately.",
-      "Common side effects that do not go away or become bothersome. Tell your healthcare professional."
+      "You have side effects that bother you or do not go away. Speak to a pharmacist or doctor.",
+      "Yellow skin or yellow whites of the eyes. This can be a sign of liver inflammation. Yellow skin may be harder to see on brown or black skin. Get urgent medical advice straight away.",
+      "Severe stomach pain. This can be a sign of an inflamed pancreas. Get urgent medical advice straight away.",
+      "Muscle cramps, severe muscle pain or weakness, sometimes with a high temperature or red or brown pee. This can be a sign of muscle damage. Get urgent medical advice straight away.",
+      "Signs of a serious allergic reaction: a swollen throat or tongue, a raised itchy rash, or difficulty breathing. Get urgent medical advice straight away.",
+      "You have taken more than your prescribed dose. Speak to a pharmacist as soon as possible. If you cannot, or you took too much on purpose, get urgent medical advice.",
+      "You are pregnant or trying to get pregnant. Tell your doctor, because this medicine can affect how a baby develops. If you are breastfeeding, check with a pharmacist or doctor."
     ],
-    "source_url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/atorvastatin",
+    "source_url": "https://www.nhs.uk/medicines/atorvastatin/",
     "source_title": "Atorvastatin",
-    "source_last_reviewed": "2026-05-22",
-    "retrieved": "2026-10-12"
+    "source_last_reviewed": "2026-06-23",
+    "retrieved": "2026-10-16",
+    "source_name": "NHS website",
+    "attribution": "Contains public sector information licensed under the Open Government Licence v3.0."
   },
   {
     "id": "omeprazole",
     "names": ["Omeprazole"],
-    "used_for": "Omeprazole treats stomach and gut problems. These include acid reflux (when stomach acid comes back up the food pipe and causes heartburn) and ulcers. It is used to treat and to prevent ulcers.",
-    "how_to_take": "Take it 30 to 60 minutes before a meal. Swallow the capsule whole with water; do not chew or crush it. If swallowing is hard, ask your healthcare professional about other ways to take it. Do not stop taking it without checking with your healthcare professional.",
-    "if_missed": "Take it as soon as you remember, then take the next dose at the usual time. Do not take two doses to make up for the missed dose.",
+    "used_for": "Omeprazole is a proton pump inhibitor (PPI). It reduces the amount of acid in your stomach. It is used to treat or prevent stomach ulcers, heartburn and acid reflux (gastro-oesophageal reflux disease, or GORD). Together with antibiotics, it is used to treat the stomach infection Helicobacter pylori. It is also used for discomfort from severe reflux in children.",
+    "how_to_take": "It is usually taken once or twice a day. If you take it once a day, try to take it at the same time each morning. If you take it twice a day, take it at the same time each morning and evening. You can take it with or without food. Swallow tablets and capsules with water. Do not chew or crush capsules or tablets labelled 'enteric coated' or 'gastro resistant'. If you find pills or capsules hard to swallow, ask a pharmacist about other ways to take it. How much you take and for how long depends on the type of omeprazole and why you take it. It is best not to drink alcohol, because it can make your symptoms worse. Always check the packet or leaflet. Ask a pharmacist or doctor if you are not sure how to take it.",
+    "if_missed": "Take it as soon as you remember, unless it is nearly time for your next dose. If it is nearly time, skip the missed dose and take your next dose at the usual time. Do not take 2 doses at the same time to make up for a missed one.",
     "common_side_effects": [
       "Headache",
       "Stomach pain",
-      "Diarrhoea",
-      "Nausea or vomiting",
-      "Wind"
+      "Feeling sick (nausea) or being sick (vomiting)",
+      "Constipation or diarrhoea",
+      "More wind than usual"
     ],
     "seek_help_if": [
-      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See a healthcare professional immediately.",
-      "Signs of low magnesium: muscle spasms, a fast or pounding heartbeat (palpitations), dizziness, or fits (seizures). See a healthcare professional immediately.",
-      "Common side effects that do not go away. Talk to your healthcare professional."
+      "You have side effects that bother you or do not go away. Speak to a pharmacist or doctor.",
+      "Your symptoms get worse or do not get better, or you are worried. Omeprazole can make it harder to notice symptoms of some serious conditions, such as stomach cancer. See a doctor.",
+      "Signs of very low vitamin B12: tiredness, dizziness, or muscle twitches or weakness. Get urgent medical advice straight away.",
+      "Signs of a serious allergic reaction: a swollen throat or tongue, a raised itchy rash, or difficulty breathing. Get urgent medical advice straight away.",
+      "A rash, mostly on skin exposed to the sun, together with joint pain. This can be a sign of a type of lupus. Get urgent medical advice straight away.",
+      "Signs of weakened bones, such as a bone breaking more easily after a fall or injury. The chance of serious side effects is higher if you take it for a long time (a year or more). Get urgent medical advice if you think you have a serious side effect.",
+      "You are booked for a medical test, such as a camera test of your food pipe and stomach (gastroscopy). Omeprazole can affect some test results. Check with the staff at the hospital or clinic.",
+      "You have taken more than it says on the packet, leaflet or prescription. Get urgent medical advice straight away.",
+      "You are pregnant or breastfeeding. Check with a pharmacist or doctor."
     ],
-    "source_url": "https://www.healthhub.sg/medication-devices-and-treatment/medications/omeprazole",
+    "source_url": "https://www.nhs.uk/medicines/omeprazole/",
     "source_title": "Omeprazole",
-    "source_last_reviewed": "2026-06-12",
-    "retrieved": "2026-10-12"
+    "source_last_reviewed": "2025-09-17",
+    "retrieved": "2026-10-16",
+    "source_name": "NHS website",
+    "attribution": "Contains public sector information licensed under the Open Government Licence v3.0."
   },
   {
     "id": "losartan",
     "names": ["Losartan"],
-    "used_for": "Losartan lowers blood pressure. It blocks a substance in the body (angiotensin II) that makes blood vessels narrower. It can also be used for people with protein in their urine and some other heart conditions.",
-    "how_to_take": "You can take it with or without food. Do not stop taking it without checking with your healthcare provider.",
-    "if_missed": "Take it as soon as you remember. If it is almost time for your next dose, just take your usual dose. Do not double the dose or take extra to make up for it.",
+    "used_for": "Losartan is mainly used to manage high blood pressure. It is a type of medicine called an angiotensin receptor blocker (ARB). It is also used to help treat heart failure, and kidney disease caused by type 2 diabetes.",
+    "how_to_take": "Most people take it once a day. You can take it at any time of day, but try to take it at the same time every day. Swallow it with water, with or without food. How much you take and for how long depends on why you are taking it. You usually need it for a long time. Keep taking it unless your doctor tells you to stop. Your doctor will arrange blood tests and blood pressure checks while you take it. Avoid grapefruit juice, because it can stop the medicine working properly. Always check the packet or leaflet. Ask a pharmacist or doctor if you are not sure how to take it.",
+    "if_missed": "If you forget a dose, take your next dose as normal. Do not take 2 doses to make up for a missed dose.",
     "common_side_effects": [
-      "Dizziness or lightheadedness when getting up"
+      "Dizziness",
+      "Tiredness",
+      "Headache",
+      "Tummy pain",
+      "Feeling sick (nausea) or being sick (vomiting)",
+      "Swelling in your legs, ankles or feet"
     ],
     "seek_help_if": [
-      "Signs of drug allergy: swollen face, eyes, lips or tongue, difficulty breathing, or an itchy rash over the whole body. See your doctor.",
-      "Signs of liver problems (very rare): dark urine, pale stools, nausea, vomiting, loss of appetite, stomach pain, or yellow eyes or skin. See a doctor immediately.",
-      "If you become pregnant. Tell your doctor as soon as possible, because this medicine can harm an unborn baby."
+      "You have side effects that bother you or do not go away. Speak to a pharmacist or doctor.",
+      "Signs of a serious allergic reaction: a swollen throat or tongue, a raised itchy rash, or difficulty breathing. Get urgent medical advice straight away.",
+      "A fast or irregular heartbeat. Your heart may feel like it is pounding, racing, fluttering or missing a beat. Get urgent medical advice straight away.",
+      "Signs of liver problems: yellow skin or yellow whites of the eyes, feeling sick or being sick. Yellow skin may be harder to see on black or brown skin. Get urgent medical advice straight away.",
+      "You are ill with vomiting, diarrhoea or a high temperature. You may get dehydrated. Talk to a pharmacist or doctor, or follow the advice they have already given you.",
+      "You have taken more than your prescribed dose. Taking too much can be dangerous. Get urgent medical advice straight away.",
+      "You are pregnant, trying to get pregnant, or breastfeeding. Tell your doctor. Losartan is not usually used during pregnancy or breastfeeding."
     ],
-    "source_url": "https://www.healthhub.sg/a-z/medications/losartan",
+    "source_url": "https://www.nhs.uk/medicines/losartan/",
     "source_title": "Losartan",
-    "source_last_reviewed": "2026-05-08",
-    "retrieved": "2026-10-12"
+    "source_last_reviewed": "2026-06-10",
+    "retrieved": "2026-10-16",
+    "source_name": "NHS website",
+    "attribution": "Contains public sector information licensed under the Open Government Licence v3.0."
   }
 ]

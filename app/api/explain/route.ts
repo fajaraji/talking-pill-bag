@@ -13,8 +13,6 @@ const requestSchema = z.object({
 const responseSchema = z.object({
   known: z.boolean(),
   text: z.string(),
-  source_url: z.string().optional(),
-  source_title: z.string().optional(),
   fallback: z.boolean().optional(),
 });
 
@@ -70,7 +68,7 @@ async function translateWithLlm(
     id: "Indonesian",
   };
 
-  const systemPrompt = `You are a medical information assistant. Your job is to translate and simplify the following medication information into ${languageLabels[language] || language}.
+  const systemPrompt = `You are a medical information assistant. Your job is to translate and simplify the following openly licensed public-sector patient information into ${languageLabels[language] || language}.
 
 RULES:
 1. Use short, simple sentences suitable for an older adult.
@@ -174,8 +172,6 @@ export async function POST(request: NextRequest) {
       const response: ExplainResponse = {
         known: true,
         text: cleanSourceText,
-        source_url: entry.source_url,
-        source_title: entry.source_title,
       };
       return NextResponse.json(response);
     }
@@ -186,8 +182,6 @@ export async function POST(request: NextRequest) {
       const response: ExplainResponse = {
         known: true,
         text: stripMarkdown(translated),
-        source_url: entry.source_url,
-        source_title: entry.source_title,
       };
       return NextResponse.json(response);
     }
@@ -196,8 +190,6 @@ export async function POST(request: NextRequest) {
     const response: ExplainResponse = {
       known: true,
       text: cleanSourceText,
-      source_url: entry.source_url,
-      source_title: entry.source_title,
       fallback: true,
     };
     return NextResponse.json(response);

@@ -27,7 +27,7 @@ Demo focus population: **elderly with hypertension** who take several chronic me
 
 1. **Strictly bounded:** the app NEVER suggests changing, adding, reducing, or stopping a medicine, and does not diagnose. Questions of this kind are answered with "This question needs to be answered by a doctor or pharmacist" and are automatically added to the questions list.
 2. **Honest about uncertainty:** if the label is unreadable or the medicine is not in the knowledge base, answer exactly: "I'm not able to identify that medication, please check with your pharmacist." (plus its translation in the selected language). Do not guess.
-3. **Medicine explanations come from only two sources:** the confirmed label text, and the file `data/drug-info.json` (summaries from HealthHub Medications A-Z). The LLM may simplify and translate that text, but must not add medical facts.
+3. **Medicine explanations come from only two sources:** the confirmed label text, and the file `data/drug-info.json` (plain-language adaptation of openly licensed public-sector patient information). The LLM may simplify and translate that text, but must not add medical facts.
 4. **Human-in-the-loop:** AI reading results are always displayed next to the original photo and must be pressed "Correct" (or corrected) before entering the schedule.
 5. No real patient data. The demo uses fictional labels in the `labels/` folder.
 

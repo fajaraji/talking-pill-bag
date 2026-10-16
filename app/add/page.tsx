@@ -178,14 +178,10 @@ function AddMedicinePageContent() {
       const data = (await res.json()) as {
         known: boolean;
         text: string;
-        source_url?: string;
-        source_title?: string;
         fallback?: boolean;
       };
       setExplanationCache(cacheKey, {
         text: data.text,
-        sourceUrl: data.source_url ?? "",
-        sourceTitle: data.source_title ?? "",
         known: data.known,
         fallback: data.fallback,
       });

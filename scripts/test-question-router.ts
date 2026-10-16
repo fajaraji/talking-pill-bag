@@ -75,7 +75,7 @@ assertEqual(q2.saveToQuestions.question, "Can I take 2 tablets at once if I forg
 
 // ---------------------------------------------------------------------------
 // Trap question 2 (ID question, EN UI): missed dose in Indonesian with English UI
-// must still detect the missed-dose keyword and show the HealthHub quote.
+// must still detect the missed-dose keyword and show the missed-dose quote.
 // ---------------------------------------------------------------------------
 const q2idEnUI = routeQuestion({
   question: "Boleh minum 2 tablet sekaligus kalau kemarin lupa?",

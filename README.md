@@ -8,7 +8,7 @@ Built for the **Tencent Cloud AI CAN DO IT Hackathon Singapore 2026** — Health
 
 1. **Read the label** — photograph a medicine label; AI extracts the name, strength, timing and food instructions. A person confirms the result next to the original photo before it is used.
 2. **Picture schedule** — morning / afternoon / evening / bedtime, before or after food, in large print.
-3. **Spoken explanations** — what each medicine is for, in English, 中文, Bahasa Melayu or Bahasa Indonesia, sourced only from the confirmed label and official HealthHub (Singapore) medication information.
+3. **Spoken explanations** — what each medicine is for, in English, 中文, Bahasa Melayu or Bahasa Indonesia, sourced only from the confirmed label and openly licensed public-sector patient information.
 4. **Reminders with one "Done" button** — when doses are missed, the app asks why (forgot, side effects, felt well, ran out).
 5. **Blood pressure log** — photograph the BP monitor screen; see a simple 14-day trend.
 6. **Refill reminders** — remaining supply is estimated from the label quantity.
@@ -18,7 +18,7 @@ Built for the **Tencent Cloud AI CAN DO IT Hackathon Singapore 2026** — Health
 
 - **Add Medicine** — Take or upload a photo of a medicine label. AI reads it and shows the extracted fields next to the original image for human confirmation before saving.
 - **Today** — A picture schedule with Morning / Afternoon / Evening / Bedtime slots, before/after-food icons, medicine photos, and a large "Done" button for each dose.
-- **Listen + Ask a question** — Tap "Listen" to hear a brief explanation of the medicine in the chosen language. Tap "Ask a question" to type a question; the deterministic router redirects every question to a doctor or pharmacist and, for missed-dose questions about known medicines, also shows the official HealthHub quote.
+- **Listen + Ask a question** — Tap "Listen" to hear a brief explanation of the medicine in the chosen language. Tap "Ask a question" to type a question; the deterministic router redirects every question to a doctor or pharmacist and, for missed-dose questions about known medicines, also shows the official missed-dose quote.
 - **Blood Pressure** — Photograph a BP monitor screen or enter values manually. View a 14-day trend graph and a plain-language sentence (no diagnosis).
 - **Questions for my doctor or pharmacist** — A printable list of missed doses with reasons, refill reminders, high-BP readings, and any questions the user asked that the app redirected.
 - **Weekly Summary** — For family members: doses taken vs scheduled, reasons recorded, average blood pressure, and refills due.
@@ -61,7 +61,7 @@ flowchart TB
 
     subgraph Data["Data"]
         DB["Neon Postgres<br/>(@neondatabase/serverless)"]
-        DI["data/drug-info.json<br/>(HealthHub summaries)"]
+        DI["data/drug-info.json<br/>(OGL-licensed summaries)"]
     end
 
     UI <-->|"reads/writes"| LS
@@ -93,8 +93,8 @@ flowchart TB
 
 - The **phone browser** (UI, `localStorage`, Web Speech) runs entirely on the user's device. Data is synced to the server via the `/api/v1/*` routes.
 - The **Next.js server routes** (`/api/read-label`, `/api/read-bp`, `/api/explain`, `/api/v1/*`) are the only components that hold the LLM API key and database credentials. The key stays on the server and never reaches the client.
-- The **external LLM provider** receives only photos (vision model) or HealthHub text snippets (text model). A label photo can show the patient's name; the app does not extract or store it, but the photo itself is sent to the provider. A production version would crop or blur the name area on the device before upload.
-- **`data/drug-info.json`** is a static file of HealthHub medication summaries. It is read by the server and returned to the client as part of explanations.
+- The **external LLM provider** receives only photos (vision model) or openly licensed text snippets (text model). A label photo can show the patient's name; the app does not extract or store it, but the photo itself is sent to the provider. A production version would crop or blur the name area on the device before upload.
+- **`data/drug-info.json`** is a static file of openly licensed medication summaries. It is read by the server and returned to the client as part of explanations.
 - **Questions are answered by a deterministic router** (`lib/question-router.ts`) with **no LLM call**. Every question is redirected to a doctor or pharmacist.
 
 ## Key design trade-offs
@@ -102,7 +102,7 @@ flowchart TB
 - **Neon Postgres with HTTP driver** — Replaces the earlier `localStorage`-only approach. Family members can now share data across devices. The `@neondatabase/serverless` driver works on Vercel Edge/Node without connection pooling.
 - **No ORM** — Raw SQL via tagged templates keeps the dependency tree small and queries explicit.
 - **Human confirmation of every AI label read** — The preparer must tap "Confirm" (or edit fields) before the medicine enters the schedule. This prevents silent misreadings.
-- **Explanations limited to HealthHub summaries** — The LLM may only translate and simplify text from `data/drug-info.json`. It cannot add facts not present in the JSON.
+- **Explanations limited to openly licensed summaries** — The LLM may only translate and simplify text from `data/drug-info.json`. It cannot add facts not present in the JSON.
 - **Deterministic question router instead of a chatbot** — Every free-text question is redirected to a doctor or pharmacist. No generative model answers medical questions.
 - **Pre-generated cached translations** — Because the text model (`tencent/hy3`) takes 8–13 s per call, explanations are generated once when a medicine is confirmed and stored on the server. Subsequent "Listen" taps are instant.
 
@@ -176,4 +176,9 @@ All tables include `household_id` with `ON DELETE CASCADE`.
 
 ## Data sources
 
-Medication information in `data/drug-info.json` is summarised from [HealthHub Singapore](https://www.healthhub.sg) medication pages (source URL stored per entry).
+Medication information in `data/drug-info.json` is a plain-language adaptation that contains public sector information licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). Provenance URLs are kept in the file for maintainers; the adapted text is not endorsed by, and is not presented as coming from, the original publisher.
+
+## Licences and credits
+
+- Medicine information: contains public sector information licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
+- Demo video music: "Inspired" by Kevin MacLeod ([incompetech.com](https://incompetech.com)), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

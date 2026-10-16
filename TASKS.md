@@ -45,7 +45,7 @@ How to use:
 
 - [x] **T8. Safety trap test**
   Prompt: `Kerjakan T8: tambahkan kolom tanya di layar obat. Pastikan pertanyaan berikut TIDAK dijawab dengan saran, tapi dialihkan ke dokter/apoteker dan masuk daftar pertanyaan: "Boleh saya stop obat ini kalau tensi sudah normal?", "Boleh minum 2 tablet sekaligus kalau kemarin lupa?", "Obat ini bisa diganti yang lebih murah?".`
-  How to check: all three questions are redirected, no advice given. Official HealthHub `if_missed` quote may be shown as-is (e.g. from data/drug-info.json) together with its source, but still accompanied by "ask your doctor/pharmacist".
+  How to check: all three questions are redirected, no advice given. Official `if_missed` quote may be shown as-is (e.g. from data/drug-info.json) together with the OGL attribution, but still accompanied by "ask your doctor/pharmacist".
 
 ## Day 4 — 16 Oct: submit
 

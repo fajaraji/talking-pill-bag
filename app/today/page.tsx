@@ -292,8 +292,6 @@ function TodayPageInner() {
   const [questionResult, setQuestionResult] = useState<{
     reply: string;
     ifMissedQuote?: string;
-    sourceUrl?: string;
-    sourceTitle?: string;
   } | null>(null);
 
   const isSenior = state.role === "senior";
@@ -333,8 +331,6 @@ function TodayPageInner() {
           return res.json() as Promise<{
             known: boolean;
             text: string;
-            source_url?: string;
-            source_title?: string;
             fallback?: boolean;
           }>;
         })
@@ -342,8 +338,6 @@ function TodayPageInner() {
           if (!data) return;
           setExplanationCache(key, {
             text: data.text,
-            sourceUrl: data.source_url ?? "",
-            sourceTitle: data.source_title ?? "",
             known: data.known,
             fallback: data.fallback,
           });
@@ -435,14 +429,10 @@ function TodayPageInner() {
             const data = (await res.json()) as {
               known: boolean;
               text: string;
-              source_url?: string;
-              source_title?: string;
               fallback?: boolean;
             };
             explanation = {
               text: data.text,
-              sourceUrl: data.source_url ?? "",
-              sourceTitle: data.source_title ?? "",
               known: data.known,
               fallback: data.fallback,
             };
@@ -457,8 +447,6 @@ function TodayPageInner() {
     if (!explanation) {
       explanation = {
         text: t(lang, "pharmacistMessage"),
-        sourceUrl: "",
-        sourceTitle: "",
         known: false,
       };
     }
@@ -513,8 +501,6 @@ function TodayPageInner() {
     setQuestionResult({
       reply: result.reply,
       ifMissedQuote: result.ifMissedQuote,
-      sourceUrl: result.sourceUrl,
-      sourceTitle: result.sourceTitle,
     });
     setQuestionInput("");
   }
@@ -882,19 +868,17 @@ function TodayPageInner() {
                     <p className="whitespace-pre-wrap text-xl leading-relaxed text-ink">
                       {panelData.explanation?.text}
                     </p>
-                    {panelData.explanation?.sourceUrl && (
-                      <a
-                        href={panelData.explanation.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 inline-block text-base font-semibold text-primary underline"
-                      >
-                        {t(lang, "source")}: {panelData.explanation.sourceTitle || "HealthHub"}
-                      </a>
-                    )}
-                    {!panelData.explanation?.sourceUrl && panelData.explanation?.known && (
-                      <p className="mt-3 text-base text-muted">
-                        {t(lang, "source")}: HealthHub
+                    {panelData.explanation?.known && (
+                      <p className="mt-3 text-sm text-muted">
+                        {t(lang, "oglAttribution")}{" "}
+                        <a
+                          href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                        >
+                          Open Government Licence v3.0
+                        </a>
                       </p>
                     )}
                     {panelData.explanation?.fallback && (
@@ -957,21 +941,22 @@ function TodayPageInner() {
                         {questionResult.ifMissedQuote && (
                           <div className="flex flex-col gap-2 rounded-xl border border-line bg-white p-3">
                             <p className="text-base font-semibold text-muted">
-                              {t(lang, "whatHealthHubSaysAboutMissedDose")}
+                              {t(lang, "whatSourceSaysAboutMissedDose")}
                             </p>
                             <p className="text-base leading-relaxed text-ink">
                               {questionResult.ifMissedQuote}
                             </p>
-                            {questionResult.sourceUrl && (
+                            <p className="text-sm text-muted">
+                              {t(lang, "oglAttribution")}{" "}
                               <a
-                                href={questionResult.sourceUrl}
+                                href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-block text-base font-semibold text-primary underline"
+                                className="underline"
                               >
-                                {t(lang, "source")}: {questionResult.sourceTitle || "HealthHub"}
+                                Open Government Licence v3.0
                               </a>
-                            )}
+                            </p>
                           </div>
                         )}
                       </div>

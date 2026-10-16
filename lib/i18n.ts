@@ -115,7 +115,8 @@ type StringKey =
   | "askQuestionPlaceholder"
   | "send"
   | "questionRedirected"
-  | "whatHealthHubSaysAboutMissedDose"
+  | "whatSourceSaysAboutMissedDose"
+  | "oglAttribution"
   // Questions page
   | "questionsTitle"
   | "questionsForDoctor"
@@ -272,7 +273,8 @@ const en: Dictionary = {
   send: "Send",
   questionRedirected:
     "This question needs your doctor or pharmacist. We've added it to your questions list.",
-  whatHealthHubSaysAboutMissedDose: "What HealthHub says about a missed dose:",
+  whatSourceSaysAboutMissedDose: "Information about a missed dose:",
+  oglAttribution: "Contains public sector information licensed under the Open Government Licence v3.0.",
   bpTitle: "Blood Pressure",
   bpLink: "Blood Pressure",
   addBPReading: "Add Reading",
@@ -450,7 +452,8 @@ const zh: Dictionary = {
   askQuestionPlaceholder: "在此输入您的问题",
   send: "发送",
   questionRedirected: "这个问题需要医生或药剂师来回答。我们已将其添加到您的问题列表中。",
-  whatHealthHubSaysAboutMissedDose: "HealthHub 关于漏服剂量的说明：",
+  whatSourceSaysAboutMissedDose: "漏服剂量相关信息：",
+  oglAttribution: "Contains public sector information licensed under the Open Government Licence v3.0.",
   bpTitle: "血压",
   bpLink: "血压",
   addBPReading: "添加记录",
@@ -632,7 +635,8 @@ const ms: Dictionary = {
   send: "Hantar",
   questionRedirected:
     "Soalan ini perlu dijawab oleh doktor atau ahli farmasi anda. Kami telah menambahnya ke senarai soalan anda.",
-  whatHealthHubSaysAboutMissedDose: "Apa yang HealthHub katakan tentang terlepas dos:",
+  whatSourceSaysAboutMissedDose: "Maklumat tentang terlepas dos:",
+  oglAttribution: "Contains public sector information licensed under the Open Government Licence v3.0.",
   bpTitle: "Tekanan Darah",
   bpLink: "Tekanan Darah",
   addBPReading: "Tambah Bacaan",
@@ -815,7 +819,8 @@ const id: Dictionary = {
   send: "Kirim",
   questionRedirected:
     "Pertanyaan ini perlu dijawab oleh dokter atau apoteker Anda. Kami telah menambahkannya ke daftar pertanyaan Anda.",
-  whatHealthHubSaysAboutMissedDose: "Apa yang HealthHub katakan tentang dosis yang terlewat:",
+  whatSourceSaysAboutMissedDose: "Informasi tentang dosis yang terlewat:",
+  oglAttribution: "Contains public sector information licensed under the Open Government Licence v3.0.",
   bpTitle: "Tekanan Darah",
   bpLink: "Tekanan Darah",
   addBPReading: "Tambah Catatan",

@@ -40,6 +40,18 @@ CREATE TABLE IF NOT EXISTS pairing_codes (
 CREATE INDEX IF NOT EXISTS idx_pairing_codes_household_id ON pairing_codes(household_id);
 CREATE INDEX IF NOT EXISTS idx_pairing_codes_expires_at ON pairing_codes(expires_at);
 
+-- Long-lived single-use recovery codes for caregivers. Only the SHA-256 hash
+-- is stored; the plaintext is shown once when generated.
+CREATE TABLE IF NOT EXISTS recovery_codes (
+  code_hash text PRIMARY KEY,
+  household_id uuid NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  created_by_device uuid REFERENCES devices(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  used_at timestamptz
+);
+
+CREATE INDEX IF NOT EXISTS idx_recovery_codes_household_id ON recovery_codes(household_id);
+
 CREATE TABLE IF NOT EXISTS medicines (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   household_id uuid NOT NULL REFERENCES households(id) ON DELETE CASCADE,
@@ -74,6 +86,9 @@ CREATE TABLE IF NOT EXISTS dose_logs (
 
 CREATE INDEX IF NOT EXISTS idx_dose_logs_household_id ON dose_logs(household_id);
 CREATE INDEX IF NOT EXISTS idx_dose_logs_household_id_date ON dose_logs(household_id, date);
+
+-- Which device recorded the dose. Kept NULL when that device is later removed.
+ALTER TABLE dose_logs ADD COLUMN IF NOT EXISTS taken_by_device uuid REFERENCES devices(id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS missed_reasons (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -4,6 +4,14 @@ Snap a medicine label once. Get a picture schedule, spoken explanations in your 
 
 Built for the **Tencent Cloud AI CAN DO IT Hackathon Singapore 2026** — Healthcare Track, Challenge 2: *AI Healthier Every Day*. Developed with **CodeBuddy**.
 
+## Explore the implementation
+
+To trace the path from a label to a reminder, begin with the normalization rules, then inspect the adherence logic. The demo and safety sections below explain what the patient or caregiver must confirm.
+
+- [Label extraction](app/api/read-label/route.ts)
+- [Normalization of model output](lib/label-normalise.ts)
+- [Dose tracking](lib/adherence.ts)
+
 ## What it does
 
 1. **Read the label** — photograph a medicine label; AI extracts the name, strength, timing and food instructions. A person confirms the result next to the original photo before it is used.
